@@ -5,6 +5,7 @@ import { uploadProductImage } from "@/app/(app)/products/image-actions";
 import { getBrandLogo } from "@/app/(app)/brand-actions";
 import { baseLayer, type ActionResult, type Editor } from "../editor";
 import { loadImage } from "../render";
+import { optimizeImageForUpload } from "../image-utils";
 import type { CanvasDoc } from "./use-canvas-doc";
 import type { Toast } from "./use-stage-save";
 
@@ -58,20 +59,26 @@ export function useStageImages(
     const failed: string[] = [];
     try {
       for (const [i, file] of files.entries()) {
-        const fd = new FormData();
-        fd.set("file", file);
-        const res = await onUpload(fd);
-        if (res.error || !res.url) {
-          failed.push(`${file.name}: ${res.error ?? "upload failed"}`);
-          continue;
-        }
-        done.push({ url: res.url, name: file.name });
         try {
-          // Fan the new layers out a little so they don't sit exactly on top of each other.
-          const offset = i * 40;
-          added.push(imageLayer(await loadImage(res.url), res.url, file.name, null, { x: W / 2 + offset, y: H / 2 + offset }));
-        } catch {
-          failed.push(`${file.name}: uploaded but could not be displayed`);
+          const optimized = await optimizeImageForUpload(file);
+          const fd = new FormData();
+          fd.set("file", optimized);
+          const res = await onUpload(fd);
+          if (res.error || !res.url) {
+            failed.push(`${file.name}: ${res.error ?? "upload failed"}`);
+            continue;
+          }
+          done.push({ url: res.url, name: file.name });
+          try {
+            // Fan the new layers out a little so they don't sit exactly on top of each other.
+            const offset = i * 40;
+            const img = await loadImage(res.url);
+            added.push(imageLayer(img, res.url, file.name, null, { x: W / 2 + offset, y: H / 2 + offset }));
+          } catch {
+            failed.push(`${file.name}: uploaded but could not be displayed`);
+          }
+        } catch (itemErr) {
+          failed.push(`${file.name}: ${itemErr instanceof Error ? itemErr.message : "upload error"}`);
         }
       }
     } finally {
@@ -80,7 +87,7 @@ export function useStageImages(
     setUploads((u) => [...done, ...u]);
     if (added.length) addMany(added);
     if (failed.length) setToast({ kind: "error", text: failed.join(" · ") });
-    else setToast({ kind: "ok", text: `Added ${added.length} image${added.length === 1 ? "" : "s"}.` });
+    else if (done.length) setToast({ kind: "ok", text: `Added ${added.length} image${added.length === 1 ? "" : "s"}.` });
   };
 
   const placeImage: Editor["placeImage"] = async (product, url, at) => {
@@ -106,11 +113,24 @@ export function useStageImages(
   };
 
   const uploadBackground = async (file: File) => {
-    const fd = new FormData();
-    fd.set("file", file);
-    const res = await onUpload(fd);
-    if (res.error || !res.url) return setToast({ kind: "error", text: res.error ?? "Upload failed." });
-    change((c) => ({ ...c, background: { ...c.background, image_url: res.url! } }));
+    setUploading(true);
+    try {
+      const optimized = await optimizeImageForUpload(file, 2500);
+      const fd = new FormData();
+      fd.set("file", optimized);
+      const res = await onUpload(fd);
+      if (res.error || !res.url) {
+        setToast({ kind: "error", text: res.error ?? "Upload failed." });
+        return;
+      }
+      await loadImage(res.url);
+      change((c) => ({ ...c, background: { ...c.background, image_url: res.url! } }));
+      setToast({ kind: "ok", text: "Background image updated." });
+    } catch (err) {
+      setToast({ kind: "error", text: err instanceof Error ? err.message : "Could not upload background image." });
+    } finally {
+      setUploading(false);
+    }
   };
 
   const cutOut: Editor["cutOut"] = async (id, tolerance) => {

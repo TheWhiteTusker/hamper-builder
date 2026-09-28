@@ -47,8 +47,11 @@ export default async function ProductPage({
   return (
     <>
       <PageHeader title={product.name} subtitle={product.code}>
-        <Link href={costingHref(product.code)} className="btn-primary">
+        <Link href={costingHref(product.code)} className="btn-secondary">
           Edit
+        </Link>
+        <Link href="/products/new" className="btn-primary">
+          Add new product
         </Link>
       </PageHeader>
 
@@ -61,7 +64,7 @@ export default async function ProductPage({
         />
 
         {!sheet && (
-          <div className="card border-dashed p-4 text-center text-sm text-[var(--color-muted)]">
+          <div className="card border-dashed p-4 text-center text-sm text-(--color-muted)">
             No costing saved for this product yet. Click <strong>Edit</strong> to cost it in the calculator.
           </div>
         )}

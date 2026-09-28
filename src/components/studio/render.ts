@@ -53,13 +53,27 @@ export async function loadFonts(canvas: HamperCanvas) {
 
 /* ----------------------------------------------------------------- images */
 
-export const loadImage = (url: string) =>
+export const loadImage = (url: string, timeoutMs = 15000) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new window.Image();
-    // Without this the canvas becomes "tainted" and PNG export throws.
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`Could not load ${url}`));
+    // Only set crossOrigin for remote URLs; setting it on data: or blob: can cause browser CORS glitches
+    if (!url.startsWith("blob:") && !url.startsWith("data:")) {
+      img.crossOrigin = "anonymous";
+    }
+    const timer = setTimeout(() => {
+      img.onload = null;
+      img.onerror = null;
+      reject(new Error(`Timed out loading image: ${url}`));
+    }, timeoutMs);
+
+    img.onload = () => {
+      clearTimeout(timer);
+      resolve(img);
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error(`Could not load ${url}`));
+    };
     img.src = url;
   });
 

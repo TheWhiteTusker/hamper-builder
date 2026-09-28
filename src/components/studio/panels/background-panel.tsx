@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus, Trash2 } from "lucide-react";
+import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 import { CANVAS_PRESETS } from "@/lib/hamper-canvas";
 import type { Editor } from "../editor";
 import { ColorPanel, cx, panelTitle, toolBtn } from "../studio-ui";
@@ -24,12 +24,19 @@ export function BackgroundPanel({ ed }: { ed: Editor }) {
           </div>
         )}
         <div className="flex gap-2">
-          <label className={cx(toolBtn, "flex-1 cursor-pointer border border-[var(--st-line)]")}>
-            <ImagePlus className="h-4 w-4" />
-            {bg.image_url ? "Replace" : "Upload image"}
+          <label
+            className={cx(
+              toolBtn,
+              "flex-1 cursor-pointer border border-[var(--st-line)]",
+              ed.uploading && "pointer-events-none opacity-60",
+            )}
+          >
+            {ed.uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+            {ed.uploading ? "Uploading…" : bg.image_url ? "Replace" : "Upload image"}
             <input
               type="file"
               accept="image/*"
+              disabled={ed.uploading}
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
@@ -42,7 +49,8 @@ export function BackgroundPanel({ ed }: { ed: Editor }) {
             <button
               type="button"
               title="Remove background image"
-              className={cx(toolBtn, "border border-[var(--st-line)]")}
+              disabled={ed.uploading}
+              className={cx(toolBtn, "border border-[var(--st-line)]", ed.uploading && "opacity-50")}
               onClick={() => ed.change((c) => ({ ...c, background: { ...c.background, image_url: null } }))}
             >
               <Trash2 className="h-4 w-4" />

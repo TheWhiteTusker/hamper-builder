@@ -14,12 +14,32 @@ const storagePathOf = (url: string | null) =>
 
 async function upload(folder: string, file: File, name: string) {
   const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    throw new Error("You must be signed in to upload images.");
+  }
+
   const path = `hampers/${folder}/${name}`;
+  const ext = name.split(".").pop()?.toLowerCase() || "jpg";
+  const contentType =
+    file.type ||
+    (ext === "png"
+      ? "image/png"
+      : ext === "webp"
+        ? "image/webp"
+        : ext === "gif"
+          ? "image/gif"
+          : "image/jpeg");
+
   const { error } = await supabase.storage
     .from(BUCKET)
     .upload(path, Buffer.from(await file.arrayBuffer()), {
-      contentType: file.type || "image/png",
-      upsert: false,
+      contentType,
+      upsert: true,
     });
   if (error) throw new Error(`Storage upload failed: ${describeError(error)}`);
   return { supabase, path, url: supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl };

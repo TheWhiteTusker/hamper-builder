@@ -39,6 +39,8 @@ export function HamperLineRow({
   }, [products, line.category_name]);
 
   const byLabel = useMemo(() => new Map(options.map((p) => [productLabel(p.name, p.code), p])), [options]);
+  const allByLabel = useMemo(() => new Map(products.map((p) => [productLabel(p.name, p.code), p])), [products]);
+  const categoryOptions = useMemo(() => ["All categories", ...categories.map((c) => c.name)], [categories]);
 
   const totalCp = num(line.qty) * num(line.unit_cp);
   const totalSp = num(line.qty) * num(line.unit_sp);
@@ -64,15 +66,16 @@ export function HamperLineRow({
           label="Category"
           placeholder="All categories"
           value={line.category_name}
-          options={categories.map((c) => c.name)}
+          options={categoryOptions}
           disabled={!canEdit}
           onPick={(category) => {
-            const stillMatches = !category || selectedProduct?.category_name === category;
+            const cat = category === "All categories" ? "" : category;
+            const stillMatches = !cat || selectedProduct?.category_name === cat;
             // Clearing a mismatched product mirrors the sheet's onEdit handler.
             onChange(
               stillMatches
-                ? { category_name: category }
-                : { category_name: category, product_id: null, product_code: "", product_name: "" },
+                ? { category_name: cat }
+                : { category_name: cat, product_id: null, product_code: "", product_name: "" },
             );
           }}
         />
@@ -91,25 +94,26 @@ export function HamperLineRow({
               placeholder="Search products…"
               value={line.product_name ? productLabel(line.product_name, line.product_code) : ""}
               options={Array.from(byLabel.keys())}
+              allOptions={Array.from(allByLabel.keys())}
               disabled={!canEdit}
               onPick={(text) => {
-                const p = byLabel.get(text);
+                const p = byLabel.get(text) ?? allByLabel.get(text);
                 if (p) onSelectProduct(p.id);
                 else if (text === "") onSelectProduct("");
               }}
             />
             {/* A product that has since been retired still shows on saved lines. */}
             {!line.product_id && line.product_name && (
-              <div className="mt-0.5 text-xs text-[var(--color-muted)]">No longer in Product Master</div>
+              <div className="mt-0.5 text-xs text-(--color-muted)">No longer in Product Master</div>
             )}
           </div>
         </div>
       </td>
 
-      <td className="font-mono text-xs text-[var(--color-muted)]">{line.product_code || "—"}</td>
+      <td className="font-mono text-xs text-(--color-muted)">{line.product_code || "—"}</td>
       {numCell("qty", "Quantity")}
       {numCell("unit_cp", "Unit cost")}
-      <td className="num text-[var(--color-muted)]">{totalCp ? formatMoney(totalCp) : "—"}</td>
+      <td className="num text-(--color-muted)">{totalCp ? formatMoney(totalCp) : "—"}</td>
       {numCell("target_margin", "Target margin")}
       {numCell("unit_sp", "Unit price")}
       <td className="num font-medium">{totalSp ? formatMoney(totalSp) : "—"}</td>
