@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { CostVariety } from "@/lib/types";
+import type { CostSubcategoryWithVarieties, CostVariety } from "@/lib/types";
 
 /** What every level of the hierarchy needs from the master view. */
 export type MasterCtx = {
@@ -12,6 +12,11 @@ export type MasterCtx = {
   /** Runs a server action, showing its error, its message, or `success` in the banner. */
   run: (action: () => Promise<{ error?: string; message?: string }>, success: string, after?: () => void) => void;
   editVariety: (subcategoryId: string, variety: Partial<CostVariety>) => void;
+  openTransferSubcategory: (
+    sub: CostSubcategoryWithVarieties,
+    mode: "move" | "duplicate",
+    currentCategoryId: string,
+  ) => void;
 };
 
 export { Chevron } from "@/components/ui";

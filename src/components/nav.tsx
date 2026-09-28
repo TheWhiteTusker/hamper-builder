@@ -71,7 +71,7 @@ export function Nav({ profile, desktop }: { profile: Profile; desktop: boolean }
   // links wrap to a second line rather than scroll if it is narrower still.
   return (
     <header className="no-print bg-(--color-brand)">
-      <div className="flex items-center gap-[clamp(0.5rem,1.4vw,1.5rem)] whitespace-nowrap px-[clamp(0.75rem,1.8vw,1.5rem)] py-[clamp(0.5rem,0.9vw,0.75rem)]">
+      <div className="flex flex-wrap items-center justify-between gap-[clamp(0.5rem,1.4vw,1.5rem)] px-[clamp(0.75rem,1.8vw,1.5rem)] py-[clamp(0.5rem,0.9vw,0.75rem)]">
         <Link href="/dashboard" aria-label="Lattice Lane — dashboard" className="shrink-0">
           <Image
             src="/lattice-lane-logo.png"
@@ -100,7 +100,7 @@ export function Nav({ profile, desktop }: { profile: Profile; desktop: boolean }
           ))}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-[clamp(0.4rem,0.9vw,0.75rem)] text-[clamp(0.75rem,0.95vw,0.875rem)]">
+        <div className="flex shrink-0 items-center whitespace-nowrap gap-[clamp(0.4rem,0.9vw,0.75rem)] text-[clamp(0.75rem,0.95vw,0.875rem)]">
           {!isDesktopClient ? (
             // Plain <a>: a file download, not a page for the router to prefetch.
             <a

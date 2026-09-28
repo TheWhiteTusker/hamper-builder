@@ -57,10 +57,10 @@ export function ColorsCard({ productColors }: { productColors: ProductColor[] })
     <div className="card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="text-base font-bold text-[var(--color-ink)]">
+          <h3 className="text-base font-bold text-(--color-ink)">
             Standard Product Colors & Finishes
           </h3>
-          <p className="text-xs text-[var(--color-muted)] mt-0.5">
+          <p className="text-xs text-(--color-muted) mt-0.5">
             Standard <strong>Walnut (WL)</strong>, <strong>Natural (NT)</strong> and <strong>Black (BL)</strong>, plus any finish you add below.
           </p>
         </div>
@@ -90,7 +90,7 @@ export function ColorsCard({ productColors }: { productColors: ProductColor[] })
             </label>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-bold text-[var(--color-ink)]">{c.name}</span>
+                <span className="text-sm font-bold text-(--color-ink)">{c.name}</span>
                 <span className="flex items-center gap-1">
                   <span className="rounded font-mono font-black text-xs bg-slate-100 px-1.5 py-0.5 text-slate-800">
                     {c.code}
@@ -107,7 +107,7 @@ export function ColorsCard({ productColors }: { productColors: ProductColor[] })
                   )}
                 </span>
               </div>
-              <span className="text-[11px] text-[var(--color-muted)]">Code suffix: /{c.code}</span>
+              <span className="text-[11px] text-(--color-muted)">Code suffix: /{c.code}</span>
             </div>
           </div>
         ))}

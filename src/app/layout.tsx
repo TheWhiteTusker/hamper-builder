@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
       className={`${cabin.variable} ${figtree.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-[family-name:var(--font-figtree)]">
+      <body className="min-h-full flex flex-col font-(family-name:--font-figtree) overflow-x-clip">
         {children}
       </body>
     </html>

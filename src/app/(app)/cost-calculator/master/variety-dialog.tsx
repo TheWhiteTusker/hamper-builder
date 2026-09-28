@@ -29,7 +29,7 @@ export function VarietyDialog({
         <input type="hidden" name="subcategory_id" value={subcategoryId} />
         {variety.id && <input type="hidden" name="id" value={variety.id} />}
 
-        <h3 className="text-base font-bold text-[var(--color-ink)]">
+        <h3 className="text-base font-bold text-(--color-ink)">
           {variety.id ? "Edit Variety / Specification" : "New Variety / Specification"}
         </h3>
 
@@ -136,7 +136,7 @@ export function VarietyDialog({
           />
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--color-border)]">
+        <div className="flex items-center justify-end gap-2 pt-3 border-t border-(--color-line)">
           <button type="button" onClick={onCancel} className="btn-secondary text-sm">
             Cancel
           </button>

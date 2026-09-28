@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from "react";
 import type { ProductColor } from "@/lib/product-code";
-import type { CostStageWithHierarchy, CostVariety } from "@/lib/types";
-import { saveCostVariety } from "./actions";
+import type { CostStageWithHierarchy, CostSubcategoryWithVarieties, CostVariety } from "@/lib/types";
+import { duplicateCostSubcategory, moveCostSubcategory, saveCostVariety } from "./actions";
 import { ColorsCard } from "./colors-card";
 import { filterStages } from "./filter";
 import type { MasterCtx } from "./master-ui";
 import { StageCard } from "./stage-card";
 import { SyncRatesButton } from "./sync-rates-button";
+import { TransferSubcategoryDialog } from "./transfer-subcategory-dialog";
 import { VarietyDialog } from "./variety-dialog";
 
 export function CostMasterView({
@@ -24,6 +25,13 @@ export function CostMasterView({
   const [editing, setEditing] = useState<{
     subcategoryId: string;
     variety: Partial<CostVariety>;
+  } | null>(null);
+
+  // The subcategory being moved or duplicated.
+  const [transferModal, setTransferModal] = useState<{
+    sub: CostSubcategoryWithVarieties;
+    mode: "move" | "duplicate";
+    currentCategoryId: string;
   } | null>(null);
 
   // Collapsed by default; a search expands everything it matched.
@@ -52,6 +60,8 @@ export function CostMasterView({
       });
     },
     editVariety: (subcategoryId, variety) => setEditing({ subcategoryId, variety }),
+    openTransferSubcategory: (sub, mode, currentCategoryId) =>
+      setTransferModal({ sub, mode, currentCategoryId }),
   };
 
   return (
@@ -87,7 +97,7 @@ export function CostMasterView({
       )}
 
       {q && visibleStages.length === 0 && (
-        <p className="text-sm text-[var(--color-muted)] italic">
+        <p className="text-sm text-(--color-muted) italic">
           Nothing matches &ldquo;{query.trim()}&rdquo;.
         </p>
       )}
@@ -105,6 +115,39 @@ export function CostMasterView({
               () => saveCostVariety(fd),
               "Variety / Specification saved successfully!",
               () => setEditing(null),
+            )
+          }
+        />
+      )}
+
+      {transferModal && (
+        <TransferSubcategoryDialog
+          sub={transferModal.sub}
+          initialMode={transferModal.mode}
+          currentCategoryId={transferModal.currentCategoryId}
+          stages={stages}
+          isPending={isPending}
+          onClose={() => setTransferModal(null)}
+          onMove={(subId, targetCatId) =>
+            ctx.run(
+              () => moveCostSubcategory(subId, targetCatId),
+              "Subcategory moved successfully!",
+              () => {
+                const targetCat = stages.flatMap((s) => s.categories).find((c) => c.id === targetCatId);
+                setTransferModal(null);
+                ctx.expand(targetCatId);
+                ctx.expand(subId);
+              },
+            )
+          }
+          onDuplicate={(subId, targetCatId, newName) =>
+            ctx.run(
+              () => duplicateCostSubcategory(subId, targetCatId, newName),
+              "Subcategory duplicated successfully!",
+              () => {
+                setTransferModal(null);
+                ctx.expand(targetCatId);
+              },
             )
           }
         />

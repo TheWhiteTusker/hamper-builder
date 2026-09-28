@@ -13,6 +13,7 @@
   --color-ink: #2c332f;
   --color-muted: #54655b;
   --color-line: #e3ddcc;
+  --color-border: #e3ddcc;
   --color-paper: #faf8ee;
   --color-brand: #54655b;
   --color-brand-dark: #2c332f;
@@ -52,8 +53,8 @@ body {
    all the time, which is a fine fallback. */
 .scroll-top {
   @apply fixed bottom-6 right-6 z-50 inline-flex h-14 w-14 items-center justify-center
-         rounded-full border border-black/5 bg-[var(--color-brand)] text-white
-         hover:bg-[var(--color-brand-dark)];
+         rounded-full border border-black/5 bg-(--color-brand) text-white
+         hover:bg-(--color-brand-dark);
   box-shadow: 0 10px 30px rgb(2 6 23 / 0.12);
   transition:
     background 0.18s ease,
@@ -83,11 +84,11 @@ body {
    of money line up, and compact controls so a 20-line hamper fits on screen. */
 @layer components {
   .card {
-    @apply rounded-lg border border-[var(--color-line)] bg-white;
+    @apply rounded-lg border border-line bg-white;
   }
 
   .label {
-    @apply block text-[11px] font-medium uppercase tracking-wide text-[var(--color-muted)];
+    @apply block text-[11px] font-medium uppercase tracking-wide text-(--color-muted);
   }
 
   /* The storefront rounds inputs to 20px, which on a 32px-tall field in a
@@ -95,10 +96,10 @@ body {
      same family of shape, still legible at density. */
   .input,
   .select {
-    @apply w-full rounded-lg border border-[var(--color-line)] bg-white px-2.5 py-1.5
-           text-sm text-[var(--color-ink)] outline-none
-           focus:border-[var(--color-brand)] focus:ring-2 focus:ring-[var(--color-brand)]/20
-           disabled:bg-[var(--color-paper)] disabled:text-[var(--color-muted)];
+    @apply w-full rounded-lg border border-line bg-white px-2.5 py-1.5
+           text-sm text-(--color-ink) outline-none
+           focus:border-(--color-brand) focus:ring-2 focus:ring-(--color-brand)/20
+           disabled:bg-paper disabled:text-(--color-muted);
   }
 
   .input-num {
@@ -119,12 +120,12 @@ body {
   }
 
   .btn-primary {
-    @apply bg-[var(--color-brand)] text-white hover:bg-[var(--color-brand-dark)];
+    @apply bg-(--color-brand) text-white hover:bg-(--color-brand-dark);
   }
 
   .btn-secondary {
-    @apply border border-[var(--color-line)] bg-white text-[var(--color-ink)]
-           hover:bg-[var(--color-paper)];
+    @apply border border-line bg-white text-(--color-ink)
+           hover:bg-paper;
   }
 
   .btn-danger {
@@ -136,12 +137,12 @@ body {
   }
 
   .table th {
-    @apply border-b border-[var(--color-line)] px-2.5 py-2 text-left text-[11px]
-           font-semibold uppercase tracking-wide text-[var(--color-muted)];
+    @apply border-b border-line px-2.5 py-2 text-left text-[11px]
+           font-semibold uppercase tracking-wide text-(--color-muted);
   }
 
   .table td {
-    @apply border-b border-[var(--color-line)] px-2.5 py-1.5 align-middle;
+    @apply border-b border-line px-2.5 py-1.5 align-middle;
   }
 
   .table .num {
@@ -149,8 +150,8 @@ body {
   }
 
   .badge {
-    @apply inline-block rounded-full border border-[var(--color-line)]
-           bg-[var(--color-paper)] px-2 py-0.5 text-[11px] font-medium;
+    @apply inline-block rounded-full border border-line
+           bg-paper px-2 py-0.5 text-[11px] font-medium;
   }
 }
 

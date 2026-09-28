@@ -21,7 +21,7 @@ export function StageCard({ stage, ctx }: { stage: CostStageWithHierarchy; ctx: 
   return (
     <div className="card p-5 space-y-4">
       <div
-        className={`flex flex-wrap items-center justify-between gap-3 ${open ? "border-b border-[var(--color-border)] pb-3" : ""}`}
+        className={`flex flex-wrap items-center justify-between gap-3 ${open ? "border-b border-(--color-line) pb-3" : ""}`}
       >
         <button
           type="button"
@@ -31,16 +31,16 @@ export function StageCard({ stage, ctx }: { stage: CostStageWithHierarchy; ctx: 
         >
           <div className="flex items-center gap-2">
             <Chevron open={open} />
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-brand)] text-xs font-bold text-white">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-(--color-brand) text-xs font-bold text-white">
               {stage.sort_order}
             </span>
-            <h3 className="text-lg font-bold text-[var(--color-ink)]">{stage.name} Master</h3>
+            <h3 className="text-lg font-bold text-(--color-ink)">{stage.name} Master</h3>
             <span className="badge text-[11px]">
               {stage.categories.length}{" "}
               {stage.categories.length === 1 ? "category" : "categories"}
             </span>
           </div>
-          <p className="text-xs text-[var(--color-muted)] mt-0.5">
+          <p className="text-xs text-(--color-muted) mt-0.5">
             {stage.code === "bought_out"
               ? "Hierarchy: Category (e.g. Ceramics) → Subcategory (e.g. Jars) → Varieties (e.g. 200ml Amber)"
               : "Hierarchy: Category → Subcategory (e.g. Birch) → Varieties (e.g. 3mm, 8mm, 12mm)"}
