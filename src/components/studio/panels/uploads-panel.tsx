@@ -9,7 +9,7 @@ export function UploadsPanel({ ed }: { ed: Editor }) {
     <div className="space-y-3">
       <label
         className={cx(
-          "flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--st-accent)] px-3 py-2.5 text-[13px] font-medium text-[var(--st-on-accent)] hover:bg-[var(--st-accent-strong)]",
+          "flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-(--st-accent) px-3 py-2.5 text-[13px] font-medium text-(--st-on-accent) hover:bg-(--st-accent-strong)",
           ed.uploading && "pointer-events-none opacity-60",
         )}
       >
@@ -27,7 +27,7 @@ export function UploadsPanel({ ed }: { ed: Editor }) {
           }}
         />
       </label>
-      <p className="text-[12px] text-[var(--st-muted)]">
+      <p className="text-[12px] text-(--st-muted)">
         Pick several at once (hold Ctrl or Shift in the file dialog). Each image is added to the page as its own layer.
       </p>
 
@@ -46,7 +46,7 @@ export function UploadsPanel({ ed }: { ed: Editor }) {
                   e.dataTransfer.effectAllowed = "copy";
                 }}
                 onClick={() => ed.addImage(u.url, u.name)}
-                className="checkerboard aspect-square overflow-hidden rounded-md border border-[var(--st-line)] hover:border-[var(--st-accent)]"
+                className="checkerboard aspect-square overflow-hidden rounded-md border border-(--st-line) hover:border-(--st-accent)"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={u.url} alt="" className="h-full w-full object-contain" draggable={false} />

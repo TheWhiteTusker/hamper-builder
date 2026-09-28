@@ -18,7 +18,7 @@ export function BackgroundPanel({ ed }: { ed: Editor }) {
       <div>
         <div className={cx(panelTitle, "mb-2")}>Background image</div>
         {bg.image_url && (
-          <div className="checkerboard mb-2 aspect-video overflow-hidden rounded-md border border-[var(--st-line)]">
+          <div className="checkerboard mb-2 aspect-video overflow-hidden rounded-md border border-(--st-line)">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={bg.image_url} alt="" className="h-full w-full object-cover" />
           </div>
@@ -27,7 +27,7 @@ export function BackgroundPanel({ ed }: { ed: Editor }) {
           <label
             className={cx(
               toolBtn,
-              "flex-1 cursor-pointer border border-[var(--st-line)]",
+              "flex-1 cursor-pointer border border-(--st-line)",
               ed.uploading && "pointer-events-none opacity-60",
             )}
           >
@@ -50,14 +50,14 @@ export function BackgroundPanel({ ed }: { ed: Editor }) {
               type="button"
               title="Remove background image"
               disabled={ed.uploading}
-              className={cx(toolBtn, "border border-[var(--st-line)]", ed.uploading && "opacity-50")}
+              className={cx(toolBtn, "border border-(--st-line)", ed.uploading && "opacity-50")}
               onClick={() => ed.change((c) => ({ ...c, background: { ...c.background, image_url: null } }))}
             >
               <Trash2 className="h-4 w-4" />
             </button>
           )}
         </div>
-        <p className="mt-1.5 text-[11px] text-[var(--st-muted)]">Fills the page, e.g. an empty basket or box.</p>
+        <p className="mt-1.5 text-[11px] text-(--st-muted)">Fills the page, e.g. an empty basket or box.</p>
       </div>
 
       <div>
@@ -71,18 +71,18 @@ export function BackgroundPanel({ ed }: { ed: Editor }) {
                 type="button"
                 onClick={() => ed.change((c) => ({ ...c, width: p.width, height: p.height }))}
                 className={cx(
-                  "flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left hover:bg-[var(--st-hover)]",
-                  on && "bg-[var(--st-accent-soft)]",
+                  "flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left hover:bg-(--st-hover)",
+                  on && "bg-(--st-accent-soft)",
                 )}
               >
                 <span className="flex h-7 w-7 items-center justify-center">
                   <span
-                    className="border border-[var(--st-muted)]"
+                    className="border border-(--st-muted)"
                     style={{ width: (p.width / Math.max(p.width, p.height)) * 24, height: (p.height / Math.max(p.width, p.height)) * 24 }}
                   />
                 </span>
                 <span className="flex-1">{p.label}</span>
-                <span className="text-[11px] tabular-nums text-[var(--st-muted)]">
+                <span className="text-[11px] tabular-nums text-(--st-muted)">
                   {p.width}×{p.height}
                 </span>
               </button>
