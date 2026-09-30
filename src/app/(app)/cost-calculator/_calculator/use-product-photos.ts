@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { uploadProductImage } from "@/app/(app)/products/image-actions";
 import type { ProductImage } from "@/lib/types";
+import { optimizeImageForUpload } from "@/components/studio/image-utils";
 
 type Pending = { key: string; color: string; file: File; url: string };
 type UploadStatus = { color: string; busy?: boolean; error?: string; ok?: string };
@@ -10,7 +11,7 @@ async function uploadFiles(productId: string, colName: string, files: File[], ex
   const added: ProductImage[] = [];
   for (const [i, file] of files.entries()) {
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", await optimizeImageForUpload(file));
     fd.append("productId", productId);
     fd.append("color", colName);
     // First photo of a product with none becomes its cover

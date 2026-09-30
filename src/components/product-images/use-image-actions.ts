@@ -6,6 +6,7 @@ import {
   deleteProductImage,
 } from "@/app/(app)/products/image-edit-actions";
 import type { ProductImage } from "@/lib/types";
+import { optimizeImageForUpload } from "@/components/studio/image-utils";
 
 export type Feedback = { error?: string; success?: string };
 
@@ -38,11 +39,14 @@ export function useImageActions(
       let next = images;
       for (const [i, file] of files.entries()) {
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", await optimizeImageForUpload(file));
         formData.append("productId", productId);
         formData.append("color", colorOrNull(color) ?? "");
         formData.append("isPrimary", String(asPrimary && i === 0));
-        const res = await uploadProductImage(formData);
+        const res = await uploadProductImage(formData).catch((e: unknown) => ({
+          error: e instanceof Error ? e.message : "Upload failed.",
+          image: undefined,
+        }));
         if (res.error) {
           setImages(next);
           return setFeedback({ error: res.error });
