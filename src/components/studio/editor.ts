@@ -10,6 +10,9 @@ export type PickerProduct = { id: string; code: string; name: string; image_url:
 /** What the editor's save and upload server actions return. */
 export type ActionResult = { ok?: boolean; error?: string; url?: string };
 
+/** A signed URL to upload one image straight to storage, and its public URL once uploaded. */
+export type UploadTicket = { error?: string; path?: string; token?: string; url?: string };
+
 /** Everything the panels and toolbars can do to the design. Built in canvas-stage.tsx. */
 export type Editor = {
   canvas: HamperCanvas;

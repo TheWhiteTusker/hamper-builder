@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import type Konva from "konva";
 import { moveLayers, reorderLayer, type HamperCanvas } from "@/lib/hamper-canvas";
-import { DRAG_MIME, type ActionResult, type Editor, type PickerProduct } from "./editor";
+import { DRAG_MIME, type ActionResult, type Editor, type UploadTicket, type PickerProduct } from "./editor";
 import { ContextToolbar } from "./context-toolbar";
 import { LayersPanel, TransformPanel } from "./layers-panel";
 import { Rail, SidePanel, type SideTab } from "./side-panels";
@@ -50,7 +50,7 @@ export default function CanvasStage({
   /** Server action; receives `canvas` (JSON) and, with saveImage, `png`. */
   onSave: (formData: FormData) => Promise<ActionResult>;
   /** Server action; receives `file`, returns its public `url`. */
-  onUpload: (formData: FormData) => Promise<ActionResult>;
+  onUpload: (ext: string) => Promise<UploadTicket>;
   saveImage?: boolean;
   savedMessage?: string;
   /** Sibling pages (presentation slides) shown as a strip under the page. */

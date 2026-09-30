@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
 import { CanvasSchema } from "@/lib/hamper-canvas";
-import type { ActionResult } from "@/components/studio/editor";
+import { signedImageUpload } from "@/lib/signed-upload";
+import type { ActionResult, UploadTicket } from "@/components/studio/editor";
 
 const BUCKET = "product-images";
 
@@ -97,17 +98,8 @@ export async function saveHamperCanvas(hamperId: string, formData: FormData): Pr
 }
 
 // ponytail: replaced backgrounds and removed uploads stay in storage; clean up on save if the bucket grows.
-export async function uploadHamperBackground(hamperId: string, formData: FormData): Promise<ActionResult> {
-  try {
-    const file = formData.get("file");
-    if (!hamperId) return { error: "Missing hamper." };
-    if (!(file instanceof File) || file.size === 0) return { error: "Please choose an image." };
-    if (!file.type.startsWith("image/")) return { error: "That file is not an image." };
-
-    const ext = file.name.split(".").pop()?.toLowerCase() || "png";
-    const { url } = await upload(hamperId, file, `asset-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`);
-    return { ok: true, url };
-  } catch (err: unknown) {
-    return { error: describeError(err) };
-  }
+/** Bind the hamper id. The browser then uploads the file to the returned URL. */
+export async function uploadHamperBackground(hamperId: string, ext: string): Promise<UploadTicket> {
+  if (!hamperId) return { error: "Missing hamper." };
+  return signedImageUpload(`hampers/${hamperId}`, ext);
 }

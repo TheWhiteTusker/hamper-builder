@@ -1,3 +1,19 @@
+import { createClient } from "@/lib/supabase/client";
+import type { ActionResult, UploadTicket } from "./editor";
+
+/** Uploads straight to storage via a signed URL from `prepare`, so the file skips the server's body limits. */
+export async function uploadDirect(prepare: (ext: string) => Promise<UploadTicket>, file: File): Promise<ActionResult> {
+  if (!file.type.startsWith("image/")) return { error: "That file is not an image." };
+  const ext = file.name.split(".").pop()?.toLowerCase() || file.type.split("/")[1];
+  const ticket = await prepare(ext);
+  if (ticket.error || !ticket.path || !ticket.token) return { error: ticket.error ?? "Upload failed." };
+  const { error } = await createClient()
+    .storage.from("product-images")
+    .uploadToSignedUrl(ticket.path, ticket.token, file, { contentType: file.type });
+  if (error) return { error: `Storage upload failed: ${error.message}` };
+  return { ok: true, url: ticket.url };
+}
+
 /**
  * Client-side image optimization for the studio canvas.
  * Scales large camera/phone photos down to max 2000px and compresses to ~300-500KB

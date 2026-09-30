@@ -3,9 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
 import { CanvasSchema } from "@/lib/hamper-canvas";
-import type { ActionResult } from "@/components/studio/editor";
-
-const BUCKET = "product-images";
+import { signedImageUpload } from "@/lib/signed-upload";
+import type { ActionResult, UploadTicket } from "@/components/studio/editor";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -45,21 +44,7 @@ export async function saveSlide(presentationId: string, slideId: string, formDat
 }
 
 /** Bind presentationId. Uploads a background image for any slide of the deck. */
-export async function uploadPresentationAsset(presentationId: string, formData: FormData): Promise<ActionResult> {
-  try {
-    const file = formData.get("file");
-    if (!(file instanceof File) || file.size === 0) return { error: "Please choose an image." };
-    if (!file.type.startsWith("image/")) return { error: "That file is not an image." };
-
-    const supabase = await createClient();
-    const ext = file.name.split(".").pop()?.toLowerCase() || "png";
-    const path = `presentations/${presentationId}/asset-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
-    const { error } = await supabase.storage
-      .from(BUCKET)
-      .upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type, upsert: false });
-    if (error) return { error: `Storage upload failed: ${describeError(error)}` };
-    return { ok: true, url: supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl };
-  } catch (err) {
-    return { error: describeError(err) };
-  }
+/** Bind presentationId. The browser then uploads the file to the returned URL. */
+export async function uploadPresentationAsset(presentationId: string, ext: string): Promise<UploadTicket> {
+  return signedImageUpload(`presentations/${presentationId}`, ext);
 }

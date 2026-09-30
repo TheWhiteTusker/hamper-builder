@@ -3,16 +3,16 @@ import type { Layer } from "@/lib/hamper-canvas";
 import { removeBackground } from "@/lib/background-removal";
 import { uploadProductImage } from "@/app/(app)/products/image-actions";
 import { getBrandLogo } from "@/app/(app)/brand-actions";
-import { baseLayer, type ActionResult, type Editor } from "../editor";
+import { baseLayer, type Editor, type UploadTicket } from "../editor";
 import { loadImage } from "../render";
-import { optimizeImageForUpload } from "../image-utils";
+import { optimizeImageForUpload, uploadDirect } from "../image-utils";
 import type { CanvasDoc } from "./use-canvas-doc";
 import type { Toast } from "./use-stage-save";
 
 /** Adding, swapping and uploading images, and cutting out product photos. */
 export function useStageImages(
   doc: CanvasDoc,
-  onUpload: (formData: FormData) => Promise<ActionResult>,
+  onUpload: (ext: string) => Promise<UploadTicket>,
   setToast: (t: Toast) => void,
 ) {
   const { canvas, add, addMany, patch, select, change } = doc;
@@ -60,10 +60,7 @@ export function useStageImages(
     try {
       for (const [i, file] of files.entries()) {
         try {
-          const optimized = await optimizeImageForUpload(file);
-          const fd = new FormData();
-          fd.set("file", optimized);
-          const res = await onUpload(fd);
+          const res = await uploadDirect(onUpload, await optimizeImageForUpload(file));
           if (res.error || !res.url) {
             failed.push(`${file.name}: ${res.error ?? "upload failed"}`);
             continue;
@@ -115,10 +112,7 @@ export function useStageImages(
   const uploadBackground = async (file: File) => {
     setUploading(true);
     try {
-      const optimized = await optimizeImageForUpload(file, 2500);
-      const fd = new FormData();
-      fd.set("file", optimized);
-      const res = await onUpload(fd);
+      const res = await uploadDirect(onUpload, await optimizeImageForUpload(file, 2500));
       if (res.error || !res.url) {
         setToast({ kind: "error", text: res.error ?? "Upload failed." });
         return;
