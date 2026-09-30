@@ -5,7 +5,7 @@ import { createClient, isAdmin, requireUser } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
 import type { ProductColor } from "@/lib/product-code";
 import type { CostVariety } from "@/lib/types";
-import { repriceVariety } from "../reprice";
+import { repriceVarieties } from "../reprice";
 
 // Every page under /cost-calculator reads the hierarchy, so refresh them all.
 const refresh = () => revalidatePath("/cost-calculator", "layout");
@@ -430,11 +430,11 @@ export async function saveCostVariety(formData: FormData) {
   refresh();
   if (!repricing) return { ok: true };
 
-  const res = await repriceVariety(supabase, id);
+  const res = await repriceVarieties(supabase, [id]);
   revalidatePath("/products");
   revalidatePath("/products/[...code]", "page");
   if (res.error) {
-    return { error: `Rate saved, but repricing stopped after ${res.products} product(s): ${res.error}` };
+    return { error: `Rate saved, but repricing failed: ${res.error}` };
   }
   return {
     ok: true,

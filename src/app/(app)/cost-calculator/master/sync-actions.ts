@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { isAdmin, requireUser } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
-import { repriceVariety } from "../reprice";
+import { repriceVarieties } from "../reprice";
 
 type StoredLine = {
   sheet_id: string;
@@ -56,10 +56,8 @@ export async function syncAllRates(): Promise<{ error?: string; message?: string
   });
   if (!stale.length) return { message: "Every product already uses the current master rates and names." };
 
-  for (const id of new Set(stale.map((l) => l.cost_variety_id))) {
-    const res = await repriceVariety(supabase, id);
-    if (res.error) return { error: `Sync stopped part-way: ${res.error}` };
-  }
+  const res = await repriceVarieties(supabase, [...new Set(stale.map((l) => l.cost_variety_id))]);
+  if (res.error) return { error: `Sync failed: ${res.error}` };
 
   revalidatePath("/cost-calculator", "layout");
   revalidatePath("/products");
