@@ -2,7 +2,10 @@ import { createClient } from "@/lib/supabase/client";
 import type { ActionResult, UploadTicket } from "./editor";
 
 /** Uploads straight to storage via a signed URL from `prepare`, so the file skips the server's body limits. */
-export async function uploadDirect(prepare: (ext: string) => Promise<UploadTicket>, file: File): Promise<ActionResult> {
+export async function uploadDirect(
+  prepare: (ext: string) => Promise<UploadTicket>,
+  file: File,
+): Promise<ActionResult & { path?: string }> {
   if (!file.type.startsWith("image/")) return { error: "That file is not an image." };
   const ext = file.name.split(".").pop()?.toLowerCase() || file.type.split("/")[1];
   const ticket = await prepare(ext);
@@ -11,7 +14,7 @@ export async function uploadDirect(prepare: (ext: string) => Promise<UploadTicke
     .storage.from("product-images")
     .uploadToSignedUrl(ticket.path, ticket.token, file, { contentType: file.type });
   if (error) return { error: `Storage upload failed: ${error.message}` };
-  return { ok: true, url: ticket.url };
+  return { ok: true, url: ticket.url, path: ticket.path };
 }
 
 /**

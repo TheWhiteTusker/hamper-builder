@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
-import { uploadProductImage } from "@/app/(app)/products/image-actions";
+import { uploadProductImage } from "@/components/product-images/upload-product-image";
 import type { ProductImage } from "@/lib/types";
-import { optimizeImageForUpload } from "@/components/studio/image-utils";
 
 type Pending = { key: string; color: string; file: File; url: string };
 type UploadStatus = { color: string; busy?: boolean; error?: string; ok?: string };
@@ -10,16 +9,12 @@ type UploadStatus = { color: string; busy?: boolean; error?: string; ok?: string
 async function uploadFiles(productId: string, colName: string, files: File[], existing: number) {
   const added: ProductImage[] = [];
   for (const [i, file] of files.entries()) {
-    const fd = new FormData();
-    fd.append("file", await optimizeImageForUpload(file));
-    fd.append("productId", productId);
-    fd.append("color", colName);
-    // First photo of a product with none becomes its cover
-    fd.append("isPrimary", String(existing + added.length === 0 && i === 0));
-    const res = await uploadProductImage(fd).catch((e: unknown) => ({
-      error: e instanceof Error ? e.message : "Upload failed.",
-      image: undefined,
-    }));
+    const res = await uploadProductImage(file, {
+      productId,
+      color: colName,
+      // First photo of a product with none becomes its cover
+      isPrimary: existing + added.length === 0 && i === 0,
+    });
     if (res.error || !res.image) return { added, error: res.error ?? "Upload failed." };
     added.push(res.image);
   }

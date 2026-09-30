@@ -5,12 +5,24 @@ import { createClient } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
 import { colorTag } from "@/lib/product-code";
 import type { ProductImage } from "@/lib/types";
+import { signedImageUpload } from "@/lib/signed-upload";
+import type { UploadTicket } from "@/components/studio/editor";
 import type { ImageActionResult } from "./image-types";
 
-/**
- * Upload an image file for a product to the product-images Supabase storage bucket
- */
-export async function uploadProductImage(formData: FormData): Promise<ImageActionResult> {
+/** Step 1 of a product photo upload: a signed URL the browser sends the file to. */
+export async function prepareProductImageUpload(productId: string, ext: string): Promise<UploadTicket> {
+  if (!productId) return { error: "Product ID is missing." };
+  return signedImageUpload(`products/${productId}`, ext);
+}
+
+/** Step 2: record a photo the browser uploaded to `storagePath`. */
+export async function saveUploadedProductImage(input: {
+  productId: string;
+  storagePath: string;
+  color?: string | null;
+  isPrimary?: boolean;
+  caption?: string | null;
+}): Promise<ImageActionResult> {
   try {
     const supabase = await createClient();
     const {
@@ -19,35 +31,17 @@ export async function uploadProductImage(formData: FormData): Promise<ImageActio
 
     if (!user) return { error: "You must be signed in to upload images." };
 
-    const file = formData.get("file") as File | null;
-    const productId = formData.get("productId")?.toString()?.trim();
-    const rawColor = formData.get("color")?.toString()?.trim() || null;
-    const isPrimary = formData.get("isPrimary") === "true";
-    const caption = formData.get("caption")?.toString()?.trim() || null;
+    const productId = input.productId?.trim();
+    const storagePath = input.storagePath;
+    const rawColor = input.color?.trim() || null;
+    const isPrimary = input.isPrimary === true;
+    const caption = input.caption?.trim() || null;
 
-    if (!file || !(file instanceof File) || file.size === 0) {
-      return { error: "Please select an image file to upload." };
-    }
     if (!productId) {
       return { error: "Product ID is missing." };
     }
-
-    // Generate safe storage path
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
-    const storagePath = `products/${productId}/${safeName}`;
-
-    // Upload to Supabase Storage
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const { error: uploadError } = await supabase.storage
-      .from("product-images")
-      .upload(storagePath, buffer, {
-        contentType: file.type || `image/${ext}`,
-        upsert: false,
-      });
-
-    if (uploadError) {
-      return { error: `Storage upload failed: ${describeError(uploadError)}` };
+    if (!storagePath?.startsWith(`products/${productId}/`)) {
+      return { error: "Invalid upload path." };
     }
 
     // Get public URL

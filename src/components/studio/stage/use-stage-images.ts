@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Layer } from "@/lib/hamper-canvas";
 import { removeBackground } from "@/lib/background-removal";
-import { uploadProductImage } from "@/app/(app)/products/image-actions";
+import { uploadProductImage } from "@/components/product-images/upload-product-image";
 import { getBrandLogo } from "@/app/(app)/brand-actions";
 import { baseLayer, type Editor, type UploadTicket } from "../editor";
 import { loadImage } from "../render";
@@ -146,12 +146,10 @@ export function useStageImages(
       const blob = await new Promise<Blob | null>((r) => c.toBlob(r, "image/png"));
       if (!blob) throw new Error("render failed");
 
-      const fd = new FormData();
-      fd.set("file", new File([blob], "cutout.png", { type: "image/png" }));
-      fd.set("productId", layer.product_id);
-      fd.set("isPrimary", "false");
-      fd.set("caption", "Background removed");
-      const res = await uploadProductImage(fd);
+      const res = await uploadProductImage(new File([blob], "cutout.png", { type: "image/png" }), {
+        productId: layer.product_id,
+        caption: "Background removed",
+      });
       if (res.error || !res.image) return setToast({ kind: "error", text: res.error ?? "Upload failed." });
       patch(id, { url: res.image.url });
       setToast({ kind: "ok", text: "Background removed. The cut-out is saved to the product's images." });
