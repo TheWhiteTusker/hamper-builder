@@ -1,5 +1,5 @@
 import type { DisplayProduct } from "./fallbacks";
-import { thumbProps } from "@/lib/product-images";
+import { thumbUrl } from "@/lib/product-images";
 
 /**
  * Ultra-smooth infinite downward scrolling column.
@@ -47,7 +47,7 @@ function ProductCard({ item }: { item: DisplayProduct }) {
       <div className="aspect-[4/3] w-full rounded-xl overflow-hidden bg-[var(--color-paper)] relative">
         {/* eslint-disable-next-line @next/next/no-img-element -- remote catalogue and Unsplash photos */}
         <img
-          {...thumbProps(item.url)}
+          src={thumbUrl(item.url)}
           alt={item.name}
           decoding="async"
           loading="lazy"
