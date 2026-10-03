@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser, canManage } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
-import { thumbPath } from "@/lib/product-images";
+import { thumbPath, viewPath } from "@/lib/product-images";
 import type { BinActionResult } from "./bin-types";
 
 const BUCKET = "product-images";
@@ -25,7 +25,7 @@ export async function purgeExpiredAction(): Promise<BinActionResult> {
       .lte("deleted_at", thirtyDaysAgo);
 
     for (const img of expImages ?? []) {
-      if (img.storage_path) await supabase.storage.from(BUCKET).remove([img.storage_path, thumbPath(img.storage_path)]);
+      if (img.storage_path) await supabase.storage.from(BUCKET).remove([img.storage_path, thumbPath(img.storage_path), viewPath(img.storage_path)]);
     }
 
     const { data: expHampers } = await supabase

@@ -91,21 +91,29 @@ export function groupImagesByColor(
 
 const PRODUCT_PHOTOS = "/product-images/products/";
 
-/** Where a product photo's small copy lives: products/x/asset-1.png -> products/x/asset-1.thumb.webp */
-export const thumbPath = (path: string) => path.replace(/\.[^./]+$/, "") + ".thumb.webp";
-
-/** The small copy of one of our product photos; any other URL (external, hamper, blob) is unchanged. */
-export const thumbUrl = (url: string) => (url.includes(PRODUCT_PHOTOS) ? thumbPath(url) : url);
-
-/**
- * <img>/<Image> props for a thumbnail. Falls back to the full photo when the
- * small copy is missing, e.g. its upload failed.
+/*
+ * Each product photo is stored three ways. The original (usually PNG) is what
+ * presentations and the studio place; the WebP copies are only for viewing:
+ *   products/x/asset-1.png        original
+ *   products/x/asset-1.view.webp  full-size view, 2000px
+ *   products/x/asset-1.thumb.webp lists and galleries, 480px
  */
-export function thumbProps(url: string) {
+const copyPath = (path: string, kind: "thumb" | "view") => path.replace(/\.[^./]+$/, "") + `.${kind}.webp`;
+export const thumbPath = (path: string) => copyPath(path, "thumb");
+export const viewPath = (path: string) => copyPath(path, "view");
+
+/** The WebP copy of one of our product photos; any other URL (external, hamper, blob) is unchanged. */
+export const thumbUrl = (url: string) => (url.includes(PRODUCT_PHOTOS) ? thumbPath(url) : url);
+export const viewUrl = (url: string) => (url.includes(PRODUCT_PHOTOS) ? viewPath(url) : url);
+
+/** <img>/<Image> props showing `src`, falling back to the original if that copy is missing. */
+function withFallback(src: string, url: string) {
   return {
-    src: thumbUrl(url),
+    src,
     onError: (e: SyntheticEvent<HTMLImageElement>) => {
       if (e.currentTarget.src !== url) e.currentTarget.src = url;
     },
   };
 }
+export const thumbProps = (url: string) => withFallback(thumbUrl(url), url);
+export const viewProps = (url: string) => withFallback(viewUrl(url), url);

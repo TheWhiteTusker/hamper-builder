@@ -4,24 +4,27 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
 import { colorTag } from "@/lib/product-code";
-import { thumbPath } from "@/lib/product-images";
+import { thumbPath, viewPath } from "@/lib/product-images";
 import type { ProductImage } from "@/lib/types";
 import { signedImageUpload } from "@/lib/signed-upload";
 import type { UploadTicket } from "@/components/studio/editor";
 import type { ImageActionResult } from "./image-types";
 
-/** Step 1 of a product photo upload: signed URLs the browser sends the photo and its thumbnail to. */
+/** Step 1 of a product photo upload: signed URLs for the original and its two WebP viewing copies. */
 export async function prepareProductImageUpload(
   productId: string,
   ext: string,
-): Promise<UploadTicket & { thumbToken?: string }> {
+): Promise<UploadTicket & { thumbToken?: string; viewToken?: string }> {
   if (!productId) return { error: "Product ID is missing." };
   const ticket = await signedImageUpload(`products/${productId}`, ext);
   if (!ticket.path) return ticket;
-  // No thumbnail ticket is fine: lists fall back to the full photo.
-  const supabase = await createClient();
-  const { data } = await supabase.storage.from("product-images").createSignedUploadUrl(thumbPath(ticket.path));
-  return { ...ticket, thumbToken: data?.token };
+  // A missing copy ticket is fine: viewers fall back to the original.
+  const storage = (await createClient()).storage.from("product-images");
+  const [thumb, view] = await Promise.all([
+    storage.createSignedUploadUrl(thumbPath(ticket.path)),
+    storage.createSignedUploadUrl(viewPath(ticket.path)),
+  ]);
+  return { ...ticket, thumbToken: thumb.data?.token, viewToken: view.data?.token };
 }
 
 /** After a batch of uploads: refresh the pages that show product photos. */

@@ -6,6 +6,8 @@ import {
   groupImagesByColor,
   thumbPath,
   thumbUrl,
+  viewPath,
+  viewUrl,
 } from "./product-images.ts";
 import type { ProductImage } from "./types.ts";
 
@@ -105,6 +107,9 @@ test("thumbUrl points our product photos at their small copy and leaves others a
   const base = "https://x.supabase.co/storage/v1/object/public/product-images";
   assert.equal(thumbUrl(`${base}/products/p1/asset-1-ab.png`), `${base}/products/p1/asset-1-ab.thumb.webp`);
   assert.equal(thumbPath("products/p1/asset-1-ab.webp"), "products/p1/asset-1-ab.thumb.webp");
+  assert.equal(viewPath("products/p1/asset-1-ab.png"), "products/p1/asset-1-ab.view.webp");
+  assert.equal(viewUrl(`${base}/products/p1/asset-1-ab.png`), `${base}/products/p1/asset-1-ab.view.webp`);
+  assert.equal(viewUrl(`${base}/hampers/h1/a.png`), `${base}/hampers/h1/a.png`);
   assert.equal(thumbUrl(`${base}/hampers/h1/a.png`), `${base}/hampers/h1/a.png`);
   assert.equal(thumbUrl("https://example.com/walnut.jpg"), "https://example.com/walnut.jpg");
   assert.equal(thumbUrl("blob:http://localhost/123"), "blob:http://localhost/123");
