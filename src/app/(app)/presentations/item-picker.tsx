@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { formatMoney } from "@/lib/pricing";
 import type { DeckItem } from "./deck-schemas";
+import { thumbProps } from "@/lib/product-images";
 
 export type PickableItem = {
   type: "hamper" | "product";
@@ -87,7 +88,7 @@ export function ItemPicker({
                   <input type="checkbox" checked={on} onChange={() => toggle(i)} className="h-4 w-4 accent-[var(--color-brand)]" />
                   {i.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={i.image_url} alt="" loading="lazy" className="h-10 w-10 rounded-md border border-[var(--color-line)] object-cover" />
+                    <img {...thumbProps(i.image_url)} alt="" loading="lazy" className="h-10 w-10 rounded-md border border-[var(--color-line)] object-cover" />
                   ) : (
                     <span className="h-10 w-10 rounded-md border border-dashed border-[var(--color-line)] bg-[var(--color-paper)]" />
                   )}

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { FALLBACK_COLOR_HEX, type ProductColor } from "@/lib/product-code";
 import type { ProductImage } from "@/lib/types";
+import { thumbProps } from "@/lib/product-images";
 
 /** One photo: cover badge, delete, its colour tag and "Make Primary". */
 export function ImageCard({
@@ -33,7 +34,7 @@ export function ImageCard({
     >
       <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
         <Image
-          src={img.url}
+          {...thumbProps(img.url)}
           alt={img.caption || productName || "Product Photo"}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"

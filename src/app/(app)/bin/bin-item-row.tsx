@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { BinItem } from "./bin-types";
 import { restoreBinItem } from "./bin-restore";
 import { permanentlyDeleteBinItem } from "./bin-delete";
+import { thumbProps } from "@/lib/product-images";
 
 export function BinItemRow({
   item,
@@ -98,7 +99,7 @@ export function BinItemRow({
         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-line bg-paper">
           {item.imageUrl ? (
             <Image
-              src={item.imageUrl}
+              {...thumbProps(item.imageUrl)}
               alt=""
               fill
               sizes="48px"

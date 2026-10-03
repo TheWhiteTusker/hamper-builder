@@ -4,15 +4,24 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
 import { colorTag } from "@/lib/product-code";
+import { thumbPath } from "@/lib/product-images";
 import type { ProductImage } from "@/lib/types";
 import { signedImageUpload } from "@/lib/signed-upload";
 import type { UploadTicket } from "@/components/studio/editor";
 import type { ImageActionResult } from "./image-types";
 
-/** Step 1 of a product photo upload: a signed URL the browser sends the file to. */
-export async function prepareProductImageUpload(productId: string, ext: string): Promise<UploadTicket> {
+/** Step 1 of a product photo upload: signed URLs the browser sends the photo and its thumbnail to. */
+export async function prepareProductImageUpload(
+  productId: string,
+  ext: string,
+): Promise<UploadTicket & { thumbToken?: string }> {
   if (!productId) return { error: "Product ID is missing." };
-  return signedImageUpload(`products/${productId}`, ext);
+  const ticket = await signedImageUpload(`products/${productId}`, ext);
+  if (!ticket.path) return ticket;
+  // No thumbnail ticket is fine: lists fall back to the full photo.
+  const supabase = await createClient();
+  const { data } = await supabase.storage.from("product-images").createSignedUploadUrl(thumbPath(ticket.path));
+  return { ...ticket, thumbToken: data?.token };
 }
 
 /** Step 2: record a photo the browser uploaded to `storagePath`. */

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser, canManage, isAdmin } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
+import { thumbPath } from "@/lib/product-images";
 import type { BinItemType, BinActionResult } from "./bin-types";
 
 const BUCKET = "product-images";
@@ -76,7 +77,7 @@ export async function permanentlyDeleteBinItem(
         .maybeSingle<{ storage_path: string | null }>();
 
       if (img?.storage_path) {
-        await supabase.storage.from(BUCKET).remove([img.storage_path]);
+        await supabase.storage.from(BUCKET).remove([img.storage_path, thumbPath(img.storage_path)]);
       }
 
       const { error: delErr } = await supabase.from("product_images").delete().eq("id", id);
@@ -163,7 +164,7 @@ export async function emptyBinAction(
 
         for (const img of images ?? []) {
           if (img.storage_path) {
-            await supabase.storage.from(BUCKET).remove([img.storage_path]);
+            await supabase.storage.from(BUCKET).remove([img.storage_path, thumbPath(img.storage_path)]);
           }
           await supabase.from("product_images").delete().eq("id", img.id);
           deletedCount++;

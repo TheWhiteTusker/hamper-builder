@@ -13,6 +13,11 @@
   // Required by OpenNext and by @supabase/ssr, both of which use node: builtins.
   "compatibility_flags": ["nodejs_compat"],
 
+  // Run next to Supabase (Mumbai). Free-plan traffic from India lands in far-off
+  // colos (seen: Marseille), and every page and save makes several sequential DB
+  // round trips, each paying that distance. Update if the Supabase project moves.
+  "placement": { "region": "aws:ap-south-1" },
+
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"

@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Image from "next/image";
+import { thumbProps } from "@/lib/product-images";
 
 /**
  * A thumbnail that opens the full image in a modal. Native <dialog> gives
@@ -28,7 +29,7 @@ export function ImagePreview({
         title={`Preview ${alt}`}
         className={`relative block cursor-zoom-in overflow-hidden ${className ?? ""}`}
       >
-        <Image src={src} alt={alt} fill sizes={sizes} className="object-cover" unoptimized />
+        <Image {...thumbProps(src)} alt={alt} fill sizes={sizes} className="object-cover" unoptimized />
       </button>
 
       <dialog

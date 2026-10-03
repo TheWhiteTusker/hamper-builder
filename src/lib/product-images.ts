@@ -1,3 +1,4 @@
+import type { SyntheticEvent } from "react";
 import type { ProductImage } from "./types.ts";
 import { COLOR_TO_CODE, CODE_TO_COLOR, colorCode } from "./product-code.ts";
 
@@ -86,4 +87,25 @@ export function groupImagesByColor(
   }
 
   return groups;
+}
+
+const PRODUCT_PHOTOS = "/product-images/products/";
+
+/** Where a product photo's small copy lives: products/x/asset-1.png -> products/x/asset-1.thumb.webp */
+export const thumbPath = (path: string) => path.replace(/\.[^./]+$/, "") + ".thumb.webp";
+
+/** The small copy of one of our product photos; any other URL (external, hamper, blob) is unchanged. */
+export const thumbUrl = (url: string) => (url.includes(PRODUCT_PHOTOS) ? thumbPath(url) : url);
+
+/**
+ * <img>/<Image> props for a thumbnail. Falls back to the full photo when the
+ * small copy is missing, e.g. its upload failed.
+ */
+export function thumbProps(url: string) {
+  return {
+    src: thumbUrl(url),
+    onError: (e: SyntheticEvent<HTMLImageElement>) => {
+      if (e.currentTarget.src !== url) e.currentTarget.src = url;
+    },
+  };
 }

@@ -8,6 +8,7 @@ import { ColorPhotoRows } from "./color-photo-rows";
 import { ORIGINS } from "./lines";
 import type { ProductDetails } from "./use-product-details";
 import type { ProductPhotos } from "./use-product-photos";
+import { thumbProps } from "@/lib/product-images";
 
 export function ProductDetailsCard({
   details,
@@ -31,7 +32,7 @@ export function ProductDetailsCard({
         <div className="flex items-center gap-3">
           {imageUrl && (
             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-xs">
-              <Image src={imageUrl} alt={details.name || "Product photo"} fill sizes="48px" className="object-cover" unoptimized />
+              <Image {...thumbProps(imageUrl)} alt={details.name || "Product photo"} fill sizes="48px" className="object-cover" unoptimized />
             </div>
           )}
           <div>

@@ -6,6 +6,7 @@ import { formatMoney, num } from "@/lib/pricing";
 import type { Category } from "@/lib/types";
 import { Combo, RowButton } from "./controls";
 import { productLabel, type CatalogProduct, type Line } from "./hamper-state";
+import { thumbProps } from "@/lib/product-images";
 
 export function HamperLineRow({
   line,
@@ -85,7 +86,7 @@ export function HamperLineRow({
         <div className="flex items-center gap-2">
           {selectedProduct?.image_url && (
             <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-slate-100 shadow-2xs">
-              <Image src={selectedProduct.image_url} alt={selectedProduct.name} fill sizes="32px" className="object-cover" unoptimized />
+              <Image {...thumbProps(selectedProduct.image_url)} alt={selectedProduct.name} fill sizes="32px" className="object-cover" unoptimized />
             </div>
           )}
           <div className="min-w-0 flex-1">

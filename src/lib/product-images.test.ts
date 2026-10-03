@@ -4,6 +4,8 @@ import {
   getImagesForColor,
   getPrimaryImage,
   groupImagesByColor,
+  thumbPath,
+  thumbUrl,
 } from "./product-images.ts";
 import type { ProductImage } from "./types.ts";
 
@@ -97,4 +99,13 @@ test("groupImagesByColor groups images correctly into color buckets", () => {
   assert.equal(grouped.Natural.length, 1);
   assert.equal(grouped.Black.length, 1);
   assert.equal(grouped.General.length, 1);
+});
+
+test("thumbUrl points our product photos at their small copy and leaves others alone", () => {
+  const base = "https://x.supabase.co/storage/v1/object/public/product-images";
+  assert.equal(thumbUrl(`${base}/products/p1/asset-1-ab.png`), `${base}/products/p1/asset-1-ab.thumb.webp`);
+  assert.equal(thumbPath("products/p1/asset-1-ab.webp"), "products/p1/asset-1-ab.thumb.webp");
+  assert.equal(thumbUrl(`${base}/hampers/h1/a.png`), `${base}/hampers/h1/a.png`);
+  assert.equal(thumbUrl("https://example.com/walnut.jpg"), "https://example.com/walnut.jpg");
+  assert.equal(thumbUrl("blob:http://localhost/123"), "blob:http://localhost/123");
 });

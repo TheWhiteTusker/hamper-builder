@@ -93,3 +93,18 @@ export async function optimizeImageForUpload(file: File, maxDimension = 2000): P
     return file;
   }
 }
+
+/** `file` scaled to fit within `max` px and re-encoded as WebP: keeps transparency, far smaller than PNG. */
+export async function toWebp(file: File, max: number, quality: number): Promise<File> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const blob = await new Promise<Blob | null>((done) => canvas.toBlob(done, "image/webp", quality));
+  if (!blob) throw new Error("Could not process that image.");
+  // A browser that cannot encode WebP hands back a PNG instead.
+  return new File([blob], `photo.${blob.type.split("/")[1]}`, { type: blob.type });
+}

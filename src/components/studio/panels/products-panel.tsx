@@ -5,6 +5,7 @@ import { ArrowLeft, Package, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { DRAG_MIME, type Editor, type PickerProduct } from "../editor";
 import { cx, fieldCls, toolBtn } from "../studio-ui";
+import { thumbProps } from "@/lib/product-images";
 
 function setDragImage(e: React.DragEvent, product: PickerProduct, url: string) {
   e.dataTransfer.setData(DRAG_MIME, JSON.stringify({ product, url }));
@@ -83,7 +84,7 @@ export function ProductsPanel({
                     className="checkerboard aspect-square overflow-hidden rounded-md border border-[var(--st-line)] hover:border-[var(--st-accent)]"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt="" className="h-full w-full object-contain" draggable={false} />
+                    <img {...thumbProps(url)} alt="" className="h-full w-full object-contain" draggable={false} />
                   </button>
                 ))}
               </div>
@@ -140,7 +141,7 @@ export function ProductsPanel({
                   <div className="checkerboard aspect-square overflow-hidden rounded-md border border-[var(--st-line)] group-hover:border-[var(--st-accent)]">
                     {p.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.image_url} alt="" className="h-full w-full object-contain" draggable={false} />
+                      <img {...thumbProps(p.image_url)} alt="" className="h-full w-full object-contain" draggable={false} />
                     ) : (
                       <div className="flex h-full items-center justify-center text-[var(--st-muted)]">
                         <Package className="h-6 w-6" />
