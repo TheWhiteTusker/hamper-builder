@@ -5,6 +5,7 @@ import { LoadMore } from "@/components/load-more";
 import { pageLimit } from "@/lib/paging";
 import type { Category, ProductWithCategory } from "@/lib/types";
 import { ProductRow } from "./_list/product-row";
+import { FilterForm } from "./_list/filter-form";
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
 
@@ -71,7 +72,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         </div>
       )}
 
-      <form className="card mb-4 flex flex-wrap items-end gap-3 p-3">
+      <FilterForm className="card mb-4 flex flex-wrap items-end gap-3 p-3">
         <div className="min-w-55 flex-1">
           <label className="label" htmlFor="q">
             Search
@@ -103,11 +104,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
           <input type="checkbox" name="inactive" value="1" defaultChecked={showInactive} />
           Show inactive
         </label>
-
-        <button type="submit" className="btn-secondary">
-          Apply
-        </button>
-      </form>
+      </FilterForm>
 
       {rows.length === 0 ? (
         <EmptyState
