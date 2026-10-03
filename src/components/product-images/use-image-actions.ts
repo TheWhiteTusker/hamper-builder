@@ -1,5 +1,5 @@
 import { useEffect, useState, useTransition } from "react";
-import { addExternalProductImage } from "@/app/(app)/products/image-actions";
+import { addExternalProductImage, productPhotosChanged } from "@/app/(app)/products/image-actions";
 import { uploadProductImage } from "./upload-product-image";
 import {
   setPrimaryProductImage,
@@ -37,20 +37,24 @@ export function useImageActions(
     setFeedback({});
     startTransition(async () => {
       let next = images;
+      let error = "";
       for (const [i, file] of files.entries()) {
+        if (files.length > 1) setFeedback({ success: `Uploading ${i + 1} of ${files.length}…` });
         const res = await uploadProductImage(file, {
           productId,
           color: colorOrNull(color),
           isPrimary: asPrimary && i === 0,
         });
         if (res.error) {
-          setImages(next);
-          return setFeedback({ error: res.error });
+          error = res.error;
+          break;
         }
         if (res.image) next = withAdded(next, res.image);
       }
       setImages(next);
-      setFeedback({ success: "Image(s) uploaded successfully!" });
+      // Once per batch; a failure here only means other pages refresh a little later.
+      if (next !== images) productPhotosChanged().catch(() => {});
+      setFeedback(error ? { error } : { success: "Image(s) uploaded successfully!" });
     });
   }
 

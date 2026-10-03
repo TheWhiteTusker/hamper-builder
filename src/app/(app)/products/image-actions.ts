@@ -24,6 +24,13 @@ export async function prepareProductImageUpload(
   return { ...ticket, thumbToken: data?.token };
 }
 
+/** After a batch of uploads: refresh the pages that show product photos. */
+export async function productPhotosChanged() {
+  revalidatePath("/products");
+  revalidatePath("/hampers");
+  revalidatePath("/cost-calculator", "layout");
+}
+
 /** Step 2: record a photo the browser uploaded to `storagePath`. */
 export async function saveUploadedProductImage(input: {
   productId: string;
@@ -105,10 +112,8 @@ export async function saveUploadedProductImage(input: {
         .eq("id", productId);
     }
 
-    revalidatePath("/products");
-    revalidatePath("/hampers");
-    revalidatePath("/cost-calculator", "layout");
-
+    // No revalidatePath here: it makes this action re-render the whole page
+    // being viewed, once per photo. Callers run productPhotosChanged() once per batch.
     return { ok: true, image: inserted };
   } catch (err: unknown) {
     return { error: describeError(err) };

@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { productPhotosChanged } from "@/app/(app)/products/image-actions";
 import { uploadProductImage } from "@/components/product-images/upload-product-image";
 import type { ProductImage } from "@/lib/types";
 
@@ -6,9 +7,16 @@ type Pending = { key: string; color: string; file: File; url: string };
 type UploadStatus = { color: string; busy?: boolean; error?: string; ok?: string };
 
 /** Uploads files for one colour. Returns what landed and the first error. */
-async function uploadFiles(productId: string, colName: string, files: File[], existing: number) {
+async function uploadFiles(
+  productId: string,
+  colName: string,
+  files: File[],
+  existing: number,
+  onEach: (i: number) => void,
+) {
   const added: ProductImage[] = [];
   for (const [i, file] of files.entries()) {
+    onEach(i);
     const res = await uploadProductImage(file, {
       productId,
       color: colName,
@@ -57,10 +65,14 @@ export function useProductPhotos(
     setUpload({ color: colName, busy: true });
     const pid = variantIds[colName] ?? selectedProductId;
     const existing = images.filter((img) => img.product_id === pid).length;
-    const { added, error } = await uploadFiles(pid, colName, files, existing);
+    const { added, error } = await uploadFiles(pid, colName, files, existing, (i) =>
+      setUpload({ color: colName, busy: true, ok: `Uploading ${i + 1} of ${files.length}…` }),
+    );
     if (added.length) {
       setImages((prev) => [...prev, ...added]);
       setPhotoVersion((v) => v + 1);
+      // Once per batch; a failure here only means other pages refresh a little later.
+      productPhotosChanged().catch(() => {});
     }
     setUpload(error ? { color: colName, error } : { color: colName, ok: `${added.length} added` });
   }
@@ -80,16 +92,21 @@ export function useProductPhotos(
 
     const added: ProductImage[] = [];
     const failed: string[] = [];
+    let done = 0;
     for (const colName of new Set(pending.map((p) => p.color))) {
       const pid = ids[colName] ?? productId;
       const files = pending.filter((p) => p.color === colName).map((p) => p.file);
       const existing = [...images, ...added].filter((img) => img.product_id === pid).length;
-      const r = await uploadFiles(pid, colName, files, existing);
+      // No productPhotosChanged() here: the save already refreshed, and the page moves on next.
+      const r = await uploadFiles(pid, colName, files, existing, () =>
+        setUpload({ color: colName, busy: true, ok: `Uploading photo ${++done} of ${pending.length}…` }),
+      );
       added.push(...r.added);
       if (r.error) failed.push(`${colName}: ${r.error}`);
     }
     pending.forEach((p) => URL.revokeObjectURL(p.url));
     setPending([]);
+    setUpload(null);
     setImages((prev) => [...prev, ...added]);
     setPhotoVersion((v) => v + 1);
     return {
