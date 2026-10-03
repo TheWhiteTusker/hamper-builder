@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/client";
 import type { ActionResult, UploadTicket } from "./editor";
 
+/** Every upload gets a fresh random path and is never overwritten, so browsers may keep it for a year. */
+export const IMMUTABLE = "31536000";
+
 /** Uploads straight to storage via a signed URL from `prepare`, so the file skips the server's body limits. */
 export async function uploadDirect(
   prepare: (ext: string) => Promise<UploadTicket>,
@@ -12,7 +15,7 @@ export async function uploadDirect(
   if (ticket.error || !ticket.path || !ticket.token) return { error: ticket.error ?? "Upload failed." };
   const { error } = await createClient()
     .storage.from("product-images")
-    .uploadToSignedUrl(ticket.path, ticket.token, file, { contentType: file.type });
+    .uploadToSignedUrl(ticket.path, ticket.token, file, { contentType: file.type, cacheControl: IMMUTABLE });
   if (error) return { error: `Storage upload failed: ${error.message}` };
   return { ok: true, url: ticket.url, path: ticket.path };
 }

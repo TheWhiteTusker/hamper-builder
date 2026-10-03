@@ -1,6 +1,6 @@
 import { prepareProductImageUpload, saveUploadedProductImage } from "@/app/(app)/products/image-actions";
 import type { ImageActionResult } from "@/app/(app)/products/image-types";
-import { optimizeImageForUpload, toWebp, uploadDirect } from "@/components/studio/image-utils";
+import { IMMUTABLE, optimizeImageForUpload, toWebp, uploadDirect } from "@/components/studio/image-utils";
 import { thumbPath, viewPath } from "@/lib/product-images";
 import { createClient } from "@/lib/supabase/client";
 
@@ -38,7 +38,7 @@ export async function uploadProductImage(
     ];
     await Promise.all(
       copies.map(([path, token, copy]) =>
-        token && copy ? storage.uploadToSignedUrl(path, token, copy, { contentType: copy.type }) : null,
+        token && copy ? storage.uploadToSignedUrl(path, token, copy, { contentType: copy.type, cacheControl: IMMUTABLE }) : null,
       ),
     );
     return await saveUploadedProductImage({ ...opts, storagePath: up.path });

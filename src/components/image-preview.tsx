@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Image from "next/image";
-import { thumbProps, viewProps } from "@/lib/product-images";
+import { thumbProps, thumbUrl, viewProps, viewUrl } from "@/lib/product-images";
 
 /**
  * A thumbnail that opens the full image in a modal. Native <dialog> gives
@@ -26,6 +26,8 @@ export function ImagePreview({
       <button
         type="button"
         onClick={() => ref.current?.showModal()}
+        // Start fetching the full view on hover, so it is usually there by the click.
+        onPointerEnter={() => (new window.Image().src = viewUrl(src))}
         title={`Preview ${alt}`}
         className={`relative block cursor-zoom-in overflow-hidden ${className ?? ""}`}
       >
@@ -38,8 +40,15 @@ export function ImagePreview({
         className="m-auto max-h-[96vh] max-w-[96vw] rounded-xl bg-white p-2 shadow-2xl backdrop:bg-black/70"
       >
         {/* Fixed large box; object-contain scales small photos up and big ones down without cropping. */}
+        {/* The thumbnail, already loaded for the list, stands in until the full view arrives. */}
         {/* eslint-disable-next-line @next/next/no-img-element -- any host, no optimisation needed */}
-        <img {...viewProps(src)} alt={alt} loading="lazy" className="block h-[86vh] w-[94vw] max-w-[1400px] object-contain" />
+        <img
+          {...viewProps(src)}
+          alt={alt}
+          loading="lazy"
+          style={{ background: `url("${thumbUrl(src)}") center / contain no-repeat` }}
+          className="block h-[86vh] w-[94vw] max-w-[1400px] object-contain"
+        />
         <div className="flex items-center justify-between gap-3 px-1 pt-2 text-xs">
           <span className="truncate text-[var(--color-muted)]">{alt}</span>
           <form method="dialog">
