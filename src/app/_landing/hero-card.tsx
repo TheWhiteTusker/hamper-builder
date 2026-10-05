@@ -22,7 +22,7 @@ export function HeroCard({ isLoggedIn }: { isLoggedIn: boolean }) {
             width={1600}
             height={976}
             priority
-            className="h-20 sm:h-24 w-auto object-contain drop-shadow-sm mb-1"
+            className="h-20 sm:h-24 w-auto object-contain brightness-0 mb-1"
           />
           <div className="h-0.5 w-14 bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent my-2" />
         </div>
