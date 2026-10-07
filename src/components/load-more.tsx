@@ -2,11 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { PAGE_SIZE } from "@/lib/paging";
+import { STEP_SIZE } from "@/lib/paging";
 
 /**
- * Infinite scroll for the server-rendered lists: when this sits near the
- * bottom of the viewport it asks for the next PAGE_SIZE rows by raising
+ * Infinite scroll for the server-rendered lists: when this reaches the
+ * bottom of the viewport it asks for the next STEP_SIZE rows by raising
  * ?limit=, so filters, refresh and back all keep what was loaded.
  *
  * ponytail: each step re-fetches every row shown so far, not just the next
@@ -28,10 +28,10 @@ export function LoadMore({ shown, total }: { shown: number; total: number }) {
         // One request per step; the re-render with more rows re-arms it.
         observer.disconnect();
         const params = new URLSearchParams(window.location.search);
-        params.set("limit", String(shown + PAGE_SIZE));
+        params.set("limit", String(shown + STEP_SIZE));
         router.replace(`?${params}`, { scroll: false });
       },
-      { rootMargin: "400px" },
+      { rootMargin: "0px" },
     );
 
     observer.observe(el);
