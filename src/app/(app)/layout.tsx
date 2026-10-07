@@ -8,12 +8,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <>
       {/* LATTICE_DESKTOP is set by electron/main.cjs: no download button inside the app itself. */}
       <Nav profile={profile} desktop={process.env.LATTICE_DESKTOP === "1"} />
-      <main id="top" className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6">
+      <main id="top" className="mx-auto w-full max-w-350 flex-1 px-4 py-6">
         {children}
       </main>
       <a href="#top" className="scroll-top no-print" aria-label="Scroll to top">
         <svg
-          className="h-[25px] w-[25px]"
+          className="h-6.25 w-6.25"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
