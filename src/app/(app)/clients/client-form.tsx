@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import Link from "next/link";
+import Link from "@/components/link";
 import { saveClient, deleteClient, lookupGstin } from "./actions";
 import type { Client } from "@/lib/types";
 

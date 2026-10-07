@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/link";
 import type { Client, Quote, Settings } from "@/lib/types";
 import { Field, TextField } from "./fields";
 import { GstinField } from "./gstin-field";

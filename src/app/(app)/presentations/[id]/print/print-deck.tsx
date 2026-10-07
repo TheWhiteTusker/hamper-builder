@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/link";
 import type { HamperCanvas } from "@/lib/hamper-canvas";
 import { PX_PER_INCH } from "@/lib/presentation";
 import { renderCanvas } from "@/components/studio/render";

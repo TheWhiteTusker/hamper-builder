@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import Image from "next/image";
 
 /** The centre card: brand lockup, what the suite does, and the way in. */

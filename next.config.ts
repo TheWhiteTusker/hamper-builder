@@ -20,9 +20,10 @@ const nextConfig: NextConfig = {
     // proxy.ts buffers every request body and silently truncates past this
     // (default 10mb), which breaks large uploads. Keep it at the action limit.
     proxyClientMaxBodySize: "15mb",
-    // Revisiting a page within 30s is instant. Server actions' revalidatePath
-    // still clears this, so your own edits show at once.
-    staleTimes: { dynamic: 30 },
+    // Revisiting a page within 2 min is instant and costs no Worker request.
+    // Server actions' revalidatePath still clears this, so your own edits show
+    // at once; other users' edits show within 2 min.
+    staleTimes: { dynamic: 120 },
   },
 };
 

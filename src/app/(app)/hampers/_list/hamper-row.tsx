@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { formatMoney, formatPct } from "@/lib/pricing";
 import type { HamperSummary } from "@/lib/types";
 

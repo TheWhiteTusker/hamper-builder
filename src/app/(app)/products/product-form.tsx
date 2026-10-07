@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/link";
 import { saveProduct, deleteProduct } from "./actions";
 import { STANDARD_PRODUCT_COLORS, resolveColors, type ProductColor } from "@/lib/product-code";
 import { ProductImagesManager } from "@/components/product-images-manager";

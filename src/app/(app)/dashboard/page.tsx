@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { requireUser, canManage } from "@/lib/supabase/server";
 import { PageHeader, Stat, EmptyState } from "@/components/ui";
 import { formatMoney } from "@/lib/pricing";

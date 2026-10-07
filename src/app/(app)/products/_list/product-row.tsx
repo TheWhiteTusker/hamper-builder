@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { formatMoney } from "@/lib/pricing";
 import { ImagePreview } from "@/components/image-preview";
 import type { ProductWithCategory } from "@/lib/types";
@@ -6,7 +6,6 @@ import { costingHref } from "../../cost-calculator/href";
 import { productHref } from "../href";
 import { DeleteProductButton } from "./delete-product-button";
 
-// No prefetch: each one is a Worker run, and bursts of them hit the free plan's 10 ms CPU limit.
 /** One product in the Product Master table. */
 export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolean }) {
   return (
@@ -21,7 +20,6 @@ export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolea
           />
         ) : (
           <Link
-            prefetch={false}
             href={costingHref(p.code)}
             title={`Add photos for ${p.name}`}
             className="mx-auto flex h-9 w-9 items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 text-[10px] font-semibold text-slate-400 hover:border-(--color-brand) hover:text-(--color-brand) transition-colors"
@@ -32,7 +30,6 @@ export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolea
       </td>
       <td className="font-mono whitespace-nowrap">
         <Link
-          prefetch={false}
           href={productHref(p.code)}
           className="font-semibold text-(--color-ink) hover:text-(--color-brand) hover:underline"
         >
@@ -41,7 +38,6 @@ export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolea
       </td>
       <td>
         <Link
-          prefetch={false}
           href={productHref(p.code)}
           className="font-medium hover:underline text-(--color-ink)"
         >
@@ -60,7 +56,6 @@ export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolea
           {admin ? (
             <>
               <Link
-                prefetch={false}
                 href={costingHref(p.code)}
                 className="font-medium text-(--color-ink) hover:text-(--color-brand) hover:underline"
               >
@@ -69,7 +64,7 @@ export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolea
               <DeleteProductButton id={p.id} label={`${p.code} (${p.name})`} />
             </>
           ) : (
-            <Link prefetch={false} href={costingHref(p.code)} className="text-(--color-brand) hover:underline font-medium">
+            <Link href={costingHref(p.code)} className="text-(--color-brand) hover:underline font-medium">
               Costing
             </Link>
           )}

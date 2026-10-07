@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { requireRole } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui";
 import { CalculatorScreen } from "../../cost-calculator/calculator-screen";

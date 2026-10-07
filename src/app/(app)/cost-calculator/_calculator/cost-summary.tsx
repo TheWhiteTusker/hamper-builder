@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/link";
 import { productHref } from "../../products/href";
 import { CostBreakdown } from "./cost-breakdown";
 import { PricingBoxes } from "./pricing-boxes";

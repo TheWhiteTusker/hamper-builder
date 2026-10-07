@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import Link from "next/link";
+import Link from "@/components/link";
 import { PageHeader } from "@/components/ui";
 import { exportPptx } from "@/components/studio/export-pptx";
 import { blankSlide } from "@/lib/presentation";

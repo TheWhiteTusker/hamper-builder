@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { notFound, redirect } from "next/navigation";
 import { requireRole } from "@/lib/supabase/server";
 import { loadSettings } from "@/lib/settings";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { requireUser, canManage, isAdmin } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui";
 import { loadBinItems } from "./data";

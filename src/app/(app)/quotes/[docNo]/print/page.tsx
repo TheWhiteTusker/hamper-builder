@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/link";
 import { requireUser } from "@/lib/supabase/server";
 import { loadSettings } from "@/lib/settings";
 import { priceQuote } from "@/lib/pricing";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/link";
 import { saveQuote, deleteQuote, convertToProforma } from "./actions";
 import { priceQuote, num, COMBINED_ORDER } from "@/lib/pricing";
 import type { Client, Quote, QuoteItem, Settings } from "@/lib/types";

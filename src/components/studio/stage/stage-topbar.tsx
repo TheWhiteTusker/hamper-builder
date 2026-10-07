@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/link";
 import { ArrowLeft, Check, Download, Loader2, Redo2, Scaling, Undo2 } from "lucide-react";
 import { redo, undo } from "@/lib/hamper-canvas";
 import { Popover, ToolButton, accentBtn, cx, toolBtn } from "../studio-ui";

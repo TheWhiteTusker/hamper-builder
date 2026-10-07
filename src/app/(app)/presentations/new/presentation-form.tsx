@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
+import Link from "@/components/link";
 import { DEFAULT_NOTE } from "@/lib/presentation";
 import { createPresentation } from "../deck-actions";
 import type { DeckItem } from "../deck-schemas";

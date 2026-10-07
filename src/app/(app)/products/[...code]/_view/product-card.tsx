@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { productHref } from "../../href";
 import { ImagePreview } from "@/components/image-preview";
 import { codesForColors, type ProductColor } from "@/lib/product-code";

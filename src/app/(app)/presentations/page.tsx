@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { requireUser } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui";
 

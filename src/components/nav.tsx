@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import Link from "next/link";
+import Link from "@/components/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -13,7 +13,6 @@ const ROLE_LABEL: Record<Profile["role"], string> = {
   sales: "Sales",
 };
 
-// No prefetch: each one is a Worker run, and bursts of them hit the free plan's 10 ms CPU limit.
 export function Nav({ profile, desktop }: { profile: Profile; desktop: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -73,7 +72,7 @@ export function Nav({ profile, desktop }: { profile: Profile; desktop: boolean }
   return (
     <header className="no-print bg-(--color-brand)">
       <div className="flex flex-wrap items-center justify-between gap-[clamp(0.5rem,1.4vw,1.5rem)] px-[clamp(0.75rem,1.8vw,1.5rem)] py-[clamp(0.5rem,0.9vw,0.75rem)]">
-        <Link prefetch={false} href="/dashboard" aria-label="Lattice Lane — dashboard" className="shrink-0">
+        <Link href="/dashboard" aria-label="Lattice Lane — dashboard" className="shrink-0">
           <Image
             src="/lattice-lane-logo.png"
             alt="Lattice Lane"
@@ -87,7 +86,6 @@ export function Nav({ profile, desktop }: { profile: Profile; desktop: boolean }
         <nav className="flex min-w-0 flex-1 flex-wrap items-center gap-[clamp(0.1rem,0.3vw,0.25rem)]">
           {links.map((link) => (
             <Link
-              prefetch={false}
               key={link.href}
               href={link.href}
               aria-current={isActive(link.href) ? "page" : undefined}

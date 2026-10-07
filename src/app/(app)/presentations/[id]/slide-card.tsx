@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/link";
 import { SlideThumb } from "@/components/studio/slide-thumb";
 import { KIND_LABEL, slideName, type DraftSlide } from "./draft";
 
