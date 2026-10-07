@@ -63,9 +63,9 @@ export async function saveRow(
 }
 
 /**
- * One sibling product per extra colour, same costing and price. Saved by
- * code, so re-saving updates rather than duplicates. Also saves matching
- * cost sheet and cost lines so sibling variants have complete costing.
+ * One sibling product per newly ticked colour, created as a copy of this one
+ * (product, cost sheet and lines). Colours that already exist are left alone:
+ * each colour is edited on its own. A binned sibling is restored as a copy.
  */
 export async function saveColorVariants(
   supabase: SupabaseClient,
@@ -78,8 +78,20 @@ export async function saveColorVariants(
 ) {
   const variants: { color: string; code: string; id: string }[] = [];
   if (colors[0]) variants.push({ color: colors[0], code, id: productId });
-  for (const { color, code: variantCode } of codesForColors(code, colors.slice(1))) {
-    if (variantCode === code) continue;
+  const extra = codesForColors(code, colors.slice(1)).filter((v) => v.code !== code);
+  const { data: live } = await supabase
+    .from("products")
+    .select("id, code")
+    .in("code", extra.map((v) => v.code))
+    .is("deleted_at", null);
+  const liveIds = new Map((live ?? []).map((p) => [p.code as string, p.id as string]));
+
+  for (const { color, code: variantCode } of extra) {
+    const existingId = liveIds.get(variantCode);
+    if (existingId) {
+      variants.push({ color, code: variantCode, id: existingId });
+      continue;
+    }
     const values = { ...productValues, code: variantCode, colors: [color], deleted_at: null };
     const saved = await saveRow(supabase, "products", values, null, ["code", variantCode]);
     if (saved.error !== undefined) return { error: `Error saving ${variantCode}: ${saved.error}` };
