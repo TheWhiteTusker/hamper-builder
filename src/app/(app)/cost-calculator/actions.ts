@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { productHref } from "../products/href";
 import { createClient } from "@/lib/supabase/server";
 import { calculateCostSheetTotals } from "@/lib/costing.ts";
 import { roundUpToNext10 } from "@/lib/numbers.ts";
@@ -129,15 +131,9 @@ export async function saveCostSheetAndProduct(payload: SaveCostSheetPayload) {
     );
     if (saved.error !== undefined) return { error: saved.error };
 
-    revalidatePath("/cost-calculator", "layout");
-    revalidatePath("/products");
-    revalidatePath("/products/new");
-    revalidatePath(`/products/${encodeURIComponent(code)}`);
-    for (const v of saved.variants) {
-      revalidatePath(`/products/${encodeURIComponent(v.code)}`);
-    }
-    revalidatePath("/hampers");
-
+    // No revalidatePath here: it makes Next re-render the whole calculator into
+    // this response, which the client throws away to open the product page.
+    // The client calls costingSaved() once photos are up.
     return {
       ok: true,
       sheetId,
@@ -150,6 +146,18 @@ export async function saveCostSheetAndProduct(payload: SaveCostSheetPayload) {
   } catch (err: unknown) {
     return { error: err instanceof Error ? err.message : String(err) };
   }
+}
+
+/**
+ * Refreshes the pages a costing save changes, then opens `openCode`'s product
+ * page in this same request. Without `openCode`, re-renders the current page.
+ * Kept apart from the save so the Worker renders one page per save, not two.
+ */
+export async function costingSaved(openCode?: string) {
+  revalidatePath("/cost-calculator", "layout");
+  revalidatePath("/products", "layout");
+  revalidatePath("/hampers");
+  if (openCode) redirect(productHref(openCode));
 }
 
 export async function getNextSerialAction(

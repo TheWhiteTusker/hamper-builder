@@ -97,7 +97,7 @@ export function useProductPhotos(
       const pid = ids[colName] ?? productId;
       const files = pending.filter((p) => p.color === colName).map((p) => p.file);
       const existing = [...images, ...added].filter((img) => img.product_id === pid).length;
-      // No productPhotosChanged() here: the save already refreshed, and the page moves on next.
+      // No productPhotosChanged() here: costingSaved() refreshes once the batch is up.
       const r = await uploadFiles(pid, colName, files, existing, () =>
         setUpload({ color: colName, busy: true, ok: `Uploading photo ${++done} of ${pending.length}…` }),
       );

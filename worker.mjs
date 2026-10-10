@@ -8,6 +8,12 @@
 
 // @ts-expect-error: resolved by wrangler build
 import openNext from "./.open-next/worker.js";
+// Load the Next server (~8 MB) at startup. OpenNext imports it lazily inside the
+// first request, so every fresh isolate spent ~80 ms CPU on that one request and
+// the free plan's 10 ms limit answered it with a 503 - usually a save, since the
+// isolate goes idle while someone fills in a form. Startup has its own 1 s budget.
+// @ts-expect-error: resolved by wrangler build
+import "./.open-next/server-functions/default/handler.mjs";
 
 const FILES = {
   "latest.json": "application/json",

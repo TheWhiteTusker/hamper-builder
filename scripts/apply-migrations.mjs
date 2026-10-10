@@ -20,13 +20,7 @@ const ROOT = path.resolve(import.meta.dirname, "..");
 const CHECK_ONLY = process.argv.includes("--check");
 
 async function loadEnv() {
-  const raw = (
-    await Promise.all(
-      [".env", ".env.tooling"].map((f) =>
-        readFile(path.join(ROOT, f), "utf8").catch(() => ""),
-      ),
-    )
-  ).join("\n");
+  const raw = await readFile(path.join(ROOT, ".env"), "utf8").catch(() => "");
   const env = { ...process.env };
 
   for (const line of raw.split("\n")) {

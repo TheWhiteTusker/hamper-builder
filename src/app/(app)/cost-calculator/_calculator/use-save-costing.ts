@@ -1,9 +1,7 @@
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { formatMoney, num } from "@/lib/pricing";
-import { productHref } from "../../products/href";
 import type { ProductCostSheet } from "@/lib/types";
-import { saveCostSheetAndProduct } from "../actions";
+import { costingSaved, saveCostSheetAndProduct } from "../actions";
 import { toSavedLine, type LineState } from "./lines";
 import type { Pricing } from "./use-pricing";
 import type { ProductDetails } from "./use-product-details";
@@ -25,7 +23,6 @@ export function useSaveCosting({
   activeLines: LineState[];
   initialSheet?: ProductCostSheet | null;
 }) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<Feedback>({});
 
@@ -62,12 +59,12 @@ export function useSaveCosting({
         ? res.variants.map((v) => v.code).join(", ")
         : (res.productCode ?? code);
 
-      // All good: redirect to the expanded product page of that specific product
+      // All good: refresh and open that product's page in one request.
       if (!photo.failed) {
-        const targetCode = res.productCode ?? code;
-        router.push(productHref(targetCode));
+        await costingSaved(res.productCode ?? code);
         return;
       }
+      await costingSaved();
 
       // A photo failed: stay put so the error is visible and can be retried.
       setFeedback({

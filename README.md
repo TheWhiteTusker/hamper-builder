@@ -34,18 +34,16 @@ pnpm install
 pnpm dev
 ```
 
-Three env files, deliberately:
+Two env files:
 
-| File | Read by Next | Committed | Holds |
-| --- | :---: | :---: | --- |
-| `.env.production` | yes | **yes** | The two `NEXT_PUBLIC_` values, so every build has them |
-| `.env` | yes | no | Local overrides, e.g. pointing at a different project |
-| `.env.tooling` | no | no | Access tokens and other real secrets |
+| File | Committed | Holds |
+| --- | :---: | --- |
+| `.env.production` | **yes** | The two `NEXT_PUBLIC_` values, so every build has them |
+| `.env` | no | Local overrides and tooling secrets (Cloudflare, R2, Supabase tokens) |
 
-Next compiles everything it reads into the bundle, including the deployed
-Worker — so anything in the first two ships to the browser. That is fine for the
-`NEXT_PUBLIC_` pair (the anon key is RLS-scoped and public by design) and fatal
-for anything else, which is why tooling secrets are in a file Next never opens.
+A local `cf:build` copies every value in `.env` into the Worker bundle, so don't
+deploy from your machine: push to `main` and let Workers Builds deploy, since it
+never sees `.env`.
 
 **4. Create the first account.** Open <http://localhost:3015>, choose *Create an
 account*. The first person to sign up becomes the **admin** — everyone after
@@ -143,7 +141,7 @@ Cloudflare Workers, via [OpenNext](https://opennext.js.org/cloudflare).
 ```bash
 pnpm run cf:build     # next build + the Worker bundle in .open-next/
 pnpm run cf:preview   # run it locally on workerd
-npx wrangler deploy   # needs CLOUDFLARE_API_TOKEN in .env.tooling
+npx wrangler deploy   # needs CLOUDFLARE_API_TOKEN in .env; ships .env too, prefer CI
 ```
 
 Through Workers Builds instead, set the **build command** to `pnpm run cf:build`
