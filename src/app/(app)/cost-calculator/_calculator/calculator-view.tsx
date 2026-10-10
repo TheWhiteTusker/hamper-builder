@@ -32,7 +32,7 @@ export function CostCalculatorView({
 }: {
   stages: CostStageWithHierarchy[];
   categories: Category[];
-  products: Product[];
+  products: Pick<Product, "id" | "code" | "name">[];
   productColors?: ProductColor[];
   initialProduct?: Product | null;
   initialSheet?: (ProductCostSheet & { lines?: ProductCostLine[] }) | null;

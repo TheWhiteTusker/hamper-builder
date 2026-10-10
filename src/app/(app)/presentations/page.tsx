@@ -1,3 +1,4 @@
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "@/components/link";
 import { requireUser } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui";
@@ -27,41 +28,41 @@ export default async function PresentationsPage() {
       </PageHeader>
 
       <div className="card overflow-x-auto">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th className="num">Slides</th>
-              <th>Last edited</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead className="num">Slides</TableHead>
+              <TableHead>Last edited</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.length === 0 ? (
-              <tr>
-                <td colSpan={3} className="py-10 text-center text-sm text-[var(--color-muted)]">
+              <TableRow>
+                <TableCell colSpan={3} className="py-10 text-center text-sm text-[var(--color-muted)]">
                   No presentations yet.
                   <Link href="/presentations/new" className="ml-2 underline">
                     Make the first one
                   </Link>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               rows.map((p) => (
-                <tr key={p.id}>
-                  <td>
+                <TableRow key={p.id}>
+                  <TableCell>
                     <Link href={`/presentations/${p.id}`} className="font-medium hover:underline">
                       {p.title}
                     </Link>
-                  </td>
-                  <td className="num">{p.presentation_slides[0]?.count ?? 0}</td>
-                  <td className="text-[var(--color-muted)]">
+                  </TableCell>
+                  <TableCell className="num">{p.presentation_slides[0]?.count ?? 0}</TableCell>
+                  <TableCell className="text-[var(--color-muted)]">
                     {new Date(p.updated_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </>
   );

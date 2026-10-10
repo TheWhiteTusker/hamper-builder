@@ -1,3 +1,4 @@
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "@/components/link";
 import { requireUser, isAdmin } from "@/lib/supabase/server";
 import { PageHeader, EmptyState } from "@/components/ui";
@@ -119,26 +120,26 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         />
       ) : (
         <div className="card overflow-x-auto">
-          <table className="table">
-            <thead>
-              <tr>
-                <th className="w-12 text-center">Photo</th>
-                <th>Code</th>
-                <th>Product</th>
-                <th>Category</th>
-                <th>Source</th>
-                <th className="num">Cost</th>
-                <th className="num">Markup</th>
-                <th className="num">Selling price</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12 text-center">Photo</TableHead>
+                <TableHead>Code</TableHead>
+                <TableHead>Product</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Source</TableHead>
+                <TableHead className="num">Cost</TableHead>
+                <TableHead className="num">Markup</TableHead>
+                <TableHead className="num">Selling price</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {rows.map((p) => (
                 <ProductRow key={p.id} p={p} admin={admin} />
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
 

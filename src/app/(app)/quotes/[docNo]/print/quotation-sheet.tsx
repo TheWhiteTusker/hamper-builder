@@ -1,3 +1,4 @@
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { HamperContents } from "@/components/hamper-contents";
 import { COMBINED_ORDER, formatMoney, type QuotePricing } from "@/lib/pricing";
 import type { CompanySettings, HamperItem, QuoteItem, QuoteSummary } from "@/lib/types";
@@ -87,27 +88,27 @@ export function QuotationSheet({
       )}
 
       {/* ---------------- lines ---------------- */}
-      <table className="table mt-5">
-        <thead>
-          <tr>
-            <th className="w-8">#</th>
-            <th>Item</th>
-            <th className="num w-16">Qty</th>
-            <th className="num w-24">Rate</th>
-            <th className="num w-24">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="mt-5">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-8">#</TableHead>
+            <TableHead>Item</TableHead>
+            <TableHead className="num w-16">Qty</TableHead>
+            <TableHead className="num w-24">Rate</TableHead>
+            <TableHead className="num w-24">Amount</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {lines.map((line, index) => {
             const items = line.hamper_id ? (byHamper.get(line.hamper_id) ?? []) : [];
 
             return (
-              <tr key={line.id} className="avoid-break align-top">
-                <td className="text-[var(--color-muted)]">
+              <TableRow key={line.id} className="avoid-break align-top">
+                <TableCell className="text-[var(--color-muted)]">
                   {line.option_label || index + 1}
-                </td>
+                </TableCell>
 
-                <td>
+                <TableCell>
                   <div className="font-medium">{line.hamper_name}</div>
 
                   <HamperContents
@@ -116,25 +117,25 @@ export function QuotationSheet({
                     packagingTreatment={line.packaging_treatment}
                     packagingCategories={packagingCategories}
                   />
-                </td>
+                </TableCell>
 
-                <td className="num">{line.qty}</td>
+                <TableCell className="num">{line.qty}</TableCell>
 
-                <td className="num">
+                <TableCell className="num">
                   {formatMoney(line.final_rate)}
                   {Number(line.discount_pct) > 0 && (
                     <div className="text-xs text-[var(--color-muted)] line-through">
                       {formatMoney(line.catalogue_price)}
                     </div>
                   )}
-                </td>
+                </TableCell>
 
-                <td className="num font-medium">{formatMoney(line.amount)}</td>
-              </tr>
+                <TableCell className="num font-medium">{formatMoney(line.amount)}</TableCell>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
 
       {isCombined && <QuotationTotals quote={quote} totals={totals} />}
 

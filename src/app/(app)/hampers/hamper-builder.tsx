@@ -1,5 +1,6 @@
 "use client";
 
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useActionState, useMemo, useState } from "react";
 import Link from "@/components/link";
 import { saveHamper, duplicateHamper, deleteHamper } from "./actions";
@@ -103,22 +104,22 @@ export function HamperBuilder({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="table min-w-[1060px]">
-              <thead>
-                <tr>
-                  <th className="w-[170px]">Category</th>
-                  <th className="w-[280px]">Product</th>
-                  <th className="w-[110px]">Code</th>
-                  <th className="w-[80px] num">Qty</th>
-                  <th className="w-[110px] num">Unit cost</th>
-                  <th className="w-[110px] num">Total cost</th>
-                  <th className="w-[90px] num">Margin %</th>
-                  <th className="w-[110px] num">Unit price</th>
-                  <th className="w-[110px] num">Total price</th>
-                  {canEdit && <th className="w-[90px]"></th>}
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="min-w-[1060px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[170px]">Category</TableHead>
+                  <TableHead className="w-[280px]">Product</TableHead>
+                  <TableHead className="w-[110px]">Code</TableHead>
+                  <TableHead className="w-[80px] num">Qty</TableHead>
+                  <TableHead className="w-[110px] num">Unit cost</TableHead>
+                  <TableHead className="w-[110px] num">Total cost</TableHead>
+                  <TableHead className="w-[90px] num">Margin %</TableHead>
+                  <TableHead className="w-[110px] num">Unit price</TableHead>
+                  <TableHead className="w-[110px] num">Total price</TableHead>
+                  {canEdit && <TableHead className="w-[90px]"></TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {lines.map((line, index) => (
                   <HamperLineRow
                     key={line.key}
@@ -136,8 +137,8 @@ export function HamperBuilder({
                     }
                   />
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </section>
 

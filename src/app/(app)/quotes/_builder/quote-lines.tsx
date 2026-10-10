@@ -1,5 +1,6 @@
 "use client";
 
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useMemo } from "react";
 import type { Settings } from "@/lib/types";
 import { QuoteLineRow } from "./quote-line-row";
@@ -101,22 +102,22 @@ export function QuoteLines({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="table min-w-[1100px]">
-            <thead>
-              <tr>
-                <th className="w-[110px]">Option</th>
-                <th className="w-[240px]">Item</th>
-                <th className="w-[80px] num">Qty</th>
-                <th className="w-[120px] num">Catalogue price</th>
-                <th className="w-[90px] num">Discount %</th>
-                <th className="w-[120px] num">Final rate</th>
-                <th className="w-[120px] num">Amount</th>
-                <th className="w-[150px]">Contents shown</th>
-                <th className="w-[190px]">Packaging</th>
-                {canEdit && <th className="w-[40px]"></th>}
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="min-w-[1100px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[110px]">Option</TableHead>
+                <TableHead className="w-[240px]">Item</TableHead>
+                <TableHead className="w-[80px] num">Qty</TableHead>
+                <TableHead className="w-[120px] num">Catalogue price</TableHead>
+                <TableHead className="w-[90px] num">Discount %</TableHead>
+                <TableHead className="w-[120px] num">Final rate</TableHead>
+                <TableHead className="w-[120px] num">Amount</TableHead>
+                <TableHead className="w-[150px]">Contents shown</TableHead>
+                <TableHead className="w-[190px]">Packaging</TableHead>
+                {canEdit && <TableHead className="w-[40px]"></TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {lines.map((line) => (
                 <QuoteLineRow
                   key={line.key}
@@ -129,8 +130,8 @@ export function QuoteLines({
                   onRemove={() => onRemove(line.key)}
                 />
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
     </section>

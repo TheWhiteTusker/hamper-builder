@@ -18,7 +18,7 @@ export function useProductDetails({
 }: {
   stages: CostStageWithHierarchy[];
   categories: Category[];
-  products: Product[];
+  products: Pick<Product, "id" | "code" | "name">[];
   initialProduct?: Product | null;
   initialSheet?: ProductCostSheet | null;
 }) {

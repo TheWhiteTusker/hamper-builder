@@ -1,3 +1,4 @@
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "@/components/link";
 import { requireUser, canManage } from "@/lib/supabase/server";
 import { loadSettings } from "@/lib/settings";
@@ -82,24 +83,24 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
       {/* The form wraps the whole table so every filter can sit in the header
           cell of the column it filters. */}
       <form className="card overflow-x-auto">
-        <table className="table min-w-[1200px]">
-          <thead>
-            <tr>
-              <th className="w-14"></th>
-              <th>Code</th>
-              <th>Hamper</th>
-              <th>Collection</th>
-              <th>Status</th>
-              <th className="num">Items</th>
-              <th className="num">Cost</th>
-              <th className="num">Catalogue price</th>
-              <th className="num">Profit</th>
-              <th className="num">Margin</th>
-            </tr>
+        <Table className="min-w-[1200px]">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-14"></TableHead>
+              <TableHead>Code</TableHead>
+              <TableHead>Hamper</TableHead>
+              <TableHead>Collection</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="num">Items</TableHead>
+              <TableHead className="num">Cost</TableHead>
+              <TableHead className="num">Catalogue price</TableHead>
+              <TableHead className="num">Profit</TableHead>
+              <TableHead className="num">Margin</TableHead>
+            </TableRow>
 
-            <tr>
-              <th className="pb-2"></th>
-              <th colSpan={2} className="pb-2">
+            <TableRow>
+              <TableHead className="pb-2"></TableHead>
+              <TableHead colSpan={2} className="pb-2">
                 <input
                   name="q"
                   aria-label="Search name or code"
@@ -107,8 +108,8 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
                   placeholder="Name or code"
                   className="input"
                 />
-              </th>
-              <th className="pb-2">
+              </TableHead>
+              <TableHead className="pb-2">
                 <input
                   name="collection"
                   aria-label="Filter by collection"
@@ -122,9 +123,9 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
                     <option key={c} value={c} />
                   ))}
                 </datalist>
-              </th>
-              <th className="pb-2"></th>
-              <th className="pb-2">
+              </TableHead>
+              <TableHead className="pb-2"></TableHead>
+              <TableHead className="pb-2">
                 <input
                   name="items"
                   aria-label="Minimum items"
@@ -133,14 +134,14 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
                   placeholder="min"
                   className="input input-num"
                 />
-              </th>
-              <th className="pb-2">
+              </TableHead>
+              <TableHead className="pb-2">
                 <Range name="cost" label="cost" min={minCost} max={maxCost} />
-              </th>
-              <th className="pb-2">
+              </TableHead>
+              <TableHead className="pb-2">
                 <Range name="price" label="catalogue price" min={minPrice} max={maxPrice} />
-              </th>
-              <th colSpan={2} className="pb-2">
+              </TableHead>
+              <TableHead colSpan={2} className="pb-2">
                 <div className="flex items-center justify-end gap-2">
                   {filtered && (
                     <Link href="/hampers" className="btn-secondary">
@@ -151,27 +152,27 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
                     Apply
                   </button>
                 </div>
-              </th>
-            </tr>
-          </thead>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
 
-          <tbody>
+          <TableBody>
             {rows.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="py-10 text-center text-sm text-[var(--color-muted)]">
+              <TableRow>
+                <TableCell colSpan={10} className="py-10 text-center text-sm text-[var(--color-muted)]">
                   {filtered ? "No hampers match that search." : "No hampers yet."}
                   {manage && !filtered && (
                     <Link href="/hampers/new" className="ml-2 underline">
                       Build the first one
                     </Link>
                   )}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               rows.map((h) => <HamperRow key={h.id} h={h} />)
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </form>
 
       <LoadMore shown={rows.length} total={total} />

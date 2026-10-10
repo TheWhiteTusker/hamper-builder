@@ -132,23 +132,6 @@ body {
     @apply border border-red-200 bg-white text-red-700 hover:bg-red-50;
   }
 
-  .table {
-    @apply w-full border-collapse text-sm;
-  }
-
-  .table th {
-    @apply border-b border-line px-2.5 py-2 text-left text-[11px]
-           font-semibold uppercase tracking-wide text-(--color-muted);
-  }
-
-  .table td {
-    @apply border-b border-line px-2.5 py-1.5 align-middle;
-  }
-
-  .table .num {
-    @apply text-right tabular-nums;
-  }
-
   .badge {
     @apply inline-block rounded-full border border-line
            bg-paper px-2 py-0.5 text-[11px] font-medium;

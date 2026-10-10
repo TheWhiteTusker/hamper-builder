@@ -1,3 +1,4 @@
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "@/components/link";
 import { requireUser } from "@/lib/supabase/server";
 import { loadSettings } from "@/lib/settings";
@@ -101,25 +102,25 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
         />
       ) : (
         <div className="card overflow-x-auto">
-          <table className="table min-w-[1050px]">
-            <thead>
-              <tr>
-                <th>Document</th>
-                <th>Type</th>
-                <th>Date</th>
-                <th>Client</th>
-                <th>Occasion</th>
-                <th className="num">Hampers</th>
-                <th className="num">Qty</th>
-                <th className="num">Total</th>
-                <th>Status</th>
-                <th>Follow up</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="min-w-[1050px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Document</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Occasion</TableHead>
+                <TableHead className="num">Hampers</TableHead>
+                <TableHead className="num">Qty</TableHead>
+                <TableHead className="num">Total</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Follow up</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {rows.map((quote) => (
-                <tr key={quote.id}>
-                  <td className="font-mono whitespace-nowrap">
+                <TableRow key={quote.id}>
+                  <TableCell className="font-mono whitespace-nowrap">
                     <Link
                       href={`/quotes/${encodeURIComponent(quote.doc_no)}`}
                       className="hover:underline"
@@ -131,16 +132,16 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
                         from {quote.linked_doc_no}
                       </div>
                     )}
-                  </td>
-                  <td className="whitespace-nowrap text-[var(--color-muted)]">
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-[var(--color-muted)]">
                     {DOC_LABEL[quote.doc_type]}
-                  </td>
-                  <td className="whitespace-nowrap">{quote.doc_date}</td>
-                  <td>{quote.client_name}</td>
-                  <td className="text-[var(--color-muted)]">{quote.occasion ?? "—"}</td>
-                  <td className="num">{quote.line_count}</td>
-                  <td className="num">{quote.total_qty}</td>
-                  <td className="num">
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">{quote.doc_date}</TableCell>
+                  <TableCell>{quote.client_name}</TableCell>
+                  <TableCell className="text-[var(--color-muted)]">{quote.occasion ?? "—"}</TableCell>
+                  <TableCell className="num">{quote.line_count}</TableCell>
+                  <TableCell className="num">{quote.total_qty}</TableCell>
+                  <TableCell className="num">
                     {quote.grand_total == null ? (
                       <span className="text-[var(--color-muted)]" title="Option based quotation">
                         by option
@@ -148,17 +149,17 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
                     ) : (
                       formatMoney(quote.grand_total)
                     )}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="badge">{quote.status}</span>
-                  </td>
-                  <td className="whitespace-nowrap text-[var(--color-muted)]">
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-[var(--color-muted)]">
                     {quote.follow_up_date ?? "—"}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
 

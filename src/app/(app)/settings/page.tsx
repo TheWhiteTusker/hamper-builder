@@ -1,3 +1,4 @@
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "@/components/link";
 import { requireRole } from "@/lib/supabase/server";
 import { loadSettings } from "@/lib/settings";
@@ -69,13 +70,13 @@ export default async function SettingsPage() {
           </p>
         </div>
 
-        <table className="table">
-          <tbody>
+        <Table>
+          <TableBody>
             {(categories ?? []).map((category) => (
               <CategoryRow key={category.id} category={category} />
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
 
         {(categories ?? []).length === 0 && (
           <p className="px-4 py-6 text-sm text-(--color-muted)">
@@ -136,20 +137,20 @@ export default async function SettingsPage() {
           </p>
         </div>
 
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Can access</th>
-              <th>Role</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Can access</TableHead>
+              <TableHead>Role</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {(profiles ?? []).map((p) => (
               <UserRoleForm key={p.id} profile={p} isSelf={p.id === profile.id} />
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </section>
 
       {/* ---------------- recycle bin ---------------- */}

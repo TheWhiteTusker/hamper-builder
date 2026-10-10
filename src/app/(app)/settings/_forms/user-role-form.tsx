@@ -1,5 +1,6 @@
 "use client";
 
+import { TableCell, TableRow } from "@/components/ui/table";
 import { useActionState } from "react";
 import type { Profile, UserRole } from "@/lib/types";
 import { setUserRole } from "../category-actions";
@@ -15,13 +16,13 @@ export function UserRoleForm({ profile, isSelf }: { profile: Profile; isSelf: bo
   const [state, action, pending] = useActionState(setUserRole, {});
 
   return (
-    <tr>
-      <td>
+    <TableRow>
+      <TableCell>
         {profile.full_name || "—"}
         {isSelf && <span className="badge ml-2">you</span>}
-      </td>
-      <td className="text-[var(--color-muted)]">{ROLE_HINT[profile.role]}</td>
-      <td>
+      </TableCell>
+      <TableCell className="text-[var(--color-muted)]">{ROLE_HINT[profile.role]}</TableCell>
+      <TableCell>
         <form action={action} className="flex items-center gap-2">
           <input type="hidden" name="id" value={profile.id} />
           <select name="role" defaultValue={profile.role} className="select max-w-[140px]">
@@ -34,7 +35,7 @@ export function UserRoleForm({ profile, isSelf }: { profile: Profile; isSelf: bo
           </button>
           <Status state={state} />
         </form>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }

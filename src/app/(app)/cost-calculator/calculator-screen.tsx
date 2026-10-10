@@ -21,7 +21,8 @@ export async function CalculatorScreen({
   const { supabase } = await requireUser();
   const [stages, { data: products }, { data: categories }, settings, costing] = await Promise.all([
     loadCostStages(supabase),
-    supabase.from("products").select("*").is("deleted_at", null).order("code").returns<Product[]>(),
+    // Only the product picker reads these.
+    supabase.from("products").select("id, code, name").is("deleted_at", null).order("code").returns<Pick<Product, "id" | "code" | "name">[]>(),
     supabase.from("categories").select("*").order("sort_order").returns<Category[]>(),
     loadSettings(supabase),
     code ? loadProductCosting(supabase, code) : null,

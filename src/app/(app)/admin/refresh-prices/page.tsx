@@ -1,3 +1,4 @@
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireRole } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui";
 import { formatMoney } from "@/lib/pricing";
@@ -76,49 +77,49 @@ export default async function RefreshPricesPage({ searchParams }: { searchParams
           </div>
 
           <div className="card overflow-x-auto">
-            <table className="table min-w-[900px]">
-              <thead>
-                <tr>
-                  <th>Hamper</th>
-                  <th>Line</th>
-                  <th>Product</th>
-                  <th className="num">Cost now</th>
-                  <th className="num">New cost</th>
-                  <th className="num">Price now</th>
-                  <th className="num">New price</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="min-w-[900px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Hamper</TableHead>
+                  <TableHead>Line</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="num">Cost now</TableHead>
+                  <TableHead className="num">New cost</TableHead>
+                  <TableHead className="num">Price now</TableHead>
+                  <TableHead className="num">New price</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {diffs.map((d) => (
-                  <tr key={`${d.hamper_code}-${d.line_no}`}>
-                    <td className="font-mono whitespace-nowrap">{d.hamper_code}</td>
-                    <td className="text-[var(--color-muted)]">{d.line_no}</td>
-                    <td>
+                  <TableRow key={`${d.hamper_code}-${d.line_no}`}>
+                    <TableCell className="font-mono whitespace-nowrap">{d.hamper_code}</TableCell>
+                    <TableCell className="text-[var(--color-muted)]">{d.line_no}</TableCell>
+                    <TableCell>
                       {d.product_name}
                       <span className="ml-2 font-mono text-xs text-[var(--color-muted)]">
                         {d.product_code}
                       </span>
-                    </td>
-                    <td className="num text-[var(--color-muted)]">{formatMoney(d.old_cp)}</td>
-                    <td className="num font-medium">
+                    </TableCell>
+                    <TableCell className="num text-[var(--color-muted)]">{formatMoney(d.old_cp)}</TableCell>
+                    <TableCell className="num font-medium">
                       {d.note === "missing" ? "—" : formatMoney(d.new_cp)}
-                    </td>
-                    <td className="num text-[var(--color-muted)]">{formatMoney(d.old_sp)}</td>
-                    <td className="num font-medium">
+                    </TableCell>
+                    <TableCell className="num text-[var(--color-muted)]">{formatMoney(d.old_sp)}</TableCell>
+                    <TableCell className="num font-medium">
                       {d.note === "missing" ? "—" : formatMoney(d.new_sp)}
-                    </td>
-                    <td>
+                    </TableCell>
+                    <TableCell>
                       {d.note === "missing" && (
                         <span className="badge border-amber-300 bg-amber-50 text-amber-900">
                           not in Product Master
                         </span>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </>
       )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { TableCell, TableRow } from "@/components/ui/table";
 import { useTransition } from "react";
 import Image from "next/image";
 import type { BinItem } from "./bin-types";
@@ -93,9 +94,9 @@ export function BinItemRow({
   });
 
   return (
-    <tr className={`transition-opacity ${isPending ? "opacity-40" : ""}`}>
+    <TableRow className={`transition-opacity ${isPending ? "opacity-40" : ""}`}>
       {/* Thumbnail */}
-      <td className="w-14 py-2.5">
+      <TableCell className="w-14 py-2.5">
         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-line bg-paper">
           {item.imageUrl ? (
             <Image
@@ -112,40 +113,40 @@ export function BinItemRow({
             </div>
           )}
         </div>
-      </td>
+      </TableCell>
 
       {/* Type */}
-      <td className="w-24 whitespace-nowrap py-2.5">
+      <TableCell className="w-24 whitespace-nowrap py-2.5">
         <span
           className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-medium tracking-wide uppercase ${badgeColor}`}
         >
           {typeLabel}
         </span>
-      </td>
+      </TableCell>
 
       {/* Code */}
-      <td className="w-32 whitespace-nowrap font-mono text-xs font-medium text-(--color-ink) py-2.5">
+      <TableCell className="w-32 whitespace-nowrap font-mono text-xs font-medium text-(--color-ink) py-2.5">
         {item.code || "—"}
-      </td>
+      </TableCell>
 
       {/* Title & Details */}
-      <td className="py-2.5">
+      <TableCell className="py-2.5">
         <div className="font-medium text-(--color-ink)">{item.title}</div>
         {item.subtitle && (
           <div className="text-xs text-(--color-muted)">{item.subtitle}</div>
         )}
-      </td>
+      </TableCell>
 
       {/* Deleted Date */}
-      <td className="whitespace-nowrap text-xs text-(--color-muted) py-2.5">
+      <TableCell className="whitespace-nowrap text-xs text-(--color-muted) py-2.5">
         {formattedDate}
-      </td>
+      </TableCell>
 
       {/* Retention / Expiry */}
-      <td className="whitespace-nowrap py-2.5">{expiryBadge}</td>
+      <TableCell className="whitespace-nowrap py-2.5">{expiryBadge}</TableCell>
 
       {/* Actions */}
-      <td className="whitespace-nowrap text-right py-2.5">
+      <TableCell className="whitespace-nowrap text-right py-2.5">
         {canAction ? (
           <div className="inline-flex items-center justify-end gap-2">
             <button
@@ -170,7 +171,7 @@ export function BinItemRow({
         ) : (
           <span className="text-xs text-(--color-muted)">Read-only</span>
         )}
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }

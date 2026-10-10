@@ -1,5 +1,6 @@
 "use client";
 
+import { TableCell, TableRow } from "@/components/ui/table";
 import { formatMoney, priceQuoteLine } from "@/lib/pricing";
 import { HamperContents, type ContentItem } from "@/components/hamper-contents";
 import type { Settings } from "@/lib/types";
@@ -27,7 +28,7 @@ export function QuoteLineRow({
 }) {
   const { finalRate, amount } = priceQuoteLine(pricedLine(line));
   const num = (key: "qty" | "catalogue_price" | "discount_pct", label: string) => (
-    <td>
+    <TableCell>
       <input
         aria-label={label}
         inputMode="decimal"
@@ -36,10 +37,10 @@ export function QuoteLineRow({
         disabled={!canEdit}
         onChange={(e) => onChange({ [key]: e.target.value })}
       />
-    </td>
+    </TableCell>
   );
   const pick = (key: "detail_mode" | "packaging_treatment", label: string, list: string[]) => (
-    <td>
+    <TableCell>
       <select
         aria-label={label}
         className="select"
@@ -53,12 +54,12 @@ export function QuoteLineRow({
           </option>
         ))}
       </select>
-    </td>
+    </TableCell>
   );
 
   return (
-    <tr className="[&>td]:align-top">
-      <td>
+    <TableRow className="[&>td]:align-top">
+      <TableCell>
         <input
           aria-label="Option label"
           className="input"
@@ -66,8 +67,8 @@ export function QuoteLineRow({
           disabled={!canEdit}
           onChange={(e) => onChange({ option_label: e.target.value })}
         />
-      </td>
-      <td>
+      </TableCell>
+      <TableCell>
         <div className="font-medium">{line.hamper_name}</div>
         <div className="font-mono text-xs text-[var(--color-muted)]">{line.hamper_code}</div>
         {/* Read-only preview of what the printed document will list for this line. */}
@@ -78,12 +79,12 @@ export function QuoteLineRow({
           packagingTreatment={line.packaging_treatment}
           packagingCategories={packagingCategories}
         />
-      </td>
+      </TableCell>
       {num("qty", "Quantity")}
       {num("catalogue_price", "Catalogue price")}
       {num("discount_pct", "Discount percent")}
-      <td className="num text-[var(--color-muted)]">{formatMoney(finalRate)}</td>
-      <td className="num font-medium">{formatMoney(amount)}</td>
+      <TableCell className="num text-[var(--color-muted)]">{formatMoney(finalRate)}</TableCell>
+      <TableCell className="num font-medium">{formatMoney(amount)}</TableCell>
       {/* Product lines have no hamper, so no contents or packaging to set. */}
       {line.hamper_id ? (
         <>
@@ -91,12 +92,12 @@ export function QuoteLineRow({
           {pick("packaging_treatment", "Packaging treatment", settings.packaging_treatments)}
         </>
       ) : (
-        <td colSpan={2} className="text-xs text-[var(--color-muted)]">
+        <TableCell colSpan={2} className="text-xs text-[var(--color-muted)]">
           Single product
-        </td>
+        </TableCell>
       )}
       {canEdit && (
-        <td className="num">
+        <TableCell className="num">
           <button
             type="button"
             aria-label={`Remove ${line.hamper_code}`}
@@ -105,8 +106,8 @@ export function QuoteLineRow({
           >
             ×
           </button>
-        </td>
+        </TableCell>
       )}
-    </tr>
+    </TableRow>
   );
 }

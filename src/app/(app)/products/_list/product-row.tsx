@@ -1,3 +1,4 @@
+import { TableCell, TableRow } from "@/components/ui/table";
 import Link from "@/components/link";
 import { formatMoney } from "@/lib/pricing";
 import { ImagePreview } from "@/components/image-preview";
@@ -9,8 +10,8 @@ import { DeleteProductButton } from "./delete-product-button";
 /** One product in the Product Master table. */
 export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolean }) {
   return (
-    <tr className={p.is_active ? "" : "opacity-55"}>
-      <td className="w-12 py-1.5 px-2 text-center">
+    <TableRow className={p.is_active ? "" : "opacity-55"}>
+      <TableCell className="w-12 py-1.5 px-2 text-center">
         {p.image_url ? (
           <ImagePreview
             src={p.image_url}
@@ -27,16 +28,16 @@ export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolea
             + Pic
           </Link>
         )}
-      </td>
-      <td className="font-mono whitespace-nowrap">
+      </TableCell>
+      <TableCell className="font-mono whitespace-nowrap">
         <Link
           href={productHref(p.code)}
           className="font-semibold text-(--color-ink) hover:text-(--color-brand) hover:underline"
         >
           {p.code}
         </Link>
-      </td>
-      <td>
+      </TableCell>
+      <TableCell>
         <Link
           href={productHref(p.code)}
           className="font-medium hover:underline text-(--color-ink)"
@@ -44,13 +45,13 @@ export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolea
           {p.name}
         </Link>
         {!p.is_active && <span className="badge ml-2">Inactive</span>}
-      </td>
-      <td className="text-(--color-muted)">{p.categories?.name ?? "—"}</td>
-      <td className="text-(--color-muted)">{p.source ?? "—"}</td>
-      <td className="num">{formatMoney(p.cost_price)}</td>
-      <td className="num">{p.markup_pct != null ? `${p.markup_pct}%` : "—"}</td>
-      <td className="num">{formatMoney(p.default_sp)}</td>
-      <td className="num">
+      </TableCell>
+      <TableCell className="text-(--color-muted)">{p.categories?.name ?? "—"}</TableCell>
+      <TableCell className="text-(--color-muted)">{p.source ?? "—"}</TableCell>
+      <TableCell className="num">{formatMoney(p.cost_price)}</TableCell>
+      <TableCell className="num">{p.markup_pct != null ? `${p.markup_pct}%` : "—"}</TableCell>
+      <TableCell className="num">{formatMoney(p.default_sp)}</TableCell>
+      <TableCell className="num">
         <div className="flex items-center justify-end gap-2.5">
           {/* Editing a product happens in the cost calculator. */}
           {admin ? (
@@ -69,7 +70,7 @@ export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolea
             </Link>
           )}
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState, useTransition, useMemo } from "react";
 import type { BinItem, BinCounts, BinItemType } from "./bin-types";
 import { BinItemRow } from "./bin-item-row";
@@ -134,19 +135,19 @@ export function BinView({
       {/* Items Table */}
       {filteredItems.length > 0 ? (
         <div className="card overflow-x-auto shadow-2xs">
-          <table className="table min-w-212.5">
-            <thead>
-              <tr>
-                <th className="w-14"></th>
-                <th className="w-24">Type</th>
-                <th className="w-32">Code</th>
-                <th>Item Details</th>
-                <th>Deleted On</th>
-                <th>Retention</th>
-                <th className="text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="min-w-212.5">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-14"></TableHead>
+                <TableHead className="w-24">Type</TableHead>
+                <TableHead className="w-32">Code</TableHead>
+                <TableHead>Item Details</TableHead>
+                <TableHead>Deleted On</TableHead>
+                <TableHead>Retention</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {filteredItems.map((item) => (
                 <BinItemRow
                   key={`${item.type}-${item.id}`}
@@ -156,8 +157,8 @@ export function BinView({
                   onNotify={setNotification}
                 />
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       ) : (
         <div className="card flex flex-col items-center justify-center p-12 text-center">

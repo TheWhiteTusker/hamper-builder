@@ -1,5 +1,6 @@
 "use client";
 
+import { TableCell, TableRow } from "@/components/ui/table";
 import { useActionState } from "react";
 import type { Category } from "@/lib/types";
 import { saveCategory, deleteCategory } from "../category-actions";
@@ -10,8 +11,8 @@ export function CategoryRow({ category }: { category: Category }) {
   const [delState, delAction, deleting] = useActionState(deleteCategory, {});
 
   return (
-    <tr>
-      <td colSpan={4} className="p-0">
+    <TableRow>
+      <TableCell colSpan={4} className="p-0">
         <div className="flex flex-wrap items-center gap-2 px-2.5 py-1.5">
           <form action={action} className="flex flex-1 flex-wrap items-center gap-2">
             <input type="hidden" name="id" value={category.id} />
@@ -60,8 +61,8 @@ export function CategoryRow({ category }: { category: Category }) {
             )}
           </form>
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 

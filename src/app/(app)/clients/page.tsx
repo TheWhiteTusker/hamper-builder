@@ -1,3 +1,4 @@
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "@/components/link";
 import { requireUser, canManage } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui";
@@ -70,42 +71,42 @@ export default async function ClientsPage({ searchParams }: { searchParams: Sear
             </p>
           ) : (
             <div className="card overflow-x-auto">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Company</th>
-                    <th>GSTIN</th>
-                    <th>Contact</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Company</TableHead>
+                    <TableHead>GSTIN</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {rows.map((c) => (
-                    <tr key={c.id} className="align-top">
-                      <td>
+                    <TableRow key={c.id} className="align-top">
+                      <TableCell>
                         <div className="font-medium">{c.name}</div>
                         {c.billing_address && (
                           <div className="whitespace-pre-line text-xs text-[var(--color-muted)]">
                             {c.billing_address}
                           </div>
                         )}
-                      </td>
-                      <td className="font-mono whitespace-nowrap">{c.gstin ?? "—"}</td>
-                      <td className="text-[var(--color-muted)]">
+                      </TableCell>
+                      <TableCell className="font-mono whitespace-nowrap">{c.gstin ?? "—"}</TableCell>
+                      <TableCell className="text-[var(--color-muted)]">
                         {[c.contact_person, c.phone, c.email].filter(Boolean).join(" · ") || "—"}
-                      </td>
-                      <td className="num">
+                      </TableCell>
+                      <TableCell className="num">
                         <Link
                           href={`/clients?edit=${c.id}`}
                           className="font-medium text-[var(--color-brand)] hover:underline"
                         >
                           Edit
                         </Link>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           )}
 

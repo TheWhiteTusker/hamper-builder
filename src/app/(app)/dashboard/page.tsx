@@ -1,3 +1,4 @@
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "@/components/link";
 import { requireUser, canManage } from "@/lib/supabase/server";
 import { PageHeader, Stat, EmptyState } from "@/components/ui";
@@ -113,30 +114,30 @@ function RecentHampers({ rows }: { rows: HamperSummary[] }) {
       {rows.length === 0 ? (
         <p className="px-4 py-6 text-sm text-[var(--color-muted)]">No hampers yet.</p>
       ) : (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Name</th>
-              <th className="num">Cost</th>
-              <th className="num">Price</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Code</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead className="num">Cost</TableHead>
+              <TableHead className="num">Price</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.map((h) => (
-              <tr key={h.id}>
-                <td className="font-mono">
+              <TableRow key={h.id}>
+                <TableCell className="font-mono">
                   <Link href={`/hampers/${h.code}`} className="hover:underline">
                     {h.code}
                   </Link>
-                </td>
-                <td>{h.name}</td>
-                <td className="num">{formatMoney(h.total_cp)}</td>
-                <td className="num">{formatMoney(h.final_catalogue_sp)}</td>
-              </tr>
+                </TableCell>
+                <TableCell>{h.name}</TableCell>
+                <TableCell className="num">{formatMoney(h.total_cp)}</TableCell>
+                <TableCell className="num">{formatMoney(h.final_catalogue_sp)}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       )}
     </section>
   );
@@ -154,32 +155,32 @@ function RecentQuotes({ rows }: { rows: QuoteSummary[] }) {
       {rows.length === 0 ? (
         <p className="px-4 py-6 text-sm text-[var(--color-muted)]">No quotations yet.</p>
       ) : (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Document</th>
-              <th>Client</th>
-              <th>Status</th>
-              <th className="num">Total</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Document</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="num">Total</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.map((q) => (
-              <tr key={q.id}>
-                <td className="font-mono">
+              <TableRow key={q.id}>
+                <TableCell className="font-mono">
                   <Link href={`/quotes/${q.doc_no}`} className="hover:underline">
                     {q.doc_no}
                   </Link>
-                </td>
-                <td>{q.client_name}</td>
-                <td>
+                </TableCell>
+                <TableCell>{q.client_name}</TableCell>
+                <TableCell>
                   <span className="badge">{q.status}</span>
-                </td>
-                <td className="num">{formatMoney(q.grand_total ?? q.subtotal)}</td>
-              </tr>
+                </TableCell>
+                <TableCell className="num">{formatMoney(q.grand_total ?? q.subtotal)}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       )}
     </section>
   );

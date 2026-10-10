@@ -1,5 +1,6 @@
 "use client";
 
+import { TableCell, TableRow } from "@/components/ui/table";
 import { useMemo } from "react";
 import Image from "next/image";
 import { formatMoney, num } from "@/lib/pricing";
@@ -48,7 +49,7 @@ export function HamperLineRow({
   const selectedProduct = products.find((p) => p.id === line.product_id);
   const what = line.product_name || "line";
   const numCell = (key: "qty" | "unit_cp" | "target_margin" | "unit_sp", label: string) => (
-    <td>
+    <TableCell>
       <input
         aria-label={label}
         inputMode="decimal"
@@ -57,12 +58,12 @@ export function HamperLineRow({
         disabled={!canEdit}
         onChange={(e) => onChange({ [key]: e.target.value })}
       />
-    </td>
+    </TableCell>
   );
 
   return (
-    <tr>
-      <td>
+    <TableRow>
+      <TableCell>
         <Combo
           label="Category"
           placeholder="All categories"
@@ -80,9 +81,9 @@ export function HamperLineRow({
             );
           }}
         />
-      </td>
+      </TableCell>
 
-      <td>
+      <TableCell>
         <div className="flex items-center gap-2">
           {selectedProduct?.image_url && (
             <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-slate-100 shadow-2xs">
@@ -109,18 +110,18 @@ export function HamperLineRow({
             )}
           </div>
         </div>
-      </td>
+      </TableCell>
 
-      <td className="font-mono text-xs text-(--color-muted)">{line.product_code || "—"}</td>
+      <TableCell className="font-mono text-xs text-(--color-muted)">{line.product_code || "—"}</TableCell>
       {numCell("qty", "Quantity")}
       {numCell("unit_cp", "Unit cost")}
-      <td className="num text-(--color-muted)">{totalCp ? formatMoney(totalCp) : "—"}</td>
+      <TableCell className="num text-(--color-muted)">{totalCp ? formatMoney(totalCp) : "—"}</TableCell>
       {numCell("target_margin", "Target margin")}
       {numCell("unit_sp", "Unit price")}
-      <td className="num font-medium">{totalSp ? formatMoney(totalSp) : "—"}</td>
+      <TableCell className="num font-medium">{totalSp ? formatMoney(totalSp) : "—"}</TableCell>
 
       {canEdit && (
-        <td>
+        <TableCell>
           <div className="flex items-center justify-end gap-0.5">
             <RowButton label={`Move ${what} up`} disabled={isFirst} onClick={() => onMove(-1)}>
               ↑
@@ -132,8 +133,8 @@ export function HamperLineRow({
               ×
             </RowButton>
           </div>
-        </td>
+        </TableCell>
       )}
-    </tr>
+    </TableRow>
   );
 }

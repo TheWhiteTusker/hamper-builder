@@ -20,7 +20,7 @@ export function ProductDetailsCard({
 }: {
   details: ProductDetails;
   photos: ProductPhotos;
-  products: Product[];
+  products: Pick<Product, "id" | "code" | "name">[];
   categories: Category[];
   productColors: ProductColor[];
   imageUrl?: string | null;
