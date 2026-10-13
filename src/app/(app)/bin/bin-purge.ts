@@ -1,6 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+// No revalidatePath: BinView drops the rows itself, and other pages refresh
+// on the next navigation (markOtherPagesStale).
+
 import { requireUser, canManage } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
 import { thumbPath, viewPath } from "@/lib/product-images";
@@ -52,9 +54,6 @@ export async function purgeExpiredAction(): Promise<BinActionResult> {
 
     await supabase.rpc("purge_expired_bin_records");
 
-    revalidatePath("/hampers");
-    revalidatePath("/products");
-    revalidatePath("/bin");
     return { ok: true, message: "Expired items have been permanently purged." };
   } catch (err: unknown) {
     return { error: describeError(err) };

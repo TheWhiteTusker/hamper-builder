@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { productPhotosChanged } from "@/app/(app)/products/image-actions";
+import { markOtherPagesStale } from "@/components/stale-pages";
 import { uploadProductImage } from "@/components/product-images/upload-product-image";
 import type { ProductImage } from "@/lib/types";
 
@@ -71,8 +71,7 @@ export function useProductPhotos(
     if (added.length) {
       setImages((prev) => [...prev, ...added]);
       setPhotoVersion((v) => v + 1);
-      // Once per batch; a failure here only means other pages refresh a little later.
-      productPhotosChanged().catch(() => {});
+      markOtherPagesStale();
     }
     setUpload(error ? { color: colName, error } : { color: colName, ok: `${added.length} added` });
   }
@@ -97,7 +96,7 @@ export function useProductPhotos(
       const pid = ids[colName] ?? productId;
       const files = pending.filter((p) => p.color === colName).map((p) => p.file);
       const existing = [...images, ...added].filter((img) => img.product_id === pid).length;
-      // No productPhotosChanged() here: costingSaved() refreshes once the batch is up.
+      // No markOtherPagesStale() here: costingSaved() refreshes once the batch is up.
       const r = await uploadFiles(pid, colName, files, existing, () =>
         setUpload({ color: colName, busy: true, ok: `Uploading photo ${++done} of ${pending.length}…` }),
       );

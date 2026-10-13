@@ -38,4 +38,14 @@ export type BinActionResult = {
   ok?: boolean;
   error?: string;
   message?: string;
+  /** Types emptyBinAction cleared (the ones this user may delete). */
+  emptied?: BinItemType[];
 };
+
+export const binCounts = (items: BinItem[]): BinCounts => ({
+  all: items.length,
+  hampers: items.filter((i) => i.type === "hamper").length,
+  products: items.filter((i) => i.type === "product").length,
+  images: items.filter((i) => i.type === "image").length,
+  expired: items.filter((i) => i.daysRemaining === 0).length,
+});

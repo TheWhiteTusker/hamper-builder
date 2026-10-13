@@ -102,6 +102,14 @@ function createWindow() {
     );
   });
 
+  // F5 reloads like a browser; the hidden default menu only has Ctrl+R.
+  mainWindow.webContents.on("before-input-event", (event, input) => {
+    if (input.type === "keyDown" && input.key === "F5") {
+      event.preventDefault();
+      mainWindow.webContents.reload();
+    }
+  });
+
   mainWindow.on("closed", () => {
     mainWindow = null;
   });

@@ -1,6 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+// No revalidatePath: BinView drops the rows itself, and other pages refresh
+// on the next navigation (markOtherPagesStale).
+
 import { requireUser, canManage, isAdmin } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
 import type { BinItemType, BinActionResult } from "./bin-types";
@@ -52,9 +54,6 @@ export async function restoreBinItem(
 
       if (updateErr) return { error: describeError(updateErr) };
 
-      revalidatePath("/hampers");
-      revalidatePath("/bin");
-      revalidatePath("/dashboard");
       return { ok: true, message: `Hamper "${hamper.name}" (${hamper.code}) restored.` };
     }
 
@@ -95,9 +94,6 @@ export async function restoreBinItem(
 
       if (updateErr) return { error: describeError(updateErr) };
 
-      revalidatePath("/products");
-      revalidatePath("/bin");
-      revalidatePath("/cost-calculator", "layout");
       return { ok: true, message: `Product "${product.name}" (${product.code}) restored.` };
     }
 
@@ -142,9 +138,6 @@ export async function restoreBinItem(
           .eq("id", id);
       }
 
-      revalidatePath("/products");
-      revalidatePath("/hampers");
-      revalidatePath("/bin");
       return { ok: true, message: "Product photo restored." };
     }
 

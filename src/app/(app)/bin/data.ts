@@ -1,11 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { calculateExpiry } from "@/lib/bin";
-import type { BinItem, BinCounts } from "./bin-types";
+import type { BinItem } from "./bin-types";
 
-export async function loadBinItems(supabase: SupabaseClient): Promise<{
-  items: BinItem[];
-  counts: BinCounts;
-}> {
+export async function loadBinItems(supabase: SupabaseClient): Promise<BinItem[]> {
   const [
     { data: hampers },
     { data: products },
@@ -100,13 +97,5 @@ export async function loadBinItems(supabase: SupabaseClient): Promise<{
   // Sort by deletion date descending (newest deletions first)
   items.sort((a, b) => new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime());
 
-  const counts: BinCounts = {
-    all: items.length,
-    hampers: items.filter((i) => i.type === "hamper").length,
-    products: items.filter((i) => i.type === "product").length,
-    images: items.filter((i) => i.type === "image").length,
-    expired: items.filter((i) => i.daysRemaining === 0).length,
-  };
-
-  return { items, counts };
+  return items;
 }

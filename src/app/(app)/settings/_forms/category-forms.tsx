@@ -2,13 +2,44 @@
 
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useActionState } from "react";
+import { markOtherPagesStale } from "@/components/stale-pages";
+import type { ActionState } from "@/lib/forms";
 import type { Category } from "@/lib/types";
 import { saveCategory, deleteCategory } from "../category-actions";
 import { Status } from "./status";
 
-export function CategoryRow({ category }: { category: Category }) {
-  const [state, action, pending] = useActionState(saveCategory, {});
-  const [delState, delAction, deleting] = useActionState(deleteCategory, {});
+type Run = (prev: ActionState, formData: FormData) => Promise<ActionState & { category?: Category }>;
+
+/** A category action that hands its result to `done` (to patch the list) on success. */
+const reporting =
+  (run: Run, done: (res: ActionState & { category?: Category }) => void): Run =>
+  async (prev, formData) => {
+    const res = await run(prev, formData);
+    if (res.ok) {
+      done(res);
+      markOtherPagesStale();
+    }
+    return res;
+  };
+
+export function CategoryRow({
+  category,
+  onSaved,
+  onDeleted,
+}: {
+  category: Category;
+  onSaved: (category: Category) => void;
+  onDeleted: (id: string) => void;
+}) {
+  // React resets the form after the save; by then `category` holds the saved row.
+  const [state, action, pending] = useActionState(
+    reporting(saveCategory, (res) => res.category && onSaved(res.category)),
+    {},
+  );
+  const [delState, delAction, deleting] = useActionState(
+    reporting(deleteCategory, () => onDeleted(category.id)),
+    {},
+  );
 
   return (
     <TableRow>
@@ -66,8 +97,17 @@ export function CategoryRow({ category }: { category: Category }) {
   );
 }
 
-export function AddCategoryForm({ nextSortOrder }: { nextSortOrder: number }) {
-  const [state, action, pending] = useActionState(saveCategory, {});
+export function AddCategoryForm({
+  nextSortOrder,
+  onAdded,
+}: {
+  nextSortOrder: number;
+  onAdded: (category: Category) => void;
+}) {
+  const [state, action, pending] = useActionState(
+    reporting(saveCategory, (res) => res.category && onAdded(res.category)),
+    {},
+  );
 
   return (
     <form action={action} className="flex flex-wrap items-center gap-2 p-3">

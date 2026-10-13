@@ -1,5 +1,6 @@
 import { useEffect, useState, useTransition } from "react";
-import { addExternalProductImage, productPhotosChanged } from "@/app/(app)/products/image-actions";
+import { addExternalProductImage } from "@/app/(app)/products/image-actions";
+import { markOtherPagesStale } from "@/components/stale-pages";
 import { uploadProductImage } from "./upload-product-image";
 import {
   setPrimaryProductImage,
@@ -52,8 +53,7 @@ export function useImageActions(
         if (res.image) next = withAdded(next, res.image);
       }
       setImages(next);
-      // Once per batch; a failure here only means other pages refresh a little later.
-      if (next !== images) productPhotosChanged().catch(() => {});
+      if (next !== images) markOtherPagesStale();
       setFeedback(error ? { error } : { success: "Image(s) uploaded successfully!" });
     });
   }
@@ -66,6 +66,7 @@ export function useImageActions(
       if (res.error) return setFeedback({ error: res.error });
       if (!res.image) return;
       setImages(withAdded(images, res.image));
+      markOtherPagesStale();
       onAdded();
       setFeedback({ success: "Image URL added successfully!" });
     });
@@ -76,6 +77,7 @@ export function useImageActions(
       const res = await setPrimaryProductImage(imageId, ownerOf(imageId));
       if (res.error) return setFeedback({ error: res.error });
       if (res.image) setImages((prev) => withPrimary(prev, res.image!));
+      markOtherPagesStale();
       setFeedback({ success: "Primary cover image updated." });
     });
   }
@@ -85,6 +87,7 @@ export function useImageActions(
       const res = await updateProductImageColor(imageId, colorOrNull(newColor));
       if (res.error) return setFeedback({ error: res.error });
       if (res.image) setImages((prev) => prev.map((img) => (img.id === imageId ? res.image! : img)));
+      markOtherPagesStale();
     });
   }
 
@@ -93,7 +96,11 @@ export function useImageActions(
     startTransition(async () => {
       const res = await deleteProductImage(imageId, ownerOf(imageId));
       if (res.error) return setFeedback({ error: res.error });
-      setImages((prev) => prev.filter((img) => img.id !== imageId));
+      setImages((prev) => {
+        const rest = prev.filter((img) => img.id !== imageId);
+        return res.image ? withPrimary(rest, res.image) : rest;
+      });
+      markOtherPagesStale();
       setFeedback({ success: "Image moved to Bin. You can restore it from the Bin within 30 days." });
     });
   }

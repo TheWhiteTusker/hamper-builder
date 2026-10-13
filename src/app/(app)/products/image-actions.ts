@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
 import { colorTag } from "@/lib/product-code";
@@ -25,13 +24,6 @@ export async function prepareProductImageUpload(
     storage.createSignedUploadUrl(viewPath(ticket.path)),
   ]);
   return { ...ticket, thumbToken: thumb.data?.token, viewToken: view.data?.token };
-}
-
-/** After a batch of uploads: refresh the pages that show product photos. */
-export async function productPhotosChanged() {
-  revalidatePath("/products");
-  revalidatePath("/hampers");
-  revalidatePath("/cost-calculator", "layout");
 }
 
 /** Step 2: record a photo the browser uploaded to `storagePath`. */
@@ -116,7 +108,7 @@ export async function saveUploadedProductImage(input: {
     }
 
     // No revalidatePath here: it makes this action re-render the whole page
-    // being viewed, once per photo. Callers run productPhotosChanged() once per batch.
+    // being viewed. Callers patch their list and run markOtherPagesStale().
     return { ok: true, image: inserted };
   } catch (err: unknown) {
     return { error: describeError(err) };
@@ -168,8 +160,6 @@ export async function addExternalProductImage(
         .eq("id", productId);
     }
 
-    revalidatePath("/products");
-    revalidatePath("/hampers");
     return { ok: true, image: inserted };
   } catch (err: unknown) {
     return { error: describeError(err) };

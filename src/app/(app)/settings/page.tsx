@@ -4,8 +4,8 @@ import { requireRole } from "@/lib/supabase/server";
 import { loadSettings } from "@/lib/settings";
 import { PageHeader } from "@/components/ui";
 import { CompanyForm } from "./_forms/company-form";
-import { TermsForm, DefaultForm } from "./_forms/setting-forms";
-import { CategoryRow, AddCategoryForm } from "./_forms/category-forms";
+import { TermsForm } from "./_forms/setting-forms";
+import { CategoryList } from "./_forms/category-list";
 import { UserRoleForm } from "./_forms/user-role-form";
 import { UpdateAppButton } from "./_forms/update-app-button";
 import { PickListManager } from "./pick-list-manager";
@@ -22,7 +22,6 @@ export default async function SettingsPage() {
   ]);
 
   const desktop = process.env.LATTICE_DESKTOP === "1";
-  const nextSortOrder =(categories ?? []).reduce((max, c) => Math.max(max, c.sort_order), -1) + 1;
 
   return (
     <>
@@ -70,23 +69,7 @@ export default async function SettingsPage() {
           </p>
         </div>
 
-        <Table>
-          <TableBody>
-            {(categories ?? []).map((category) => (
-              <CategoryRow key={category.id} category={category} />
-            ))}
-          </TableBody>
-        </Table>
-
-        {(categories ?? []).length === 0 && (
-          <p className="px-4 py-6 text-sm text-(--color-muted)">
-            No categories yet. Import the Settings tab, or add them here.
-          </p>
-        )}
-
-        <div className="border-t border-line">
-          <AddCategoryForm nextSortOrder={nextSortOrder} />
-        </div>
+        <CategoryList categories={categories ?? []} />
       </section>
 
       {/* ---------------- pick-lists ---------------- */}
@@ -98,32 +81,6 @@ export default async function SettingsPage() {
 
         <div className="mt-4">
           <PickListManager settings={settings} />
-        </div>
-
-        <div className="mt-6 border-t border-line pt-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-(--color-muted)">
-            Default Selections
-          </h3>
-          <div className="mt-3 grid gap-3 md:grid-cols-3">
-            <DefaultForm
-              settingKey="default_detail_mode"
-              label="Default contents setting"
-              value={settings.default_detail_mode}
-              options={settings.detail_modes}
-            />
-            <DefaultForm
-              settingKey="default_packaging_treatment"
-              label="Default packaging treatment"
-              value={settings.default_packaging_treatment}
-              options={settings.packaging_treatments}
-            />
-            <DefaultForm
-              settingKey="default_validity"
-              label="Default validity"
-              value={settings.default_validity}
-              options={settings.validity_options}
-            />
-          </div>
         </div>
       </section>
 

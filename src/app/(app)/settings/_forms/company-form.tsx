@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { round2 } from "@/lib/pricing";
 import type { CompanySettings } from "@/lib/types";
 import { saveCompany } from "../actions";
-import { Status } from "./status";
+import { Status, keepValues } from "./status";
 
 export function CompanyForm({
   company,
@@ -16,7 +16,7 @@ export function CompanyForm({
   const [state, action, pending] = useActionState(saveCompany, {});
 
   return (
-    <form action={action} className="card p-4">
+    <form onSubmit={keepValues(action)} className="card p-4">
       <h2 className="text-sm font-semibold">Company details</h2>
       <p className="mt-0.5 text-xs text-[var(--color-muted)]">
         Printed at the top of every quotation and proforma invoice.

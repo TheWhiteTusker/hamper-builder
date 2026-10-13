@@ -1,9 +1,12 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { type ActionState, checkbox, describeError } from "@/lib/forms";
 import { deriveCategoryCode } from "@/lib/product-code";
+import type { Category } from "@/lib/types";
+
+// No revalidatePath: the settings page patches its category list from what
+// these return, and other pages refresh on the next navigation.
 
 // ---------------------------------------------------------------
 // CATEGORIES
@@ -12,7 +15,7 @@ import { deriveCategoryCode } from "@/lib/product-code";
 export async function saveCategory(
   _prev: ActionState,
   formData: FormData,
-): Promise<ActionState> {
+): Promise<ActionState & { category?: Category }> {
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: "Category name is required." };
@@ -29,14 +32,13 @@ export async function saveCategory(
 
   const supabase = await createClient();
 
-  const { error } = id
-    ? await supabase.from("categories").update(values).eq("id", id)
-    : await supabase.from("categories").insert(values);
+  const { data, error } = id
+    ? await supabase.from("categories").update(values).eq("id", id).select().single<Category>()
+    : await supabase.from("categories").insert(values).select().single<Category>();
 
   if (error) return { error: describeError(error) };
 
-  revalidatePath("/settings");
-  return { ok: true };
+  return { ok: true, category: data };
 }
 
 export async function deleteCategory(
@@ -56,8 +58,7 @@ export async function deleteCategory(
     };
   }
 
-  revalidatePath("/settings");
-  return { ok: true };
+  return { ok: true, id };
 }
 
 // ---------------------------------------------------------------
@@ -89,6 +90,5 @@ export async function setUserRole(
   const { error } = await supabase.from("profiles").update({ role }).eq("id", id);
   if (error) return { error: describeError(error) };
 
-  revalidatePath("/settings");
   return { ok: true };
 }

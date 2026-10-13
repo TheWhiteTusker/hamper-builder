@@ -1,7 +1,6 @@
 "use server";
 
 import { z } from "zod";
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { type ActionState, describeError, percent } from "@/lib/forms";
 
@@ -11,8 +10,8 @@ async function saveSetting(key: string, value: unknown): Promise<ActionState> {
 
   if (error) return { error: describeError(error) };
 
-  revalidatePath("/settings");
-  revalidatePath("/", "layout");
+  // No revalidatePath: it re-renders the whole settings page. The forms keep
+  // what was typed, and other pages refresh on the next navigation.
   return { ok: true };
 }
 

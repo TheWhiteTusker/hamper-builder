@@ -13,11 +13,14 @@ export function BinItemRow({
   canManage,
   isAdmin,
   onNotify,
+  onGone,
 }: {
   item: BinItem;
   canManage: boolean;
   isAdmin: boolean;
   onNotify: (msg: { text: string; error?: boolean }) => void;
+  /** The item left the Bin: restored, or deleted for good (`permanently`). */
+  onGone: (item: BinItem, permanently: boolean) => void;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -30,6 +33,7 @@ export function BinItemRow({
       if (res.error) {
         onNotify({ text: res.error, error: true });
       } else {
+        onGone(item, false);
         onNotify({ text: res.message || "Item restored successfully." });
       }
     });
@@ -49,6 +53,7 @@ export function BinItemRow({
       if (res.error) {
         onNotify({ text: res.error, error: true });
       } else {
+        onGone(item, true);
         onNotify({ text: res.message || "Item permanently deleted." });
       }
     });

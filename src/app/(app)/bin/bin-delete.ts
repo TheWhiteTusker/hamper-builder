@@ -1,6 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+// No revalidatePath: BinView drops the rows itself, and other pages refresh
+// on the next navigation (markOtherPagesStale).
+
 import { requireUser, canManage, isAdmin } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
 import { thumbPath, viewPath } from "@/lib/product-images";
@@ -31,8 +33,6 @@ export async function permanentlyDeleteBinItem(
       const { error: delErr } = await supabase.from("hampers").delete().eq("id", id);
       if (delErr) return { error: describeError(delErr) };
 
-      revalidatePath("/hampers");
-      revalidatePath("/bin");
       return { ok: true, message: "Hamper permanently deleted." };
     }
 
@@ -60,8 +60,6 @@ export async function permanentlyDeleteBinItem(
       const { error: delErr } = await supabase.from("products").delete().eq("id", id);
       if (delErr) return { error: describeError(delErr) };
 
-      revalidatePath("/products");
-      revalidatePath("/bin");
       return { ok: true, message: "Product permanently deleted." };
     }
 
@@ -83,8 +81,6 @@ export async function permanentlyDeleteBinItem(
       const { error: delErr } = await supabase.from("product_images").delete().eq("id", id);
       if (delErr) return { error: describeError(delErr) };
 
-      revalidatePath("/products");
-      revalidatePath("/bin");
       return { ok: true, message: "Photo permanently deleted." };
     }
 
@@ -103,10 +99,12 @@ export async function emptyBinAction(
   try {
     const { supabase, profile } = await requireUser();
     let deletedCount = 0;
+    const emptied: BinItemType[] = [];
 
     // Hampers
     if (scope === "all" || scope === "hamper") {
       if (canManage(profile.role)) {
+        emptied.push("hamper");
         const { data: hampers } = await supabase
           .from("hampers")
           .select("id")
@@ -126,6 +124,7 @@ export async function emptyBinAction(
     // Products
     if (scope === "all" || scope === "product") {
       if (isAdmin(profile.role)) {
+        emptied.push("product");
         const { data: products } = await supabase
           .from("products")
           .select("id")
@@ -157,6 +156,7 @@ export async function emptyBinAction(
     // Product Images
     if (scope === "all" || scope === "image") {
       if (canManage(profile.role)) {
+        emptied.push("image");
         const { data: images } = await supabase
           .from("product_images")
           .select("id, storage_path")
@@ -172,10 +172,11 @@ export async function emptyBinAction(
       }
     }
 
-    revalidatePath("/hampers");
-    revalidatePath("/products");
-    revalidatePath("/bin");
-    return { ok: true, message: `Successfully deleted ${deletedCount} item${deletedCount === 1 ? "" : "s"} permanently.` };
+    return {
+      ok: true,
+      emptied,
+      message: `Successfully deleted ${deletedCount} item${deletedCount === 1 ? "" : "s"} permanently.`,
+    };
   } catch (err: unknown) {
     return { error: describeError(err) };
   }

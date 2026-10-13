@@ -2,7 +2,11 @@
 
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState, useTransition, useMemo } from "react";
-import type { BinItem, BinCounts, BinItemType } from "./bin-types";
+import Link from "@/components/link";
+import { markOtherPagesStale } from "@/components/stale-pages";
+import { PageHeader } from "@/components/ui";
+import { binCounts, type BinItem, type BinItemType } from "./bin-types";
+import { BinNotice, type Notice } from "./bin-notice";
 import { BinItemRow } from "./bin-item-row";
 import { BinHeader } from "./bin-header";
 import { BinToolbar } from "./bin-toolbar";
@@ -11,26 +15,44 @@ import { purgeExpiredAction } from "./bin-purge";
 
 export function BinView({
   initialItems,
-  counts,
   canManage,
   isAdmin,
 }: {
   initialItems: BinItem[];
-  counts: BinCounts;
   canManage: boolean;
   isAdmin: boolean;
 }) {
+  // Actions drop rows here instead of re-rendering the page on the server.
+  const [items, setItems] = useState(initialItems);
+  const [prevInitial, setPrevInitial] = useState(initialItems);
+  if (initialItems !== prevInitial) {
+    setPrevInitial(initialItems);
+    setItems(initialItems);
+  }
+  const counts = binCounts(items);
+
+  /** Remove items for good; a product deleted for good takes its binned photos with it. */
+  function purge(gone: (item: BinItem) => boolean) {
+    setItems((prev) => {
+      const products = new Set(prev.filter((i) => i.type === "product" && gone(i)).map((i) => i.id));
+      return prev.filter((i) => !gone(i) && !(i.type === "image" && products.has(i.metadata?.productId ?? "")));
+    });
+    markOtherPagesStale();
+  }
+
+  function handleGone(item: BinItem, permanently: boolean) {
+    if (permanently) return purge((i) => i.id === item.id && i.type === item.type);
+    setItems((prev) => prev.filter((i) => i !== item));
+    markOtherPagesStale();
+  }
   const [selectedTab, setSelectedTab] = useState<"all" | BinItemType>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [notification, setNotification] = useState<{
-    text: string;
-    error?: boolean;
-  } | null>(null);
+  const [notification, setNotification] = useState<Notice | null>(null);
 
   const [isPending, startTransition] = useTransition();
 
   const filteredItems = useMemo(() => {
-    return initialItems.filter((item) => {
+    return items.filter((item) => {
       if (selectedTab !== "all" && item.type !== selectedTab) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -41,7 +63,7 @@ export function BinView({
       }
       return true;
     });
-  }, [initialItems, selectedTab, searchQuery]);
+  }, [items, selectedTab, searchQuery]);
 
   function handleEmptyBin() {
     const scopeLabel =
@@ -66,6 +88,8 @@ export function BinView({
       if (res.error) {
         setNotification({ text: res.error, error: true });
       } else {
+        const emptied = res.emptied ?? [];
+        purge((i) => emptied.includes(i.type));
         setNotification({ text: res.message || "Bin emptied successfully." });
       }
     });
@@ -77,6 +101,7 @@ export function BinView({
       if (res.error) {
         setNotification({ text: res.error, error: true });
       } else {
+        purge((i) => i.daysRemaining === 0);
         setNotification({ text: res.message || "Expired items purged." });
       }
     });
@@ -84,33 +109,14 @@ export function BinView({
 
   return (
     <div className="space-y-4">
+      <PageHeader title="Recycle Bin" subtitle={`${counts.all} item${counts.all === 1 ? "" : "s"} in bin`}>
+        <Link href="/settings" className="btn-secondary">
+          Settings
+        </Link>
+      </PageHeader>
+
       {/* Informational notification or feedback toast */}
-      {notification && (
-        <div
-          role="status"
-          className={`flex items-center justify-between rounded-lg border px-4 py-3 text-sm transition-all ${
-            notification.error
-              ? "border-red-200 bg-red-50 text-red-800"
-              : "border-line bg-paper text-(--color-ink)"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <span
-              className={`inline-block h-2 w-2 rounded-full ${
-                notification.error ? "bg-red-500" : "bg-(--color-brand)"
-              }`}
-            />
-            <span>{notification.text}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setNotification(null)}
-            className="text-xs font-semibold uppercase hover:underline"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
+      {notification && <BinNotice notice={notification} onDismiss={() => setNotification(null)} />}
 
       {/* Overview & explanation banner */}
       <BinHeader
@@ -155,6 +161,7 @@ export function BinView({
                   canManage={canManage}
                   isAdmin={isAdmin}
                   onNotify={setNotification}
+                  onGone={handleGone}
                 />
               ))}
             </TableBody>

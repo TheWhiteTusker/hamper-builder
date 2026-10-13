@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { markOtherPagesStale } from "@/components/stale-pages";
+import { applyCostChanges, buildCostTree, type CostRows } from "@/lib/cost-tree";
 import type { ProductColor } from "@/lib/product-code";
-import type { CostStageWithHierarchy, CostSubcategoryWithVarieties, CostVariety } from "@/lib/types";
-import { duplicateCostSubcategory, moveCostSubcategory, saveCostVariety } from "./actions";
+import type { CostSubcategoryWithVarieties, CostVariety } from "@/lib/types";
+import { duplicateCostSubcategory, moveCostSubcategory } from "./transfer-actions";
+import { saveCostVariety } from "./variety-actions";
 import { ColorsCard } from "./colors-card";
 import { filterStages } from "./filter";
 import type { MasterCtx } from "./master-ui";
@@ -13,12 +16,21 @@ import { TransferSubcategoryDialog } from "./transfer-subcategory-dialog";
 import { VarietyDialog } from "./variety-dialog";
 
 export function CostMasterView({
-  stages,
+  rows: serverRows,
   productColors,
 }: {
-  stages: CostStageWithHierarchy[];
+  rows: CostRows;
   productColors: ProductColor[];
 }) {
+  // Edits patch these rows in place; a server re-render (repricing, a refresh)
+  // replaces them wholesale.
+  const [rows, setRows] = useState(serverRows);
+  const [prevServerRows, setPrevServerRows] = useState(serverRows);
+  if (serverRows !== prevServerRows) {
+    setPrevServerRows(serverRows);
+    setRows(serverRows);
+  }
+  const stages = buildCostTree(rows);
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ error?: string; success?: string }>({});
   // The variety being added or edited, and the subcategory it belongs to.
@@ -54,6 +66,11 @@ export function CostMasterView({
       setFeedback({});
       startTransition(async () => {
         const res = await action();
+        if (res.changes) {
+          const changes = res.changes;
+          setRows((r) => applyCostChanges(r, changes));
+          markOtherPagesStale();
+        }
         if (res.error) return setFeedback({ error: res.error });
         after?.();
         setFeedback({ success: res.message ?? success });
@@ -133,7 +150,6 @@ export function CostMasterView({
               () => moveCostSubcategory(subId, targetCatId),
               "Subcategory moved successfully!",
               () => {
-                const targetCat = stages.flatMap((s) => s.categories).find((c) => c.id === targetCatId);
                 setTransferModal(null);
                 ctx.expand(targetCatId);
                 ctx.expand(subId);

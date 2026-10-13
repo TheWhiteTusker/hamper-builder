@@ -3,7 +3,9 @@
 import { useState, useTransition, useEffect } from "react";
 import { Plus, Check, AlertCircle } from "lucide-react";
 import type { Settings } from "@/lib/types";
+import { markOtherPagesStale } from "@/components/stale-pages";
 import { addPickListItem, removePickListItem } from "./actions";
+import { DefaultForm } from "./_forms/setting-forms";
 import { AddOptionDialog } from "./_picklists/add-option-dialog";
 import { PICK_LIST_CONFIGS, type PickListKey } from "./_picklists/configs";
 import { ListSelector } from "./_picklists/list-selector";
@@ -46,6 +48,7 @@ export function PickListManager({ settings }: { settings: Settings }) {
         setLists((prev) => ({ ...prev, [key]: previous }));
         setStatusMessage({ type: "error", text: res.error });
       } else {
+        markOtherPagesStale();
         setStatusMessage({ type: "success", text: success });
       }
     });
@@ -143,6 +146,33 @@ export function PickListManager({ settings }: { settings: Settings }) {
           onClose={() => setAdding(null)}
         />
       )}
+
+      {/* Here, not on the page, so an option added above is offered straight away. */}
+      <div className="mt-6 border-t border-line pt-4">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-(--color-muted)">
+          Default Selections
+        </h3>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <DefaultForm
+            settingKey="default_detail_mode"
+            label="Default contents setting"
+            value={settings.default_detail_mode}
+            options={lists.detail_modes}
+          />
+          <DefaultForm
+            settingKey="default_packaging_treatment"
+            label="Default packaging treatment"
+            value={settings.default_packaging_treatment}
+            options={lists.packaging_treatments}
+          />
+          <DefaultForm
+            settingKey="default_validity"
+            label="Default validity"
+            value={settings.default_validity}
+            options={lists.validity_options}
+          />
+        </div>
+      </div>
     </div>
   );
 }

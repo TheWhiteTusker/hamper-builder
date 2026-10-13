@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import type { CostCategoryWithSubcategories } from "@/lib/types";
-import { deleteCostCategory, renameCostCategory, saveCostSubcategory } from "./actions";
+import { deleteCostCategory, renameCostCategory } from "./category-actions";
+import { saveCostSubcategory } from "./subcategory-actions";
 import { Chevron, InlineAdd, type MasterCtx } from "./master-ui";
 import { SubcategoryBlock } from "./subcategory-block";
 

@@ -7,7 +7,8 @@ import {
   colorCode,
   type ProductColor,
 } from "@/lib/product-code";
-import { saveProductColors } from "./actions";
+import { markOtherPagesStale } from "@/components/stale-pages";
+import { saveProductColors } from "./variety-actions";
 
 export function ColorsCard({ productColors }: { productColors: ProductColor[] }) {
   const [isPending, startTransition] = useTransition();
@@ -20,6 +21,7 @@ export function ColorsCard({ productColors }: { productColors: ProductColor[] })
   function save(updated: ProductColor[], msg: string) {
     startTransition(async () => {
       await saveProductColors(updated);
+      markOtherPagesStale();
       setColorMsg(msg);
       setTimeout(() => setColorMsg(""), 3000);
     });

@@ -12,18 +12,13 @@ import type {
 } from "@/lib/types";
 import { parseProductCode } from "@/lib/product-code";
 import { variantIdsByColor } from "@/lib/product-variants";
-
-function groupBy<T>(rows: T[] | null, key: (row: T) => string) {
-  const map = new Map<string, T[]>();
-  for (const row of rows ?? []) map.set(key(row), [...(map.get(key(row)) ?? []), row]);
-  return map;
-}
+import { buildCostTree, type CostRows } from "@/lib/cost-tree";
 
 const active = <T,>(supabase: SupabaseClient, table: string) =>
   supabase.from(table).select("*").eq("is_active", true).order("sort_order").returns<T[]>();
 
-/** The 4-level costing hierarchy: stage -> category -> subcategory -> variety. */
-export async function loadCostStages(supabase: SupabaseClient): Promise<CostStageWithHierarchy[]> {
+/** The costing hierarchy's four tables, flat (active rows only). */
+export async function loadCostRows(supabase: SupabaseClient): Promise<CostRows> {
   const [{ data: stages }, { data: categories }, { data: subcategories }, { data: varieties }] =
     await Promise.all([
       active<CostStage>(supabase, "cost_stages"),
@@ -31,17 +26,17 @@ export async function loadCostStages(supabase: SupabaseClient): Promise<CostStag
       active<CostSubcategory>(supabase, "cost_subcategories"),
       active<CostVariety>(supabase, "cost_varieties"),
     ]);
+  return {
+    stages: stages ?? [],
+    categories: categories ?? [],
+    subcategories: subcategories ?? [],
+    varieties: varieties ?? [],
+  };
+}
 
-  const varietiesBySub = groupBy(varieties, (v) => v.subcategory_id);
-  const subsByCat = groupBy(
-    (subcategories ?? []).map((sub) => ({ ...sub, varieties: varietiesBySub.get(sub.id) ?? [] })),
-    (sub) => sub.category_id,
-  );
-  const catsByStage = groupBy(
-    (categories ?? []).map((cat) => ({ ...cat, subcategories: subsByCat.get(cat.id) ?? [] })),
-    (cat) => cat.stage_id,
-  );
-  return (stages ?? []).map((stage) => ({ ...stage, categories: catsByStage.get(stage.id) ?? [] }));
+/** The 4-level costing hierarchy: stage -> category -> subcategory -> variety. */
+export async function loadCostStages(supabase: SupabaseClient): Promise<CostStageWithHierarchy[]> {
+  return buildCostTree(await loadCostRows(supabase));
 }
 
 /** A product with its cost sheet (and lines) and photos, or null if the code is unknown. */

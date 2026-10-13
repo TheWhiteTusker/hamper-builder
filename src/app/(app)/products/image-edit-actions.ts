@@ -1,6 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+// No revalidatePath here: the photo manager patches its own list, and
+// markOtherPagesStale() refreshes other pages on the next navigation.
+
 import { createClient } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
 import { colorTag } from "@/lib/product-code";
@@ -41,8 +43,6 @@ export async function setPrimaryProductImage(
         .eq("id", productId);
     }
 
-    revalidatePath("/products");
-    revalidatePath("/hampers");
     return { ok: true, image: updated };
   } catch (err: unknown) {
     return { error: describeError(err) };
@@ -67,7 +67,6 @@ export async function updateProductImageColor(
 
     if (error) return { error: describeError(error) };
 
-    revalidatePath("/products");
     return { ok: true, image: updated };
   } catch (err: unknown) {
     return { error: describeError(err) };
@@ -105,6 +104,7 @@ export async function deleteProductImage(
     if (delError) return { error: describeError(delError) };
 
     // If this was primary, update products.image_url to next available active image or null
+    let promoted: ProductImage | undefined;
     if (img.is_primary) {
       const { data: nextImg } = await supabase
         .from("product_images")
@@ -125,6 +125,7 @@ export async function deleteProductImage(
           .from("products")
           .update({ image_url: nextImg.url })
           .eq("id", productId);
+        promoted = { ...nextImg, is_primary: true };
       } else {
         await supabase
           .from("products")
@@ -133,10 +134,8 @@ export async function deleteProductImage(
       }
     }
 
-    revalidatePath("/products");
-    revalidatePath("/hampers");
-    revalidatePath("/bin");
-    return { ok: true };
+    // The photo that took over as cover, if any, so the caller can show it.
+    return { ok: true, image: promoted };
   } catch (err: unknown) {
     return { error: describeError(err) };
   }

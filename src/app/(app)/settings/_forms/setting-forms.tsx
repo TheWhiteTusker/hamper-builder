@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { saveDefault } from "../actions";
-import { Status } from "./status";
+import { Status, keepValues } from "./status";
 
 export function TermsForm({
   settingKey,
@@ -16,7 +16,7 @@ export function TermsForm({
   const [state, action, pending] = useActionState(saveDefault, {});
 
   return (
-    <form action={action} className="card p-4">
+    <form onSubmit={keepValues(action)} className="card p-4">
       <input type="hidden" name="key" value={settingKey} />
       <h2 className="text-sm font-semibold">{title}</h2>
       <p className="mt-0.5 text-xs text-[var(--color-muted)]">
@@ -55,7 +55,7 @@ export function DefaultForm({
   const [state, action, pending] = useActionState(saveDefault, {});
 
   return (
-    <form action={action} className="rounded-md border border-[var(--color-line)] p-3">
+    <form onSubmit={keepValues(action)} className="rounded-md border border-[var(--color-line)] p-3">
       <input type="hidden" name="key" value={settingKey} />
 
       <label className="label" htmlFor={`default-${settingKey}`}>
