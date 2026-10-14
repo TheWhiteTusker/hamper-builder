@@ -3,8 +3,9 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, requireUser } from "@/lib/supabase/server";
 import { type ActionState, describeError } from "@/lib/forms";
+import { pushLinePrices } from "./push-prices";
 
 const nullableText = z.string().trim().nullable().optional();
 
@@ -18,6 +19,8 @@ const LineSchema = z.object({
   unit_cp: z.number(),
   unit_sp: z.number(),
   target_margin: z.number(),
+  /** Margin or price typed by hand on this line. */
+  reprice: z.boolean().optional(),
 });
 
 const HamperSchema = z.object({
@@ -56,13 +59,26 @@ export async function saveHamper(
     };
   }
 
-  const supabase = await createClient();
+  const { supabase, profile } = await requireUser();
+
+  // Prices typed on a line become the product's price too. First, because it
+  // is safe to repeat: a retry after a failure cannot create a second hamper.
+  // Product Master is admin-only (RLS); a manager's prices stay on the hamper.
+  const repriced = parsed.data.lines.flatMap((l) => (l.reprice && l.product_id ? [{ ...l, product_id: l.product_id }] : []));
+  if (profile.role === "admin" && repriced.length) {
+    const pushError = await pushLinePrices(supabase, repriced);
+    if (pushError) return { error: `Could not update the product prices: ${pushError}` };
+    revalidatePath("/products", "layout");
+    revalidatePath("/cost-calculator", "layout");
+  }
+
   const { data: code, error } = await supabase.rpc("save_hamper", { p: parsed.data });
 
   if (error) return { error: describeError(error) };
 
   revalidatePath("/hampers");
-  revalidatePath(`/hampers/${encodeURIComponent(String(code))}`);
+  // "layout" covers both the preview and its /edit page.
+  revalidatePath(`/hampers/${encodeURIComponent(String(code))}`, "layout");
   // Saving is the end of the job, so it lands back on the list rather than
   // leaving you parked on the hamper you just finished.
   redirect("/hampers");
@@ -83,7 +99,7 @@ export async function duplicateHamper(
   if (error) return { error: describeError(error) };
 
   revalidatePath("/hampers");
-  redirect(`/hampers/${encodeURIComponent(String(newCode))}?duplicated=${encodeURIComponent(code)}`);
+  redirect(`/hampers/${encodeURIComponent(String(newCode))}/edit?duplicated=${encodeURIComponent(code)}`);
 }
 
 export async function deleteHamper(

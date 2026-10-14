@@ -6,7 +6,7 @@ import Image from "next/image";
 import { formatMoney, num } from "@/lib/pricing";
 import type { Category } from "@/lib/types";
 import { Combo, RowButton } from "./controls";
-import { productLabel, type CatalogProduct, type Line } from "./hamper-state";
+import { priceEdit, productLabel, type CatalogProduct, type Line } from "./hamper-state";
 import { thumbProps } from "@/lib/product-images";
 
 export function HamperLineRow({
@@ -56,7 +56,7 @@ export function HamperLineRow({
         className="input input-num"
         value={line[key]}
         disabled={!canEdit}
-        onChange={(e) => onChange({ [key]: e.target.value })}
+        onChange={(e) => onChange(key === "qty" ? { qty: e.target.value } : priceEdit(line, key, e.target.value))}
       />
     </TableCell>
   );

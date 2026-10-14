@@ -90,7 +90,7 @@ export async function saveHamperCanvas(hamperId: string, formData: FormData): Pr
     }
 
     revalidatePath("/hampers");
-    if (before) revalidatePath(`/hampers/${encodeURIComponent(before.code)}`);
+    if (before) revalidatePath(`/hampers/${encodeURIComponent(before.code)}`, "layout");
     return { ok: true, url };
   } catch (err: unknown) {
     return { error: describeError(err) };

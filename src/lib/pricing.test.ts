@@ -6,6 +6,8 @@ import {
   priceQuoteLine,
   normalizePct,
   round2,
+  spAtMargin,
+  marginPctOf,
 } from "./pricing.ts";
 
 // A hamper worked by hand, the way it would be on the sheet:
@@ -116,4 +118,13 @@ test("percentages survive both spreadsheet export shapes", () => {
   assert.equal(normalizePct("80.00%"), 0.8); // .xlsx / Sheets export of a percent cell
   assert.equal(normalizePct(""), 0);
   assert.equal(normalizePct(null), 0);
+});
+
+test("hamper line margin and price follow each other", () => {
+  // 100 cost at 35% -> 153.85, rounded up to 160, as the calculator prices it.
+  assert.equal(spAtMargin(100, 35), 160);
+  assert.equal(spAtMargin(100, 100), null); // no finite price
+  assert.equal(spAtMargin(0, 35), null); // nothing to price from
+  assert.equal(marginPctOf(100, 160), 37.5);
+  assert.equal(marginPctOf(100, 0), null);
 });

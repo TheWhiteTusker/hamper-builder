@@ -1,4 +1,4 @@
-import { num, round2 } from "@/lib/pricing";
+import { marginPctOf, num, round2, spAtMargin } from "@/lib/pricing";
 import type { Hamper, HamperItem } from "@/lib/types";
 
 /** The slice of Product Master the builder needs in the browser. */
@@ -30,6 +30,8 @@ export type Line = {
   unit_cp: string;
   unit_sp: string;
   target_margin: string;
+  /** Margin or price typed by hand: saving makes it the product's price too. */
+  repriced: boolean;
 };
 
 /** Hamper details as typed; discount is a whole percent. */
@@ -64,6 +66,7 @@ export const blankLine = (): Line => ({
   unit_cp: "",
   unit_sp: "",
   target_margin: "",
+  repriced: false,
 });
 
 export const toLine = (item: HamperItem): Line => ({
@@ -77,6 +80,7 @@ export const toLine = (item: HamperItem): Line => ({
   unit_cp: String(item.unit_cp),
   unit_sp: String(item.unit_sp),
   target_margin: String(round2(item.target_margin * 100)),
+  repriced: false,
 });
 
 /** Same job as populateProductRow() in the Apps Script: a product fills its line. */
@@ -91,8 +95,28 @@ export const productPatch = (p: CatalogProduct | undefined): Partial<Line> =>
         unit_cp: String(p.cost_price),
         unit_sp: String(p.default_sp),
         target_margin: String(round2(p.target_margin * 100)),
+        repriced: false,
       }
-    : { product_id: null, product_code: "", product_name: "" };
+    : { product_id: null, product_code: "", product_name: "", repriced: false };
+
+/**
+ * Margin and unit price follow each other: a margin prices the line from its
+ * cost, a typed price works out the margin. A new cost keeps the price and
+ * moves the margin, as a cost change does in the calculator.
+ */
+export function priceEdit(line: Line, key: "unit_cp" | "unit_sp" | "target_margin", value: string): Partial<Line> {
+  const cp = num(key === "unit_cp" ? value : line.unit_cp);
+  if (key === "target_margin") {
+    const sp = value === "" ? null : spAtMargin(cp, num(value));
+    return { target_margin: value, repriced: true, ...(sp !== null && { unit_sp: String(sp) }) };
+  }
+  const margin = marginPctOf(cp, num(key === "unit_sp" ? value : line.unit_sp));
+  return {
+    [key]: value,
+    ...(margin !== null && { target_margin: String(margin) }),
+    ...(key === "unit_sp" && { repriced: true }),
+  };
+}
 
 /** What a product looks like in the search box - name plus code, so typing
     either one narrows the list, and the text maps back to exactly one product. */
@@ -130,5 +154,6 @@ export const hamperPayload = (f: HamperFields, lines: Line[], hamper?: Hamper) =
         unit_cp: num(l.unit_cp),
         unit_sp: num(l.unit_sp),
         target_margin: num(l.target_margin) / 100,
+        reprice: l.repriced,
       })),
   });

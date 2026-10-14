@@ -153,7 +153,7 @@ export function HamperBuilder({
             <button type="submit" className="btn-primary" disabled={saving}>
               {saving ? "Saving…" : hamper ? "Save changes" : "Create hamper"}
             </button>
-            <Link href="/hampers" className="btn-secondary">
+            <Link href={hamper ? `/hampers/${encodeURIComponent(hamper.code)}` : "/hampers"} className="btn-secondary">
               Cancel
             </Link>
           </div>

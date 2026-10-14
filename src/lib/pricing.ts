@@ -11,7 +11,7 @@
  * hiding them in cell formulas.
  */
 
-import { num } from "./numbers.ts";
+import { num, round2, roundUpToNext10 } from "./numbers.ts";
 
 export * from "./numbers.ts";
 export * from "./money-format.ts";
@@ -84,6 +84,21 @@ export function priceHamper(
         : grossProfit / finalSp,
   };
 }
+
+/**
+ * A hamper line's margin (a whole percent, as typed) and unit price follow
+ * each other the way the calculator's markup and SP do: price = cost ÷
+ * (1 − margin), rounded up to the next 10. null when there is no cost to
+ * price from, or at 100%+, which has no finite price.
+ */
+export const spAtMargin = (cp: number, marginPct: number): number | null => {
+  const divisor = 1 - marginPct / 100;
+  return cp > 0 && divisor > 0 ? roundUpToNext10(cp / divisor) : null;
+};
+
+/** Margin as a whole percent, (price − cost) ÷ price; null without a price. */
+export const marginPctOf = (cp: number, sp: number): number | null =>
+  sp > 0 ? round2(((sp - cp) / sp) * 100) : null;
 
 // ---------------------------------------------------------------
 // QUOTES

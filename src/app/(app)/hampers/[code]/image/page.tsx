@@ -35,7 +35,7 @@ export default async function HamperImagePage({
     <CanvasEditor
       title={hamper.name}
       subtitle={hamper.code}
-      backHref={`/hampers/${encodeURIComponent(hamper.code)}`}
+      backHref={`/hampers/${encodeURIComponent(hamper.code)}/edit`}
       downloadName={hamper.code}
       onSave={saveHamperCanvas.bind(null, hamper.id)}
       onUpload={uploadHamperBackground.bind(null, hamper.id)}
