@@ -16,10 +16,28 @@ const BATCH = 16;
  */
 const TRANSFORMERS = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1";
 
+/**
+ * The model and the ONNX runtime are large CDN files that sometimes fail on the
+ * first try (a cold CDN cache answers 503 without CORS, seen as "Failed to fetch").
+ * Retry a few times, and name the file if it still fails.
+ */
+async function retryingFetch(input: string | URL, init?: RequestInit): Promise<Response> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const res = await fetch(input, init);
+      if (res.status < 500 || attempt === 3) return res;
+    } catch (err) {
+      if (attempt === 3) throw new Error(`${err instanceof Error ? err.message : err} (${String(input).split("?")[0]})`);
+    }
+    await new Promise((r) => setTimeout(r, attempt * 1500));
+  }
+}
+
 async function loadModel() {
   const tf: typeof import("@huggingface/transformers") = await import(
     /* webpackIgnore: true */ /* turbopackIgnore: true */ TRANSFORMERS
   );
+  tf.env.fetch = retryingFetch;
   const open = (device: "webgpu" | "wasm") =>
     Promise.all([tf.SamModel.from_pretrained(MODEL, { device }) as Promise<SamModel>, tf.AutoProcessor.from_pretrained(MODEL)]);
   const [model, processor] =
