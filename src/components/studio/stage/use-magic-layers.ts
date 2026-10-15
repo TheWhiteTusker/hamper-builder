@@ -40,9 +40,13 @@ export function useMagicLayers(doc: CanvasDoc, onUpload: (ext: string) => Promis
   const magicSplit: Editor["magicSplit"] = async (id) => {
     const layer = doc.canvas.layers.find((l) => l.id === id);
     if (!magicEnabled || magicStep || layer?.kind !== "image") return;
-    setMagicStep({ label: "Starting" });
+    let step = "Starting";
+    setMagicStep({ label: step });
     try {
-      const layers = await runMagicLayers(layer, onUpload, setMagicStep);
+      const layers = await runMagicLayers(layer, onUpload, (s) => {
+        step = s.label;
+        setMagicStep(s);
+      });
       if (!layers.length) {
         setToast({ kind: "error", text: "No text or separate objects were found in that image." });
         return;
@@ -56,7 +60,8 @@ export function useMagicLayers(doc: CanvasDoc, onUpload: (ext: string) => Promis
       doc.selectMany(layers.map((l) => l.id));
       setToast({ kind: "ok", text: `Split into ${layers.length} layers. Double-click text to edit it; Undo puts the original back.` });
     } catch (err) {
-      setToast({ kind: "error", text: `Magic layers failed: ${err instanceof Error ? err.message : "unknown error"}` });
+      const why = err instanceof Error ? err.message : String(err ?? "unknown error");
+      setToast({ kind: "error", text: `Magic layers failed at "${step}": ${why}. Try again; downloads often succeed on a retry.` });
     } finally {
       setMagicStep(null);
     }
