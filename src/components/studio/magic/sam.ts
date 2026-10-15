@@ -38,8 +38,16 @@ async function loadModel() {
     /* webpackIgnore: true */ /* turbopackIgnore: true */ TRANSFORMERS
   );
   tf.env.fetch = retryingFetch;
+  // Served from public/models, not huggingface.co: some networks (seen in India)
+  // can't reach Hugging Face at all, and no retry gets past that. Only the q8
+  // files are there, so WebGPU uses them too instead of its 40 MB fp32 default.
+  tf.env.remoteHost = `${location.origin}/models/`;
+  tf.env.remotePathTemplate = "{model}/";
   const open = (device: "webgpu" | "wasm") =>
-    Promise.all([tf.SamModel.from_pretrained(MODEL, { device }) as Promise<SamModel>, tf.AutoProcessor.from_pretrained(MODEL)]);
+    Promise.all([
+      tf.SamModel.from_pretrained(MODEL, { device, dtype: "q8" }) as Promise<SamModel>,
+      tf.AutoProcessor.from_pretrained(MODEL),
+    ]);
   const [model, processor] =
     "gpu" in navigator ? await open("webgpu").catch(() => open("wasm")) : await open("wasm");
   return { tf, model, processor };
