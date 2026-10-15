@@ -1,7 +1,8 @@
 "use client";
 
 import { Slash, Spline } from "lucide-react";
-import { SHAPES, type Editor } from "../editor";
+import type { Editor } from "../editor";
+import { SHAPES } from "../shapes";
 import { cx, panelTitle } from "../studio-ui";
 
 export function ElementsPanel({ ed }: { ed: Editor }) {

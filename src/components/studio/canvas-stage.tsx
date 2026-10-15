@@ -19,6 +19,7 @@ import { documentColorsOf, useCanvasDoc } from "./stage/use-canvas-doc";
 import { useDrawTool, type Tool } from "./stage/use-draw-tool";
 import { useFontTick } from "./stage/use-font-tick";
 import { useLayerEvents } from "./stage/use-layer-events";
+import { useMagicLayers } from "./stage/use-magic-layers";
 import { useStageImages } from "./stage/use-stage-images";
 import { useStageKeys } from "./stage/use-stage-keys";
 import { useStageSave } from "./stage/use-stage-save";
@@ -73,6 +74,7 @@ export default function CanvasStage({
   const view = useStageView(boardRef, canvas.width, canvas.height);
   const saver = useStageSave({ doc, view, pageRef, onSave, saveImage, savedMessage, downloadName });
   const images = useStageImages(doc, onUpload, saver.setToast);
+  const magic = useMagicLayers(doc, onUpload, saver.setToast);
   const arrange = useArrange(doc, nodes, pageRef);
 
   const documentColors = useMemo(() => documentColorsOf(canvas), [canvas]);
@@ -88,6 +90,7 @@ export default function CanvasStage({
     move: (ids, m) => setLayers((ls) => moveLayers(ls, ids, m)),
     reorder: (id, to) => setLayers((ls) => reorderLayer(ls, id, to)),
     ...images,
+    ...magic,
     startSwap: (id) => {
       images.setSwapId(id);
       if (id) setTab("products");

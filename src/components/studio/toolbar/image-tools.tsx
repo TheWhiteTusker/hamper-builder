@@ -5,6 +5,7 @@ import { FlipHorizontal2, FlipVertical2, Maximize2, Replace, Scissors } from "lu
 import type { Layer } from "@/lib/hamper-canvas";
 import type { Editor } from "../editor";
 import { Divider, Popover, Slider, ToolButton, accentBtn, cx } from "../studio-ui";
+import { MagicTools } from "./magic-tools";
 
 const icon = "h-4 w-4";
 
@@ -39,6 +40,7 @@ export function ImageTools({ ed, l }: { ed: Editor; l: Extract<Layer, { kind: "i
           )}
         </Popover>
       )}
+      <MagicTools ed={ed} l={l} />
       <Popover title="Flip" width={170} trigger={<><FlipHorizontal2 className={icon} /> Flip</>}>
         {(close) => (
           <div className="space-y-1">

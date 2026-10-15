@@ -25,6 +25,9 @@ allowBuilds:
   workerd: true
   electron: true
   electron-winstaller: true
+  onnxruntime-node: false
+  protobufjs: false
+  tesseract.js: false
 
 # Flat node_modules. OpenNext's bundler symlinks pnpm's nested layout while
 # tracing files, which Windows refuses without elevation (EPERM), so
