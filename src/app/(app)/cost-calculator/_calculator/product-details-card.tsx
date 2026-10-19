@@ -8,7 +8,7 @@ import { ColorPhotoRows } from "./color-photo-rows";
 import { ORIGINS } from "./lines";
 import type { ProductDetails } from "./use-product-details";
 import type { ProductPhotos } from "./use-product-photos";
-import { thumbProps } from "@/lib/product-images";
+import { thumbProps } from "@/lib/product-image-props";
 
 export function ProductDetailsCard({
   details,

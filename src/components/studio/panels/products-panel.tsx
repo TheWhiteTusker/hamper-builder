@@ -5,7 +5,7 @@ import { ArrowLeft, Package, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { DRAG_MIME, type Editor, type PickerProduct } from "../editor";
 import { cx, fieldCls, toolBtn } from "../studio-ui";
-import { thumbProps } from "@/lib/product-images";
+import { thumbProps } from "@/lib/product-image-props";
 
 function setDragImage(e: React.DragEvent, product: PickerProduct, url: string) {
   e.dataTransfer.setData(DRAG_MIME, JSON.stringify({ product, url }));

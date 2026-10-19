@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { formatMoney } from "@/lib/pricing";
 import type { DeckItem } from "./deck-schemas";
-import { thumbProps } from "@/lib/product-images";
+import { thumbProps } from "@/lib/product-image-props";
 
 export type PickableItem = {
   type: "hamper" | "product";

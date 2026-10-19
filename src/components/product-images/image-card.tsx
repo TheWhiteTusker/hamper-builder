@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { FALLBACK_COLOR_HEX, type ProductColor } from "@/lib/product-code";
 import type { ProductImage } from "@/lib/types";
-import { thumbProps } from "@/lib/product-images";
+import { thumbProps } from "@/lib/product-image-props";
 
 /** One photo: cover badge, delete, its colour tag and "Make Primary". */
 export function ImageCard({

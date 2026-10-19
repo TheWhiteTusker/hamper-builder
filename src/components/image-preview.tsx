@@ -2,7 +2,8 @@
 
 import { useRef } from "react";
 import Image from "next/image";
-import { thumbProps, thumbUrl, viewProps, viewUrl } from "@/lib/product-images";
+import { thumbUrl, viewUrl } from "@/lib/product-images";
+import { thumbProps, viewProps } from "@/lib/product-image-props";
 
 /**
  * A thumbnail that opens the full image in a modal. Native <dialog> gives

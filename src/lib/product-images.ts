@@ -1,4 +1,3 @@
-import type { SyntheticEvent } from "react";
 import type { ProductImage } from "./types.ts";
 import { COLOR_TO_CODE, CODE_TO_COLOR, colorCode } from "./product-code.ts";
 
@@ -105,15 +104,3 @@ export const viewPath = (path: string) => copyPath(path, "view");
 /** The WebP copy of one of our product photos; any other URL (external, hamper, blob) is unchanged. */
 export const thumbUrl = (url: string) => (url.includes(PRODUCT_PHOTOS) ? thumbPath(url) : url);
 export const viewUrl = (url: string) => (url.includes(PRODUCT_PHOTOS) ? viewPath(url) : url);
-
-/** <img>/<Image> props showing `src`, falling back to the original if that copy is missing. */
-function withFallback(src: string, url: string) {
-  return {
-    src,
-    onError: (e: SyntheticEvent<HTMLImageElement>) => {
-      if (e.currentTarget.src !== url) e.currentTarget.src = url;
-    },
-  };
-}
-export const thumbProps = (url: string) => withFallback(thumbUrl(url), url);
-export const viewProps = (url: string) => withFallback(viewUrl(url), url);

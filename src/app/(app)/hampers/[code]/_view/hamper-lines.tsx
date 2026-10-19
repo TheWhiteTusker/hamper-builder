@@ -5,7 +5,7 @@
 import Image from "next/image";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatMoney, formatPct } from "@/lib/pricing";
-import { thumbProps } from "@/lib/product-images";
+import { thumbProps } from "@/lib/product-image-props";
 import type { HamperItem } from "@/lib/types";
 
 /** A saved line plus its product's photo, if the product still exists. */
@@ -15,17 +15,17 @@ export type PreviewItem = HamperItem & { products: { image_url: string | null } 
 export function HamperLines({ items }: { items: PreviewItem[] }) {
   return (
     <section className="card overflow-hidden">
-      <div className="border-b border-[var(--color-line)] px-4 py-2.5">
+      <div className="border-b border-(--color-line) px-4 py-2.5">
         <h2 className="text-sm font-semibold">
           Products
-          <span className="ml-2 font-normal text-[var(--color-muted)]">
+          <span className="ml-2 font-normal text-(--color-muted)">
             {items.length} line{items.length === 1 ? "" : "s"}
           </span>
         </h2>
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="min-w-[960px]">
+        <Table className="min-w-240">
           <TableHeader>
             <TableRow>
               <TableHead>Product</TableHead>

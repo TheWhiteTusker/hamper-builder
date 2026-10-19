@@ -6,7 +6,7 @@ import Image from "next/image";
 import type { BinItem } from "./bin-types";
 import { restoreBinItem } from "./bin-restore";
 import { permanentlyDeleteBinItem } from "./bin-delete";
-import { thumbProps } from "@/lib/product-images";
+import { thumbProps } from "@/lib/product-image-props";
 
 export function BinItemRow({
   item,
