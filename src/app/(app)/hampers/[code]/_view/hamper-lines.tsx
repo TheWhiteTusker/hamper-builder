@@ -1,3 +1,7 @@
+"use client";
+
+// Client component: thumbProps() carries an onError handler, which a server
+// component can't pass to <Image> (the page fails to render).
 import Image from "next/image";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatMoney, formatPct } from "@/lib/pricing";
