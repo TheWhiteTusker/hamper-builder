@@ -8,9 +8,9 @@ import {
   intersects,
   layerConfig,
   moveLayers,
-  parseCanvas,
   snapToRightAngle,
 } from "./hamper-canvas.ts";
+import { parseCanvas } from "./hamper-canvas-schema.ts";
 
 const ids = (layers: { id: string }[]) => layers.map((l) => l.id).join("");
 

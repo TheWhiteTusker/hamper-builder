@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
-import { CanvasSchema } from "@/lib/hamper-canvas";
+import { CanvasSchema } from "@/lib/hamper-canvas-schema";
 import { signedImageUpload } from "@/lib/signed-upload";
 import type { ActionResult, UploadTicket } from "@/components/studio/editor";
 

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/supabase/server";
-import { parseCanvas } from "@/lib/hamper-canvas";
+import { parseCanvas } from "@/lib/hamper-canvas-schema";
 import { PrintDeck } from "./print-deck";
 
 export default async function PrintPresentationPage({ params }: { params: Promise<{ id: string }> }) {

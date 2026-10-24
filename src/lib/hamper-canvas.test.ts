@@ -8,7 +8,6 @@ import {
   fitScale,
   layerLabel,
   moveLayer,
-  parseCanvas,
   record,
   redo,
   reorderLayer,
@@ -16,6 +15,7 @@ import {
   startHistory,
   undo,
 } from "./hamper-canvas.ts";
+import { parseCanvas } from "./hamper-canvas-schema.ts";
 
 const ids = (layers: { id: string }[]) => layers.map((l) => l.id).join("");
 const abc = [{ id: "a" }, { id: "b" }, { id: "c" }];

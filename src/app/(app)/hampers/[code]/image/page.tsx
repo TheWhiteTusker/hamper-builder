@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/supabase/server";
-import { parseCanvas } from "@/lib/hamper-canvas";
+import { parseCanvas } from "@/lib/hamper-canvas-schema";
 import type { Hamper } from "@/lib/types";
 import { loadCatalog } from "../../data";
 import { CanvasEditor } from "@/components/studio/canvas-editor";

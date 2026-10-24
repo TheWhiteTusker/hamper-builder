@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cabin, Figtree, Geist_Mono } from "next/font/google";
+import { RegisterServiceWorker } from "@/components/register-sw";
 import { StaleBuildPrompt } from "@/components/stale-build-prompt";
 import "./globals.css";
 
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col font-(family-name:--font-figtree) overflow-x-clip">
         {children}
         <StaleBuildPrompt />
+        <RegisterServiceWorker />
       </body>
     </html>
   );

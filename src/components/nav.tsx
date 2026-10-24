@@ -4,7 +4,6 @@ import { useState, useSyncExternalStore } from "react";
 import Link from "@/components/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/types";
 
 const ROLE_LABEL: Record<Profile["role"], string> = {
@@ -60,6 +59,8 @@ export function Nav({ profile, desktop }: { profile: Profile; desktop: boolean }
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
   async function signOut() {
+    // Loaded on click: it is ~60 kB gzipped that no page needs until now.
+    const { createClient } = await import("@/lib/supabase/client");
     await createClient().auth.signOut();
     router.replace("/login");
     router.refresh();

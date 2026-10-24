@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/supabase/server";
-import { parseCanvas } from "@/lib/hamper-canvas";
+import { parseCanvas } from "@/lib/hamper-canvas-schema";
 import { loadPickerData } from "../data";
 import { DeckOverview } from "./deck-overview";
 

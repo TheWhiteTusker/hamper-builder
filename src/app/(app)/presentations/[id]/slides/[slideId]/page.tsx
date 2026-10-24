@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/supabase/server";
-import { parseCanvas } from "@/lib/hamper-canvas";
+import { parseCanvas } from "@/lib/hamper-canvas-schema";
 import { CanvasEditor } from "@/components/studio/canvas-editor";
 import { loadCatalog } from "@/app/(app)/hampers/data";
 import { saveSlide, uploadPresentationAsset } from "../../../slide-actions";

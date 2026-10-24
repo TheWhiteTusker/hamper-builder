@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { CanvasSchema } from "./hamper-canvas.ts";
+import { CanvasSchema } from "./hamper-canvas-schema.ts";
 import {
   arrangeRow,
   closingSlide,

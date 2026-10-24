@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CanvasSchema } from "@/lib/hamper-canvas";
+import { CanvasSchema } from "@/lib/hamper-canvas-schema";
 
 /** What the server actions accept for picked items and slides. */
 export const ItemSchema = z.object({ type: z.enum(["hamper", "product"]), id: z.string().uuid() });

@@ -4,7 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+// Supabase client is ~60 kB gzipped: fetched when the form is first touched, not with the page.
+const loadClient = () => import("@/lib/supabase/client");
 
 const inputCls =
   "w-full rounded-lg bg-black/60 border border-white/20 px-3 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-amber-300 focus:ring-1 focus:ring-amber-300/40 transition-colors";
@@ -35,7 +36,7 @@ export function AuthCard() {
     setBusy(true);
     setError(null);
     setNotice(null);
-    const supabase = createClient();
+    const supabase = (await loadClient()).createClient();
 
     if (mode === "reset") {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -92,7 +93,7 @@ export function AuthCard() {
         <p className="mt-0.5 text-xs text-amber-200/70 font-medium">Hamper costing and client quotations</p>
       </div>
 
-      <form onSubmit={submit} className="mt-5 space-y-3">
+      <form onSubmit={submit} onFocus={loadClient} className="mt-5 space-y-3">
         {mode === "signup" && (
           <div>
             <Label htmlFor="fullName">Full name</Label>
