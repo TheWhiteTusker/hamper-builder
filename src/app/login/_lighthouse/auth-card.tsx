@@ -97,7 +97,7 @@ export function AuthCard() {
         {mode === "signup" && (
           <div>
             <Label htmlFor="fullName">Full name</Label>
-            <input id="fullName" className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} required autoComplete="name" placeholder="E.g. Smriti Sharma" />
+            <input id="fullName" className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} required autoComplete="name" placeholder="E.g. John Doe" />
           </div>
         )}
 
