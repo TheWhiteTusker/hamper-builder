@@ -11,6 +11,7 @@ import type {
   ProductImage,
 } from "@/lib/types";
 import { CostSummary } from "./cost-summary";
+import { BOUGHT_OUT } from "./lines";
 import { ProductDetailsCard } from "./product-details-card";
 import { StageSection } from "./stage-section";
 import { useCostLines } from "./use-cost-lines";
@@ -103,6 +104,8 @@ export function CostCalculatorView({
           onToggle={() => details.toggleStage(stage.code)}
           overhead={pricing.overheadFor(stage.code)}
           onOverhead={(pct) => pricing.setOverhead(stage.code, pct)}
+          // Outsourced: bought-out items are typed in and saved to the master.
+          freeEntry={stage.code === BOUGHT_OUT && details.source === "Outsource"}
         />
       ))}
 

@@ -9,6 +9,8 @@ import { roundUpToNext10 } from "@/lib/numbers.ts";
 import { describeError } from "@/lib/forms";
 import { getNextSerialForCategory } from "@/lib/product-code";
 import type { ProductCostLine } from "@/lib/types";
+import { linkBoughtOutLines } from "@/lib/bought-out-master";
+import { repriceVarieties } from "./reprice";
 import { prepareLines, saveColorVariants, saveRow } from "./save-sheet";
 
 export type SaveCostSheetPayload = {
@@ -45,7 +47,14 @@ export async function saveCostSheetAndProduct(payload: SaveCostSheetPayload) {
     if (!code) return { error: "Product code is required." };
     if (!name) return { error: "Product name is required." };
 
-    const preparedLines = prepareLines(payload.lines);
+    // Outsourced products type their bought-out items; they go into the master here.
+    const master =
+      payload.source === "Outsource"
+        ? await linkBoughtOutLines(supabase, payload.lines)
+        : { lines: payload.lines, repriced: [] };
+    if (master.error !== undefined) return { error: master.error };
+
+    const preparedLines = prepareLines(master.lines);
     // Only real, non-zero percentages are kept.
     const stageOverheads = Object.fromEntries(
       Object.entries(payload.stageOverheads ?? {})
@@ -130,6 +139,10 @@ export async function saveCostSheetAndProduct(payload: SaveCostSheetPayload) {
       preparedLines,
     );
     if (saved.error !== undefined) return { error: saved.error };
+
+    // A bought-out rate changed in the master: reprice the other products using it.
+    const repriced = await repriceVarieties(supabase, master.repriced);
+    if (repriced.error) return { error: `Saved, but repricing other products failed: ${repriced.error}` };
 
     // No revalidatePath here: it makes Next re-render the whole calculator into
     // this response, which the client throws away to open the product page.

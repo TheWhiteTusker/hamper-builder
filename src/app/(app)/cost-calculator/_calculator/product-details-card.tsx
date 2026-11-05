@@ -119,7 +119,7 @@ export function ProductDetailsCard({
             {source === "In-house"
               ? "In-house manufacturing stages and bought-out items apply."
               : source === "Outsource"
-                ? "Manufacturing stages start collapsed — cost items under Bought Out Items."
+                ? "Manufacturing stages start collapsed — type each item under Bought Out Items; new ones are saved to the Rates & Hierarchy Master."
                 : "In-house stages plus bought-out items with their own markup."}
           </p>
         </div>

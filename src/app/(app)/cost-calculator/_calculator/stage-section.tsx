@@ -14,6 +14,7 @@ export function StageSection({
   onToggle,
   overhead,
   onOverhead,
+  freeEntry,
 }: {
   stage: CostStageWithHierarchy;
   api: CostLines;
@@ -22,6 +23,8 @@ export function StageSection({
   /** Overhead % as typed, added to this stage's subtotal. */
   overhead: string;
   onOverhead: (pct: string) => void;
+  /** Bought-out items typed in and saved to the master (outsourced products). */
+  freeEntry?: boolean;
 }) {
   const stageLines = api.lines.filter((l) => l.stage_code === stage.code);
   const linesTotal = stageLines.reduce((acc, l) => acc + l.line_total, 0);
@@ -31,8 +34,10 @@ export function StageSection({
   // Stages with no categories configured (Miscellaneous) take a free-text
   // description instead of the Category -> Subcategory -> Variety selects.
   const hasCats = stage.categories.length > 0;
+  const named = hasCats || freeEntry; // Category, Subcategory and Variety columns
+  const masterRate = hasCats && !freeEntry;
   // Hierarchy, size, (duration), rate / unit, qty, wastage, total, actions.
-  const colCount = (hasCats ? 3 : 1) + 3 + (isMachine ? 1 : 0) + (hasCats ? 1 : 2) + 4;
+  const colCount = (named ? 3 : 1) + 3 + (isMachine ? 1 : 0) + (masterRate ? 1 : 2) + 4;
 
   return (
     <div className="card overflow-hidden shadow-sm">
@@ -60,7 +65,9 @@ export function StageSection({
             : isMachine
               ? "(Per minute or hour of machine time, or by size — as set in the master)"
               : isBoughtOut
-                ? hasCats
+                ? freeEntry
+                  ? "(Type Category → Subcategory → Variety, rate & unit — new items are added to the Rates & Hierarchy Master on save)"
+                  : hasCats
                   ? "(Category → Subcategory → Variety — Cost Price = Rate × Qty)"
                   : "(Free-text description, rate & quantity — Cost Price = Rate × Qty)"
                 : hasCats
@@ -85,7 +92,7 @@ export function StageSection({
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-(--color-border) text-(--color-muted) font-semibold">
-                  {hasCats ? (
+                  {named ? (
                     <>
                       <th className="p-2 min-w-32.5">Category</th>
                       <th className="p-2 min-w-32.5">Subcategory</th>
@@ -98,7 +105,7 @@ export function StageSection({
                   <th className="p-2 min-w-21.25">Breadth</th>
                   <th className="p-2 min-w-20">Dim Unit</th>
                   {isMachine && <th className="p-2 min-w-27.5">Duration (Mins)</th>}
-                  {hasCats ? (
+                  {masterRate ? (
                     <th className="p-2 min-w-27.5">Rate / Unit</th>
                   ) : (
                     <>
@@ -121,7 +128,7 @@ export function StageSection({
                   </tr>
                 ) : (
                   stageLines.map((line) => (
-                    <StageLineRow key={line.tempKey} stage={stage} line={line} api={api} />
+                    <StageLineRow key={line.tempKey} stage={stage} line={line} api={api} freeEntry={freeEntry} />
                   ))
                 )}
               </tbody>

@@ -4,91 +4,34 @@ import { formatMoney } from "@/lib/pricing";
 import { isTimeUnit, type DimensionUnit } from "@/lib/costing";
 import type { CostStageWithHierarchy } from "@/lib/types";
 import { NumCell, RemoveButton, UnitCell } from "./cells";
+import { PickCells, TypedCells } from "./hierarchy-cells";
 import type { LineState } from "./lines";
 import type { CostLines } from "./use-cost-lines";
-
-function Pick({
-  value,
-  options,
-  placeholder,
-  disabled,
-  className = "",
-  onChange,
-}: {
-  value: string;
-  options: { id: string; name: string }[];
-  placeholder: string;
-  disabled?: boolean;
-  className?: string;
-  onChange: (name: string) => void;
-}) {
-  // A saved choice that has since been removed from the master stays visible, flagged.
-  const missing = !!value && !options.some((o) => o.name === value);
-  return (
-    <td className="p-2">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`select text-xs py-1 px-2 ${missing ? "border-amber-400 text-amber-800" : ""} ${className}`}
-        title={missing ? "No longer in the Rates & Hierarchy Master: pick a current option" : undefined}
-        disabled={disabled}
-      >
-        <option value="">{placeholder}</option>
-        {missing && <option value={value}>{value} (not in master)</option>}
-        {options.map((o) => (
-          <option key={o.id} value={o.name}>
-            {o.name}
-          </option>
-        ))}
-      </select>
-    </td>
-  );
-}
 
 export function StageLineRow({
   stage,
   line,
   api,
+  freeEntry,
 }: {
   stage: CostStageWithHierarchy;
   line: LineState;
   api: CostLines;
+  /** Names, rate and unit typed in rather than picked from the master. */
+  freeEntry?: boolean;
 }) {
   const isMachine = stage.code === "machine";
   // Stages with a hierarchy take their rate and unit from the master.
-  const fromMaster = stage.categories.length > 0;
+  const fromMaster = stage.categories.length > 0 && !freeEntry;
   const sized = !isMachine || !isTimeUnit(line.unit || "min");
   const set = (patch: Partial<LineState>) => api.update(line.tempKey, patch);
-  const cat = stage.categories.find((c) => c.name === line.category_name);
-  const sub = cat?.subcategories.find((s) => s.name === line.subcategory_name);
 
   return (
     <tr className="hover:bg-slate-50/75 transition-colors">
-      {stage.categories.length > 0 ? (
-        <>
-          <Pick
-            value={line.category_name}
-            options={stage.categories}
-            placeholder="Select category…"
-            onChange={(name) => api.setCategory(line.tempKey, name)}
-          />
-          <Pick
-            value={line.subcategory_name ?? ""}
-            options={cat?.subcategories ?? []}
-            placeholder="Select…"
-            disabled={!line.category_name}
-            className="font-medium"
-            onChange={(name) => api.setSubcategory(line.tempKey, name)}
-          />
-          <Pick
-            value={line.variety_name ?? ""}
-            options={sub?.varieties ?? []}
-            placeholder="Select…"
-            disabled={!line.subcategory_name}
-            className="font-semibold text-(--color-brand-dark)"
-            onChange={(name) => api.setVariety(line, name)}
-          />
-        </>
+      {freeEntry ? (
+        <TypedCells stage={stage} line={line} api={api} />
+      ) : stage.categories.length > 0 ? (
+        <PickCells stage={stage} line={line} api={api} />
       ) : (
         // Free-text description for category-less stages (Miscellaneous)
         <td className="p-2">
