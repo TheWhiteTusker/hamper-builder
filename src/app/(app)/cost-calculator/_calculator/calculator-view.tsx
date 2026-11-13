@@ -10,6 +10,7 @@ import type {
   ProductCostSheet,
   ProductImage,
 } from "@/lib/types";
+import { ApplyPriceDialog, type Sibling } from "./apply-price-dialog";
 import { CostSummary } from "./cost-summary";
 import { BOUGHT_OUT } from "./lines";
 import { ProductDetailsCard } from "./product-details-card";
@@ -29,6 +30,7 @@ export function CostCalculatorView({
   initialSheet,
   initialImages = [],
   initialVariantIds = {},
+  siblings = [],
   savedCodes,
 }: {
   stages: CostStageWithHierarchy[];
@@ -40,6 +42,8 @@ export function CostCalculatorView({
   initialImages?: ProductImage[];
   /** Existing colour variant name -> sibling product id, used by photo uploads. */
   initialVariantIds?: Record<string, string>;
+  /** The other colours of this product, with their current prices. */
+  siblings?: Sibling[];
   /** Codes from the save that reset this page, shown as a banner. */
   savedCodes?: string;
 }) {
@@ -50,7 +54,8 @@ export function CostCalculatorView({
   // All lines across all stages count towards product costing
   const activeLines = api.lines;
   const pricing = usePricing(activeLines, initialProduct, initialSheet);
-  const { save, isPending, feedback } = useSaveCosting({ details, pricing, photos, activeLines, initialSheet });
+  const saving = useSaveCosting({ details, pricing, photos, activeLines, initialSheet, initialProduct, siblings });
+  const { save, isPending, feedback } = saving;
   const { selectedProductId, selectedColors } = details;
 
   return (
@@ -116,6 +121,9 @@ export function CostCalculatorView({
         isPending={isPending}
         onSave={save}
       />
+      {saving.ask && (
+        <ApplyPriceDialog {...saving.ask} isPending={isPending} onCancel={saving.cancelAsk} onSave={saving.commit} />
+      )}
     </div>
   );
 }

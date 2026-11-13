@@ -41,6 +41,7 @@ export async function CalculatorScreen({
       initialSheet={costing?.sheet ?? null}
       initialImages={costing?.images ?? []}
       initialVariantIds={costing?.variantIds ?? {}}
+      siblings={costing?.siblings ?? []}
       savedCodes={saved}
     />
   );

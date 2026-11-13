@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { calculateLineCost } from "@/lib/costing.ts";
 import { describeError } from "@/lib/forms";
-import { codesForColors } from "@/lib/product-code";
+import { codesForColors, parseProductCode } from "@/lib/product-code";
 import type { ProductCostLine } from "@/lib/types";
 
 /** Cost lines as stored: recomputed totals, coerced numbers, 1-based order. */
@@ -98,25 +98,58 @@ export async function saveColorVariants(
     const variantId = saved.id;
     variants.push({ color, code: variantCode, id: variantId });
 
-    if (sheetValues) {
-      const sheet = await saveRow(
-        supabase,
-        "product_cost_sheets",
-        {
-          ...sheetValues,
-          product_id: variantId,
-          product_code: variantCode,
-        },
-        null,
-        ["product_id", variantId],
-      );
-      if (sheet.id && lines && lines.length > 0) {
-        await supabase.from("product_cost_lines").delete().eq("sheet_id", sheet.id);
-        await supabase
-          .from("product_cost_lines")
-          .insert(lines.map((l) => ({ ...l, sheet_id: sheet.id })));
-      }
-    }
+    if (sheetValues) await copyCosting(supabase, variantId, variantCode, sheetValues, lines ?? []);
   }
   return { variants };
+}
+
+/** Gives a product this cost sheet and lines, replacing what it had. */
+async function copyCosting(
+  supabase: SupabaseClient,
+  productId: string,
+  productCode: string,
+  sheetValues: Record<string, unknown>,
+  lines: Partial<ProductCostLine>[],
+): Promise<{ error?: string }> {
+  const sheet = await saveRow(
+    supabase,
+    "product_cost_sheets",
+    { ...sheetValues, product_id: productId, product_code: productCode },
+    null,
+    ["product_id", productId],
+  );
+  if (sheet.error !== undefined) return { error: sheet.error };
+  await supabase.from("product_cost_lines").delete().eq("sheet_id", sheet.id);
+  if (lines.length === 0) return {};
+  const { error } = await supabase.from("product_cost_lines").insert(lines.map((l) => ({ ...l, sheet_id: sheet.id })));
+  return error ? { error: describeError(error) } : {};
+}
+
+/**
+ * Copies this product's price and costing to the other colours ticked in the
+ * save dialog. Only siblings of `code` (same category and serial) are touched.
+ */
+export async function applyPriceToColors(
+  supabase: SupabaseClient,
+  code: string,
+  ids: string[],
+  priceValues: Record<string, unknown>,
+  sheetValues: Record<string, unknown>,
+  lines: Partial<ProductCostLine>[],
+): Promise<{ error?: string }> {
+  const { categoryCode, serial } = parseProductCode(code);
+  if (!ids.length || !categoryCode || !serial) return {};
+  const { data: siblings } = await supabase
+    .from("products")
+    .select("id, code")
+    .in("id", ids)
+    .ilike("code", `${categoryCode}/${serial}/%`)
+    .is("deleted_at", null);
+
+  for (const s of siblings ?? []) {
+    const { error } = await supabase.from("products").update(priceValues).eq("id", s.id);
+    const copied = error ? { error: describeError(error) } : await copyCosting(supabase, s.id, s.code, sheetValues, lines);
+    if (copied.error) return { error: `Error updating ${s.code}: ${copied.error}` };
+  }
+  return {};
 }

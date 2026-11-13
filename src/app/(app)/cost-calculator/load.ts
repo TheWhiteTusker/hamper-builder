@@ -53,12 +53,12 @@ export async function loadProductCosting(supabase: SupabaseClient, code: string)
   let siblingColors: string[] = product.colors ?? [];
   let allProductIds: string[] = [product.id];
   let siblingIds: string[] = [];
-  let familyProducts: { id: string; code: string; colors?: string[] | null }[] = [product];
+  let familyProducts: { id: string; code: string; colors?: string[] | null; default_sp?: number | null }[] = [product];
 
   if (categoryCode && serial) {
     const { data: siblings } = await supabase
       .from("products")
-      .select("id, code, colors")
+      .select("id, code, colors, default_sp")
       .ilike("code", `${categoryCode}/${serial}/%`)
       .is("deleted_at", null);
 
@@ -120,5 +120,12 @@ export async function loadProductCosting(supabase: SupabaseClient, code: string)
     sheet: sheet ? { ...sheet, lines } : null,
     images: images ?? [],
     variantIds: variantIdsByColor(familyProducts),
+    // The other colours, offered the new price when this one is saved.
+    siblings: familyProducts.slice(1).map((s) => ({
+      id: s.id,
+      code: s.code,
+      color: s.colors?.[0] ?? s.code,
+      sp: Number(s.default_sp) || 0,
+    })),
   };
 }

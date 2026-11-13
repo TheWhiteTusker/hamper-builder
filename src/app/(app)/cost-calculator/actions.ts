@@ -11,7 +11,7 @@ import { getNextSerialForCategory } from "@/lib/product-code";
 import type { ProductCostLine } from "@/lib/types";
 import { linkBoughtOutLines } from "@/lib/bought-out-master";
 import { repriceVarieties } from "./reprice";
-import { prepareLines, saveColorVariants, saveRow } from "./save-sheet";
+import { applyPriceToColors, prepareLines, saveColorVariants, saveRow } from "./save-sheet";
 
 export type SaveCostSheetPayload = {
   sheetId?: string | null;
@@ -28,6 +28,8 @@ export type SaveCostSheetPayload = {
   sellingPrice?: number;
   notes?: string | null;
   lines: ProductCostLine[];
+  /** Existing sibling colours (product ids) that take this price and costing too. */
+  applyToIds?: string[];
 };
 
 export async function saveCostSheetAndProduct(payload: SaveCostSheetPayload) {
@@ -139,6 +141,12 @@ export async function saveCostSheetAndProduct(payload: SaveCostSheetPayload) {
       preparedLines,
     );
     if (saved.error !== undefined) return { error: saved.error };
+
+    // 5. Other colours ticked in the save dialog take the same price and costing.
+    const { cost_price, markup_pct, target_margin, default_sp } = productValues;
+    const priceValues = { cost_price, markup_pct, target_margin, default_sp };
+    const applied = await applyPriceToColors(supabase, code, payload.applyToIds ?? [], priceValues, sheetValues, preparedLines);
+    if (applied.error) return { error: applied.error };
 
     // A bought-out rate changed in the master: reprice the other products using it.
     const repriced = await repriceVarieties(supabase, master.repriced);
