@@ -56,8 +56,8 @@ export default async function SettingsPage({
             aria-current={t.key === tab ? "page" : undefined}
             className={`rounded-md px-3 py-1.5 text-sm font-semibold transition-all ${
               t.key === tab
-                ? "bg-white text-[var(--color-brand-dark)] shadow-sm"
-                : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                ? "bg-white text-(--color-brand-dark) shadow-sm"
+                : "text-(--color-muted) hover:text-(--color-ink)"
             }`}
           >
             {t.label}
@@ -72,7 +72,7 @@ export default async function SettingsPage({
       {tab === "company" && <GeneralTab supabase={supabase} />}
       {tab === "users" && <UsersTab supabase={supabase} selfId={profile.id} />}
       {tab === "tools" && (
-        <section className="card divide-y divide-[var(--color-line)]">
+        <section className="card divide-y divide-(--color-line)">
           {TOOLS.map((t) => (
             <div key={t.href} className="flex flex-wrap items-center justify-between gap-3 p-4">
               <div>

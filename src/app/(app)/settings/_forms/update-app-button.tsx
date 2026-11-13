@@ -89,16 +89,16 @@ function PublishReleaseButton() {
           {pending ? "Starting…" : "Package web into app release"}
         </button>
       </form>
-      {starting && !running && <span className="text-xs text-[var(--color-muted)]">Starting on GitHub…</span>}
+      {starting && !running && <span className="text-xs text-(--color-muted)">Starting on GitHub…</span>}
       {running && (
         <div className="flex items-center gap-2" role="status" aria-live="polite">
           <div className="h-2 w-32 overflow-hidden rounded bg-slate-200">
             <div
-              className="h-2 bg-[var(--color-brand)] transition-[width] duration-1000"
+              className="h-2 bg-(--color-brand) transition-[width] duration-1000"
               style={{ width: `${status.percent}%` }}
             />
           </div>
-          <span className="text-xs text-[var(--color-muted)]">
+          <span className="text-xs text-(--color-muted)">
             Packaging {status.percent}% · {(status.step && STEP_LABELS[status.step]) ?? "Preparing"}
           </span>
         </div>

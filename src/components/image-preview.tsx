@@ -48,10 +48,10 @@ export function ImagePreview({
           alt={alt}
           loading="lazy"
           style={{ background: `url("${thumbUrl(src)}") center / contain no-repeat` }}
-          className="block h-[86vh] w-[94vw] max-w-[1400px] object-contain"
+          className="block h-[86vh] w-[94vw] max-w-350 object-contain"
         />
         <div className="flex items-center justify-between gap-3 px-1 pt-2 text-xs">
-          <span className="truncate text-[var(--color-muted)]">{alt}</span>
+          <span className="truncate text-(--color-muted)">{alt}</span>
           <form method="dialog">
             <button className="btn-secondary py-1 text-xs">Close</button>
           </form>
