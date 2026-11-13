@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/supabase/server";
 import { loadSettings } from "@/lib/settings";
 import { resolveColors } from "@/lib/product-code";
-import type { Category, Product } from "@/lib/types";
+import type { Category } from "@/lib/types";
 import { CostCalculatorView } from "./_calculator/calculator-view";
 import { loadCostStages, loadProductCosting } from "./load";
 
@@ -19,10 +19,8 @@ export async function CalculatorScreen({
   t?: string;
 }) {
   const { supabase } = await requireUser();
-  const [stages, { data: products }, { data: categories }, settings, costing] = await Promise.all([
+  const [stages, { data: categories }, settings, costing] = await Promise.all([
     loadCostStages(supabase),
-    // Only the product picker reads these.
-    supabase.from("products").select("id, code, name").is("deleted_at", null).order("code").returns<Pick<Product, "id" | "code" | "name">[]>(),
     supabase.from("categories").select("*").order("sort_order").returns<Category[]>(),
     loadSettings(supabase),
     code ? loadProductCosting(supabase, code) : null,
@@ -35,12 +33,12 @@ export async function CalculatorScreen({
       key={`${costing?.product.id ?? "new"}-${t ?? ""}`}
       stages={stages}
       categories={categories ?? []}
-      products={products ?? []}
       productColors={resolveColors(settings.product_colors, settings.color_hex)}
       initialProduct={costing?.product ?? null}
       initialSheet={costing?.sheet ?? null}
       initialImages={costing?.images ?? []}
       initialVariantIds={costing?.variantIds ?? {}}
+      ownColor={costing?.ownColor ?? ""}
       siblings={costing?.siblings ?? []}
       savedCodes={saved}
     />

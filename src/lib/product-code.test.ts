@@ -6,6 +6,7 @@ import {
   getNextSerialForCategory,
   deriveCategoryCode,
   STANDARD_PRODUCT_COLORS,
+  codeClash,
   colorCode,
   resolveColors,
 } from "./product-code.ts";
@@ -92,4 +93,12 @@ test("colorCode keeps standard codes and derives codes for added colors", () => 
     { name: "Teak", code: "TE", hex: "#b5651d" },
     { name: "White", code: "WH", hex: "#94a3b8" },
   ]);
+});
+
+test("colour codes are unique across the live palette", () => {
+  const live = ["Walnut", "Natural", "Black", "Brown Paper", "Tan", "White Paper", "Gold", "Jute Brown",
+    "Frosted Candle", "Neutral", "Tan Leather", "Brown Leather", "Black Leather", "Green Leather"];
+  assert.equal(codeClash(live), null);
+  assert.equal(colorCode("Black Leather"), "BR"); // existing products use BR
+  assert.deepEqual(codeClash(["Brown Leather", "Brown Linen"]), { name: "Brown Linen", code: "BN", with: "Brown Leather" });
 });

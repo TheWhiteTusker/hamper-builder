@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { type ActionState, describeError, percent } from "@/lib/forms";
+import { codeClash } from "@/lib/product-code";
 
 async function saveSetting(key: string, value: unknown): Promise<ActionState> {
   const supabase = await createClient();
@@ -80,6 +81,9 @@ export async function addPickListItem(
   }
 
   const updated = [...current, trimmed];
+  // A colour's code ends product codes, so two colours can never share one.
+  const clash = key === "product_colors" ? codeClash(updated) : null;
+  if (clash) return { error: `"${clash.name}" would get code ${clash.code}, already used by ${clash.with}. Pick a different name.` };
   const res = await saveSetting(key, updated);
   if (res.error) return res;
 

@@ -36,7 +36,7 @@ export function useSaveCosting({
 
   // What the save dialog shows; null when there is nothing to ask.
   const newSp = roundUpToNext10(pricing.effectiveSp);
-  const others = siblings.filter((s) => details.selectedColors.includes(s.color));
+  const others = siblings; // every other colour is its own product: offer the price, never impose it
   const oldSp = num(initialProduct?.default_sp);
   const priceChanged =
     newSp !== oldSp || pricing.totals.total_cost !== num(initialProduct?.cost_price);

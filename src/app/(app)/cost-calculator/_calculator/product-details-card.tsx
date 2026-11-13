@@ -1,8 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import Link from "@/components/link";
+import { formatMoney } from "@/lib/pricing";
 import type { ProductColor } from "@/lib/product-code";
-import type { Category, Product } from "@/lib/types";
+import type { Category } from "@/lib/types";
+import { costingHref } from "../href";
+import type { Sibling } from "./apply-price-dialog";
 import { CodeField } from "./code-field";
 import { ColorPhotoRows } from "./color-photo-rows";
 import { ORIGINS } from "./lines";
@@ -13,14 +17,15 @@ import { thumbProps } from "@/lib/product-image-props";
 export function ProductDetailsCard({
   details,
   photos,
-  products,
+  siblings,
   categories,
   productColors,
   imageUrl,
 }: {
   details: ProductDetails;
   photos: ProductPhotos;
-  products: Pick<Product, "id" | "code" | "name">[];
+  /** This product in its other colours: separate products, linked for switching. */
+  siblings: Sibling[];
   categories: Category[];
   productColors: ProductColor[];
   imageUrl?: string | null;
@@ -38,28 +43,28 @@ export function ProductDetailsCard({
           <div>
             <h2 className="text-lg font-bold text-[var(--color-ink)]">Product & Costing Specification</h2>
             <p className="text-sm text-[var(--color-muted)]">
-              Standard format: [CATEGORY]/[0001]/[COLOR] (e.g. LC/0001/WL). Each product comes in 3 colors only (Walnut, Natural, Black).
+              {details.editing
+                ? "Each colour is its own product with its own costing. Changes here save to this colour only."
+                : "Code format CATEGORY/0001/COLOUR (e.g. LC/0001/WL). Tick several colours to create one product per colour."}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">
-            Load Existing:
-          </label>
-          <select
-            value={details.selectedProductId}
-            onChange={(e) => details.selectProduct(e.target.value)}
-            className="select text-sm py-1.5 min-w-[220px]"
-          >
-            <option value="">— New product —</option>
-            {products.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.code} - {p.name}
-              </option>
+        {siblings.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            <span className="font-semibold text-[var(--color-muted)]">Other colours:</span>
+            {siblings.map((s) => (
+              <Link
+                key={s.id}
+                href={costingHref(s.code)}
+                className="rounded-full bg-[var(--color-sheet)] px-2.5 py-1 font-medium hover:bg-slate-200"
+                title={`Edit ${s.color} (a separate product)`}
+              >
+                {s.color} <span className="font-mono">{formatMoney(s.sp)}</span>
+              </Link>
             ))}
-          </select>
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -73,6 +78,8 @@ export function ProductDetailsCard({
             id="calc-category"
             value={details.categoryId}
             onChange={(e) => details.changeCategory(e.target.value)}
+            disabled={details.editing}
+            title={details.editing ? "Part of the product code, so fixed once created" : undefined}
             className="select mt-1"
           >
             <option value="">No category</option>
@@ -127,7 +134,9 @@ export function ProductDetailsCard({
 
       <div className="mt-4 border-t border-[var(--color-border)] pt-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-xs font-semibold text-[var(--color-ink)]">Color Finishes &amp; Photos</span>
+          <span className="text-xs font-semibold text-[var(--color-ink)]">
+            {details.editing ? "Colour & photos" : "Colours to create & photos"}
+          </span>
           <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-ink)] cursor-pointer">
             <input
               type="checkbox"

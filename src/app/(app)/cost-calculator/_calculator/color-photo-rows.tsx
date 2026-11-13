@@ -5,7 +5,10 @@ import { ImagePreview } from "@/components/image-preview";
 import type { ProductDetails } from "./use-product-details";
 import type { ProductPhotos } from "./use-product-photos";
 
-/** One row per colour: tick it on, see its photos, upload more. */
+/**
+ * New product: one row per colour, tick the ones to create. Editing: just this
+ * product's colour, plus any new colours added (each becomes a new product).
+ */
 export function ColorPhotoRows({
   details,
   photos,
@@ -26,9 +29,19 @@ export function ColorPhotoRows({
     photos.uploadForColor(colName, files);
   }
 
+  const { editing, ownColor, selectedColors } = details;
+  const rows = editing
+    ? selectedColors.flatMap((name) => productColors.filter((c) => c.name === name))
+    : productColors;
+  // Colours this product does not exist in yet.
+  const addable = productColors.filter(
+    (c) => !selectedColors.includes(c.name) && !details.siblingColors.includes(c.name),
+  );
+
   return (
+    <>
     <ul className="mt-2 divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)]">
-      {productColors.map((col) => {
+      {rows.map((col) => {
         const colImages = photos.images.filter(
           (img) => img.color === col.name || img.color_code === col.code,
         );
@@ -37,17 +50,25 @@ export function ColorPhotoRows({
         return (
           <li key={col.name} className="flex flex-wrap items-center gap-3 px-3 py-2">
             <label className="flex min-w-[190px] cursor-pointer items-center gap-2 text-xs font-medium text-[var(--color-ink)]">
-              <input
-                type="checkbox"
-                checked={details.selectedColors.includes(col.name)}
-                onChange={() => details.toggleColor(col.name)}
-                className="h-4 w-4 rounded text-[var(--color-brand)] focus:ring-[var(--color-brand)]"
-              />
+              {!editing && (
+                <input
+                  type="checkbox"
+                  checked={selectedColors.includes(col.name)}
+                  onChange={() => details.toggleColor(col.name)}
+                  className="h-4 w-4 rounded text-[var(--color-brand)] focus:ring-[var(--color-brand)]"
+                />
+              )}
               <span
                 className="inline-block h-3.5 w-3.5 rounded-full border border-black/20"
                 style={{ backgroundColor: col.hex }}
               />
               {col.name} ({col.code})
+              {editing &&
+                (col.name === ownColor ? (
+                  <span className="badge">This product</span>
+                ) : (
+                  <span className="text-[11px] font-normal text-amber-700">New · created on save</span>
+                ))}
             </label>
 
             <div className="flex flex-1 items-center gap-1.5">
@@ -113,9 +134,40 @@ export function ColorPhotoRows({
                 onChange={(e) => handleUpload(col.name, e.currentTarget)}
               />
             </label>
+            {editing && col.name !== ownColor && (
+              <button
+                type="button"
+                onClick={() => details.toggleColor(col.name)}
+                className="text-[11px] font-semibold text-red-700 hover:underline"
+              >
+                Remove
+              </button>
+            )}
           </li>
         );
       })}
     </ul>
+    {editing && addable.length > 0 && (
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+        <label htmlFor="add-color" className="font-semibold text-[var(--color-ink)]">
+          + Add another colour
+        </label>
+        <select
+          id="add-color"
+          value=""
+          onChange={(e) => e.target.value && details.toggleColor(e.target.value)}
+          className="select py-1 text-xs"
+        >
+          <option value="">Choose…</option>
+          {addable.map((c) => (
+            <option key={c.name} value={c.name}>
+              {c.name} ({c.code})
+            </option>
+          ))}
+        </select>
+        <span className="text-[var(--color-muted)]">Saved as a new product, starting from this costing.</span>
+      </div>
+    )}
+    </>
   );
 }

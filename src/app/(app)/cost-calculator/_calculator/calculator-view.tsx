@@ -24,30 +24,38 @@ import { useSaveCosting } from "./use-save-costing";
 export function CostCalculatorView({
   stages,
   categories,
-  products,
   productColors = [],
   initialProduct,
   initialSheet,
   initialImages = [],
   initialVariantIds = {},
+  ownColor = "",
   siblings = [],
   savedCodes,
 }: {
   stages: CostStageWithHierarchy[];
   categories: Category[];
-  products: Pick<Product, "id" | "code" | "name">[];
   productColors?: ProductColor[];
   initialProduct?: Product | null;
   initialSheet?: (ProductCostSheet & { lines?: ProductCostLine[] }) | null;
   initialImages?: ProductImage[];
   /** Existing colour variant name -> sibling product id, used by photo uploads. */
   initialVariantIds?: Record<string, string>;
+  /** The edited product's own colour. */
+  ownColor?: string;
   /** The other colours of this product, with their current prices. */
   siblings?: Sibling[];
   /** Codes from the save that reset this page, shown as a banner. */
   savedCodes?: string;
 }) {
-  const details = useProductDetails({ stages, categories, products, initialProduct, initialSheet });
+  const details = useProductDetails({
+    stages,
+    categories,
+    initialProduct,
+    initialSheet,
+    ownColor,
+    siblingColors: siblings.map((s) => s.color),
+  });
   const photos = useProductPhotos(initialImages, details.selectedProductId, initialVariantIds);
   const api = useCostLines(stages, initialSheet?.lines);
 
@@ -69,7 +77,7 @@ export function CostCalculatorView({
       <ProductDetailsCard
         details={details}
         photos={photos}
-        products={products}
+        siblings={siblings}
         categories={categories}
         productColors={productColors}
         imageUrl={initialProduct?.image_url}

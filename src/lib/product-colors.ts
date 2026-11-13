@@ -30,6 +30,24 @@ export const CODE_TO_COLOR: Record<StandardColorCode, StandardColorName> = {
 const STANDARD_CODES: readonly string[] = STANDARD_PRODUCT_COLORS.map((c) => c.code);
 
 /**
+ * Codes pinned by hand where the rule below would clash. Black Leather and
+ * Brown Leather both derive BR; Black Leather products already use BR.
+ */
+const FIXED_CODES: Record<string, string> = { "black leather": "BR", "brown leather": "BN" };
+
+/** The colour in `names` whose code another one already has, or null. Codes must be unique. */
+export function codeClash(names: string[]): { name: string; code: string; with: string } | null {
+  const byCode = new Map<string, string>();
+  for (const name of names) {
+    const code = colorCode(name);
+    const other = byCode.get(code);
+    if (other) return { name, code, with: other };
+    byCode.set(code, name);
+  }
+  return null;
+}
+
+/**
  * Two-letter code for any colour: the standard three keep WL/NT/BL, anything
  * added in Settings gets its initials ("Dark Oak" -> DO, "Teak" -> TE). A
  * clash with a standard code falls back to first + last letter ("Blue" -> BE).
@@ -37,6 +55,7 @@ const STANDARD_CODES: readonly string[] = STANDARD_PRODUCT_COLORS.map((c) => c.c
 export function colorCode(name: string): string {
   const key = (name || "").trim().toLowerCase();
   if (COLOR_TO_CODE[key]) return COLOR_TO_CODE[key];
+  if (FIXED_CODES[key]) return FIXED_CODES[key];
   const code = deriveCategoryCode(name);
   if (!STANDARD_CODES.includes(code)) return code;
   const letters = key.replace(/[^a-z0-9]/g, "");

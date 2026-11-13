@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient, isAdmin, requireUser } from "@/lib/supabase/server";
 import { describeError } from "@/lib/forms";
 import type { CostSaveResult } from "@/lib/cost-tree";
-import type { ProductColor } from "@/lib/product-code";
+import { codeClash, type ProductColor } from "@/lib/product-code";
 import type { CostVariety } from "@/lib/types";
 import { repriceVarieties } from "../reprice";
 
@@ -97,6 +97,9 @@ export async function saveProductColors(colors: ProductColor[]) {
   const cleaned = colors
     .map((c) => ({ ...c, name: c.name.trim() }))
     .filter((c) => c.name && !seen.has(c.name.toLowerCase()) && seen.add(c.name.toLowerCase()));
+  // A colour's code ends product codes, so two colours can never share one.
+  const clash = codeClash(cleaned.map((c) => c.name));
+  if (clash) return { error: `"${clash.name}" would get code ${clash.code}, already used by ${clash.with}. Pick a different name.` };
   const { error } = await supabase.from("app_settings").upsert(
     [
       { key: "product_colors", value: cleaned.map((c) => c.name) },

@@ -22,6 +22,9 @@ export function CodeField({
         value={code}
         onChange={(e) => details.setCode(e.target.value.toUpperCase())}
         placeholder="Choose a category"
+        // Hampers and photos are keyed to it; a colour is changed on the product page.
+        readOnly={details.editing}
+        title={details.editing ? "Fixed once created. Change the colour on the product page." : undefined}
         required
         className="input mt-1 font-mono uppercase font-semibold"
       />
