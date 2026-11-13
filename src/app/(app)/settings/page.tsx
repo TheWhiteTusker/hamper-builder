@@ -18,8 +18,8 @@ import { APP_VERSION } from "@/lib/version";
 // Most-used first; the first tab is what /settings opens on. The tab lives in
 // the URL (?tab=users), so it survives a refresh and can be linked to.
 const TABS = [
-  { key: "dropdowns", label: "Dropdowns", hint: "The options people pick from across the app: occasions, vendors, colours, statuses." },
   { key: "rates", label: "Rates", hint: "Material, hardware, finishing and machine rates used to cost products." },
+  { key: "dropdowns", label: "Dropdowns", hint: "The options people pick from across the app: occasions, vendors, colours, statuses." },
   { key: "categories", label: "Categories", hint: "Product categories, and whether each counts towards a hamper's item count." },
   { key: "tools", label: "Tools", hint: "Recycle Bin, price refresh and app updates." },
   { key: "users", label: "Users", hint: "Who can sign in and what they can do." },
