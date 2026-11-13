@@ -51,8 +51,6 @@ export async function loadProductCosting(supabase: SupabaseClient, code: string)
 
   const { categoryCode, serial } = parseProductCode(product.code);
   let siblingColors: string[] = product.colors ?? [];
-  let allProductIds: string[] = [product.id];
-  let siblingIds: string[] = [];
   let familyProducts: { id: string; code: string; colors?: string[] | null; default_sp?: number | null }[] = [product];
 
   if (categoryCode && serial) {
@@ -64,8 +62,6 @@ export async function loadProductCosting(supabase: SupabaseClient, code: string)
 
     if (siblings && siblings.length > 0) {
       familyProducts = [product, ...siblings.filter((s) => s.id !== product.id)];
-      siblingIds = siblings.map((s) => s.id);
-      allProductIds = Array.from(new Set([product.id, ...siblingIds]));
       const collected = new Set<string>(product.colors ?? []);
       for (const s of siblings) {
         for (const col of s.colors ?? []) {
@@ -85,24 +81,16 @@ export async function loadProductCosting(supabase: SupabaseClient, code: string)
     supabase
       .from("product_images")
       .select("*")
-      .in("product_id", allProductIds)
+      // Each colour is its own product: only this one's photos, never a sibling's.
+      .eq("product_id", product.id)
       .is("deleted_at", null)
       .order("sort_order")
       .order("created_at")
       .returns<ProductImage[]>(),
   ]);
 
-  let sheet: ProductCostSheet | null = ownSheet;
-  if (!sheet && siblingIds.length > 0) {
-    const { data: altSheet } = await supabase
-      .from("product_cost_sheets")
-      .select("*")
-      .in("product_id", siblingIds)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle<ProductCostSheet>();
-    sheet = altSheet;
-  }
+  // Its own sheet only. Borrowing a sibling's made Save overwrite that sibling's costing.
+  const sheet: ProductCostSheet | null = ownSheet;
 
   let lines: ProductCostLine[] = [];
   if (sheet) {

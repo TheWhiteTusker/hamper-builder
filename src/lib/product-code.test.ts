@@ -7,6 +7,7 @@ import {
   deriveCategoryCode,
   STANDARD_PRODUCT_COLORS,
   codeClash,
+  codesForColors,
   colorCode,
   resolveColors,
 } from "./product-code.ts";
@@ -101,4 +102,11 @@ test("colour codes are unique across the live palette", () => {
   assert.equal(codeClash(live), null);
   assert.equal(colorCode("Black Leather"), "BR"); // existing products use BR
   assert.deepEqual(codeClash(["Brown Leather", "Brown Linen"]), { name: "Brown Linen", code: "BN", with: "Brown Leather" });
+});
+
+test("adding Brown Leather to a Black Leather product makes a separate BN code", () => {
+  assert.deepEqual(codesForColors("AC/0002/BR", ["Black Leather", "Brown Leather"]), [
+    { color: "Black Leather", code: "AC/0002/BR" },
+    { color: "Brown Leather", code: "AC/0002/BN" },
+  ]);
 });

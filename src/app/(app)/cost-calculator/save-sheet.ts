@@ -141,14 +141,14 @@ export async function applyPriceToColors(
   if (!ids.length || !categoryCode || !serial) return {};
   const { data: siblings } = await supabase
     .from("products")
-    .select("id, code")
+    .select("id, code, name")
     .in("id", ids)
     .ilike("code", `${categoryCode}/${serial}/%`)
     .is("deleted_at", null);
 
   for (const s of siblings ?? []) {
     const { error } = await supabase.from("products").update(priceValues).eq("id", s.id);
-    const copied = error ? { error: describeError(error) } : await copyCosting(supabase, s.id, s.code, sheetValues, lines);
+    const copied = error ? { error: describeError(error) } : await copyCosting(supabase, s.id, s.code, { ...sheetValues, product_name: s.name }, lines);
     if (copied.error) return { error: `Error updating ${s.code}: ${copied.error}` };
   }
   return {};
