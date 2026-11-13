@@ -20,7 +20,7 @@ export default async function NewProductPage({ searchParams }: { searchParams: S
           Back to products
         </Link>
         <Link href="/cost-calculator/master" className="btn-secondary">
-          Rates & Hierarchy Master
+          Rates
         </Link>
       </PageHeader>
       <CalculatorScreen saved={one(params.saved) || undefined} t={one(params.t)} />

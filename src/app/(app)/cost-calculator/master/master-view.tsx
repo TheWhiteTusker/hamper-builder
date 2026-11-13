@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "@/components/link";
+import { Menu } from "@/components/ui/menu";
 import { markOtherPagesStale } from "@/components/stale-pages";
 import { applyCostChanges, buildCostTree, type CostRows } from "@/lib/cost-tree";
 import type { ProductColor } from "@/lib/product-code";
@@ -85,38 +85,27 @@ export function CostMasterView({
   };
 
   return (
-    <div className="space-y-6">
-      <input
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search types, categories, subcategories, varieties, notes…"
-        aria-label="Search the rate and hierarchy master"
-        className="input text-sm"
-      />
-
-      {admin && (
-        <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
-          <div>
-            <h3 className="text-sm font-bold text-[var(--color-ink)]">Excel</h3>
-            <p className="mt-0.5 text-xs text-[var(--color-muted)]">
-              Download the master as an Excel sheet, fill it in, and upload it back.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/cost-calculator/master/excel/add" className="btn-secondary text-xs">
-              Add new rates
-            </Link>
-            <Link href="/cost-calculator/master/excel/edit" className="btn-secondary text-xs">
-              Edit &amp; add rates
-            </Link>
-          </div>
-        </div>
-      )}
-
-      <SyncRatesButton />
-
-      <ColorsCard productColors={productColors} />
+    // Most-used first: the rates, then colours, then the occasional catch-up sync.
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search materials, varieties or notes…"
+          aria-label="Search rates"
+          className="input text-sm"
+        />
+        {admin && (
+          <Menu
+            label="Excel"
+            items={[
+              { href: "/cost-calculator/master/excel/add", title: "Bulk add", hint: "New varieties from a sheet" },
+              { href: "/cost-calculator/master/excel/edit", title: "Bulk edit", hint: "Change rates in Excel" },
+            ]}
+          />
+        )}
+      </div>
 
       {feedback.error && (
         <div
@@ -140,9 +129,18 @@ export function CostMasterView({
           Nothing matches &ldquo;{query.trim()}&rdquo;.
         </p>
       )}
-      {visibleStages.map((stage) => (
-        <StageCard key={stage.id} stage={stage} ctx={ctx} />
-      ))}
+      <div className="space-y-2">
+        {visibleStages.map((stage) => (
+          <StageCard key={stage.id} stage={stage} ctx={ctx} />
+        ))}
+      </div>
+
+      {!q && (
+        <>
+          <ColorsCard productColors={productColors} />
+          <SyncRatesButton />
+        </>
+      )}
 
       {editing && (
         <VarietyDialog

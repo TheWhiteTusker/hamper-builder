@@ -81,7 +81,7 @@ export default async function PrintQuotePage({
   const toolbar = (
     <div className="no-print mb-4 flex flex-wrap items-center gap-2">
       <Link href={`/quotes/${encodeURIComponent(quote.doc_no)}`} className="btn-secondary">
-        Back to quotation
+        Back to quote
       </Link>
       <PrintButton />
       <p className="text-sm text-[var(--color-muted)]">

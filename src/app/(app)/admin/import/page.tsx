@@ -8,7 +8,7 @@ export default async function ImportPage() {
   return (
     <>
       <PageHeader
-        title="Import from the spreadsheet"
+        title="Import old workbook"
         subtitle="Brings across products, saved hampers and past quotations, keeping their existing codes"
       />
       <ImportWizard />

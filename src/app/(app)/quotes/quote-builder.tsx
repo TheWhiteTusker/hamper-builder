@@ -156,7 +156,7 @@ export function QuoteBuilder({
         {canEdit && (
           <div className="flex flex-wrap items-center gap-2">
             <button type="submit" className="btn-primary" disabled={saving}>
-              {saving ? "Saving…" : quote ? "Save changes" : "Create quotation"}
+              {saving ? "Saving…" : quote ? "Save changes" : "Create quote"}
             </button>
             <Link href="/quotes" className="btn-secondary">
               Cancel

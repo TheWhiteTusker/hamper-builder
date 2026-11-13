@@ -4,8 +4,8 @@ import { PageHeader } from "@/components/ui";
 import { ProductSheetWizard } from "../product-sheet-wizard";
 
 const TITLES = {
-  add: { title: "Add new products", subtitle: "Download a blank Excel sheet, fill in new products, upload it back" },
-  edit: { title: "Edit & add products", subtitle: "Download every product as Excel, change or add rows, upload it back" },
+  add: { title: "Bulk add products", subtitle: "Fill in a template in Excel, then upload it" },
+  edit: { title: "Bulk edit products", subtitle: "Download your products, change them in Excel, upload them back" },
 };
 
 export default async function ProductSheetPage({ params }: { params: Promise<{ mode: string }> }) {

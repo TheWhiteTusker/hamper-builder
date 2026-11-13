@@ -52,7 +52,7 @@ export function ProductDetailsCard({
             onChange={(e) => details.selectProduct(e.target.value)}
             className="select text-sm py-1.5 min-w-[220px]"
           >
-            <option value="">-- Create New Product --</option>
+            <option value="">— New product —</option>
             {products.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.code} - {p.name}
@@ -119,7 +119,7 @@ export function ProductDetailsCard({
             {source === "In-house"
               ? "In-house manufacturing stages and bought-out items apply."
               : source === "Outsource"
-                ? "Manufacturing stages start collapsed — type each item under Bought Out Items; new ones are saved to the Rates & Hierarchy Master."
+                ? "Manufacturing stages start collapsed — type each item under Bought Out Items; new ones are saved to the Rates page."
                 : "In-house stages plus bought-out items with their own markup."}
           </p>
         </div>

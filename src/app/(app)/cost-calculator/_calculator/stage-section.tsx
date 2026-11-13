@@ -66,7 +66,7 @@ export function StageSection({
               ? "(Per minute or hour of machine time, or by size — as set in the master)"
               : isBoughtOut
                 ? freeEntry
-                  ? "(Type Category → Subcategory → Variety, rate & unit — new items are added to the Rates & Hierarchy Master on save)"
+                  ? "(Type Category → Subcategory → Variety, rate & unit — new items are added to the Rates page on save)"
                   : hasCats
                   ? "(Category → Subcategory → Variety — Cost Price = Rate × Qty)"
                   : "(Free-text description, rate & quantity — Cost Price = Rate × Qty)"

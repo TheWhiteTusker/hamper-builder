@@ -11,7 +11,7 @@ export function SyncRatesButton() {
   function sync() {
     if (
       !confirm(
-        "Update every product whose costing uses an out-of-date rate, unit or name from this master? Their costs and selling prices are recalculated (each keeps its margin). Quotations and invoices don't change.",
+        "Update every product costed with an old rate? Their cost and selling price are recalculated (each keeps its markup). Quotes and invoices don't change.",
       )
     )
       return;
@@ -22,15 +22,15 @@ export function SyncRatesButton() {
   return (
     <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
       <div>
-        <h3 className="text-sm font-bold text-[var(--color-ink)]">Products using older rates</h3>
+        <h3 className="text-base font-semibold text-[var(--color-ink)]">Products on old rates</h3>
         <p className="mt-0.5 text-xs text-[var(--color-muted)]">
-          Editing a rate updates products automatically. Products costed before a change can be brought up to date here.
+          Changing a rate updates products automatically. Use this for products costed before a change.
         </p>
         {result?.message && <p className="mt-1.5 text-xs font-medium text-emerald-700">{result.message}</p>}
         {result?.error && <p className="mt-1.5 text-xs font-medium text-red-700">{result.error}</p>}
       </div>
       <button type="button" onClick={sync} disabled={pending} className="btn-secondary text-xs">
-        {pending ? "Syncing…" : "Sync products with current rates"}
+        {pending ? "Updating…" : "Update products"}
       </button>
     </div>
   );

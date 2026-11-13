@@ -16,7 +16,7 @@ export function PickListManager({ settings }: { settings: Settings }) {
   const [lists, setLists] = useState<Record<PickListKey, string[]>>(
     () => Object.fromEntries(PICK_LIST_CONFIGS.map((c) => [c.key, settings[c.key] ?? []])) as Record<PickListKey, string[]>,
   );
-  const [selectedKey, setSelectedKey] = useState<PickListKey>("hamper_statuses");
+  const [selectedKey, setSelectedKey] = useState<PickListKey>(PICK_LIST_CONFIGS[0].key);
   const [search, setSearch] = useState("");
   // The add dialog, and what it opens pre-filled with.
   const [adding, setAdding] = useState<string | null>(null);

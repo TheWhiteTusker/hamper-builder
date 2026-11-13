@@ -18,33 +18,29 @@ export function StageCard({ stage, ctx }: { stage: CostStageWithHierarchy; ctx: 
     ctx.run(() => saveCostCategory(fd), "Category added successfully!", () => setAdding(false));
   }
 
+  // Only examples that fit the stage; the rest just show the levels.
+  const example =
+    stage.code === "bought_out"
+      ? " (e.g. Ceramics → Jars → 200ml Amber)"
+      : stage.code === "material"
+        ? " (e.g. Woodbased → Birch → 8mm)"
+        : "";
+  const count = stage.categories.length;
+
   return (
-    <div className="card p-5 space-y-4">
-      <div
-        className={`flex flex-wrap items-center justify-between gap-3 ${open ? "border-b border-(--color-line) pb-3" : ""}`}
-      >
+    <div className="card">
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5">
         <button
           type="button"
           onClick={() => ctx.toggle(stage.id)}
           aria-expanded={open}
-          className="text-left"
+          className="flex min-w-0 flex-1 items-center gap-2 text-left"
         >
-          <div className="flex items-center gap-2">
-            <Chevron open={open} />
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-(--color-brand) text-xs font-bold text-white">
-              {stage.sort_order}
-            </span>
-            <h3 className="text-lg font-bold text-(--color-ink)">{stage.name} Master</h3>
-            <span className="badge text-[11px]">
-              {stage.categories.length}{" "}
-              {stage.categories.length === 1 ? "category" : "categories"}
-            </span>
-          </div>
-          <p className="text-xs text-(--color-muted) mt-0.5">
-            {stage.code === "bought_out"
-              ? "Hierarchy: Category (e.g. Ceramics) → Subcategory (e.g. Jars) → Varieties (e.g. 200ml Amber)"
-              : "Hierarchy: Category → Subcategory (e.g. Birch) → Varieties (e.g. 3mm, 8mm, 12mm)"}
-          </p>
+          <Chevron open={open} />
+          <h3 className="text-base font-semibold text-(--color-ink)">{stage.name}</h3>
+          <span className="text-xs text-(--color-muted)">
+            {count} {count === 1 ? "category" : "categories"}
+          </span>
         </button>
 
         <button
@@ -53,30 +49,31 @@ export function StageCard({ stage, ctx }: { stage: CostStageWithHierarchy; ctx: 
             setAdding(true);
             ctx.expand(stage.id);
           }}
-          className="btn-secondary text-xs py-1.5 px-3"
+          className="btn-secondary px-3 py-1 text-xs"
         >
-          + Add Category to {stage.name}
+          + Category
         </button>
       </div>
 
       {open && (
-        <>
+        <div className="space-y-3 border-t border-(--color-line) px-4 pt-3 pb-4">
+          <p className="text-xs text-(--color-muted)">Category → Subcategory → Variety{example}</p>
           {adding && (
             <InlineAdd
               placeholder={`Category name under ${stage.name} (e.g. ${stage.code === "bought_out" ? "Packaging, Ceramics, Goodies" : "Woodbased, Magnets"})`}
-              saveLabel="Save Category"
+              saveLabel="Save category"
               busy={ctx.isPending}
               className="bg-emerald-50/50"
               onSave={handleAdd}
               onCancel={() => setAdding(false)}
             />
           )}
-          <div className="space-y-4">
+          <div className="space-y-3">
             {stage.categories.map((cat) => (
               <CategoryBlock key={cat.id} cat={cat} isMachine={isMachine} stageCode={stage.code} ctx={ctx} />
             ))}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

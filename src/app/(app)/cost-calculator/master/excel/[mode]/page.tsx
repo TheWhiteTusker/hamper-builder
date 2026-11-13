@@ -3,7 +3,7 @@ import Link from "@/components/link";
 import { requireRole } from "@/lib/supabase/server";
 import { RateSheetWizard } from "../rate-sheet-wizard";
 
-const TITLES = { add: "Add new rates", edit: "Edit & add rates" };
+const TITLES = { add: "Bulk add rates", edit: "Bulk edit rates" };
 
 export default async function RateSheetPage({ params }: { params: Promise<{ mode: string }> }) {
   await requireRole("admin");
@@ -13,9 +13,9 @@ export default async function RateSheetPage({ params }: { params: Promise<{ mode
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-bold">{TITLES[mode]} from Excel</h2>
+        <h2 className="text-lg font-bold">{TITLES[mode]}</h2>
         <Link href="/cost-calculator/master" className="text-sm font-semibold text-(--color-brand) underline">
-          Back to the master
+          Back to rates
         </Link>
       </div>
       <RateSheetWizard mode={mode} />

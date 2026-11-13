@@ -51,7 +51,7 @@ export default async function ProductPage({
           Edit
         </Link>
         <Link href="/products/new" className="btn-primary">
-          Add new product
+          New product
         </Link>
       </PageHeader>
 

@@ -101,8 +101,8 @@ export function StageLineRow({
         ))}
 
       {fromMaster ? (
-        // The rate comes from the Rates & Hierarchy Master and is not edited here.
-        <td className="p-2 whitespace-nowrap font-mono text-xs font-semibold" title="Set in the Rates & Hierarchy Master">
+        // The rate comes from the Rates page and is not edited here.
+        <td className="p-2 whitespace-nowrap font-mono text-xs font-semibold" title="Set on the Rates page">
           {line.variety_name || line.rate ? `${formatMoney(line.rate)}/${line.unit}` : "—"}
         </td>
       ) : (

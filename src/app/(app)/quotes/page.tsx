@@ -41,11 +41,11 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
   return (
     <>
       <PageHeader
-        title="Quotation Register"
+        title="Quotes"
         subtitle={`${total} document${total === 1 ? "" : "s"}`}
       >
         <Link href="/quotes/new" className="btn-primary">
-          New quotation
+          New quote
         </Link>
       </PageHeader>
 
@@ -98,7 +98,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
           title={q || status || type ? "No documents match that search" : "No quotations yet"}
           hint="A quotation pulls saved hampers together for one client, then prints as a document."
           actionHref="/quotes/new"
-          actionLabel="New quotation"
+          actionLabel="New quote"
         />
       ) : (
         <div className="card overflow-x-auto">

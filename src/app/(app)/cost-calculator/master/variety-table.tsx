@@ -24,7 +24,7 @@ export function VarietyTable({ sub, ctx }: { sub: CostSubcategoryWithVarieties; 
           {sub.varieties.length === 0 ? (
             <tr>
               <td colSpan={6} className="py-2 text-(--color-muted) italic">
-                No varieties in {sub.name} yet. Click &ldquo;+ Add Variety&rdquo; above.
+                No varieties in {sub.name} yet. Use &ldquo;+ Variety&rdquo; above.
               </td>
             </tr>
           ) : (

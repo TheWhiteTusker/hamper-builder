@@ -6,7 +6,7 @@ export default function CostCalculatorLayout({ children }: { children: React.Rea
     <>
       <PageHeader
         title="Product Cost Calculator"
-        subtitle="Stage-by-stage costing engine: Material, Hardware, Finishing & Machine per-minute costs"
+        subtitle="Work out what a product costs: materials, hardware, finishing and machine time"
       >
         <CostTabs />
       </PageHeader>

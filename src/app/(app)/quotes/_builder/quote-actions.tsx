@@ -37,7 +37,7 @@ export function QuoteActions({ quote, canEdit, options }: { quote: Quote; canEdi
             )}
             {options.length === 1 && <input type="hidden" name="option" value={options[0]} />}
             <button type="submit" className="btn-secondary" disabled={converting}>
-              {converting ? "Converting…" : "Convert to proforma invoice"}
+              {converting ? "Converting…" : "Convert to proforma"}
             </button>
           </form>
         )}
@@ -46,7 +46,7 @@ export function QuoteActions({ quote, canEdit, options }: { quote: Quote; canEdi
           <form action={delAction} className="ml-auto">
             <input type="hidden" name="id" value={quote.id} />
             <button type="submit" className="btn-danger" disabled={deleting}>
-              {deleting ? "Deleting…" : "Delete quotation"}
+              {deleting ? "Deleting…" : "Delete quote"}
             </button>
           </form>
         )}

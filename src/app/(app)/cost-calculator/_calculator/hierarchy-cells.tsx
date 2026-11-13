@@ -32,7 +32,7 @@ function Pick({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={`select text-xs py-1 px-2 ${missing ? "border-amber-400 text-amber-800" : ""} ${className}`}
-        title={missing ? "No longer in the Rates & Hierarchy Master: pick a current option" : undefined}
+        title={missing ? "No longer on the Rates page: pick a current option" : undefined}
         disabled={disabled}
       >
         <option value="">{placeholder}</option>
@@ -47,7 +47,7 @@ function Pick({
   );
 }
 
-/** Category -> Subcategory -> Variety picked from the Rates & Hierarchy Master. */
+/** Category -> Subcategory -> Variety picked from the Rates page. */
 export function PickCells({ stage, line, api }: Props) {
   const cat = stage.categories.find((c) => c.name === line.category_name);
   const sub = cat?.subcategories.find((s) => s.name === line.subcategory_name);

@@ -57,7 +57,7 @@ export function CategoryBlock({
   }
 
   return (
-    <div className="rounded-xl border border-(--color-line) bg-slate-50/40 p-4 space-y-3 min-w-0 max-w-full">
+    <div className="rounded-lg border border-(--color-line) bg-slate-50/40 p-3 space-y-3 min-w-0 max-w-full">
       <div
         className={`flex flex-wrap items-center justify-between gap-2 ${open ? "border-b border-(--color-line) pb-2" : ""}`}
       >
@@ -101,12 +101,9 @@ export function CategoryBlock({
               className="flex min-w-0 items-center gap-2 text-left"
             >
               <Chevron open={open} />
-              <span className="font-bold text-sm text-(--color-ink) uppercase tracking-wide truncate">
-                {cat.name}
-              </span>
-              <span className="badge shrink-0 text-[11px]">
-                {cat.subcategories.length}{" "}
-                {cat.subcategories.length === 1 ? "subcategory" : "subcategories"}
+              <span className="truncate text-sm font-semibold text-(--color-ink)">{cat.name}</span>
+              <span className="shrink-0 text-xs text-(--color-muted)">
+                {cat.subcategories.length} {cat.subcategories.length === 1 ? "subcategory" : "subcategories"}
               </span>
             </button>
 
@@ -118,7 +115,7 @@ export function CategoryBlock({
                   setName(cat.name);
                 }}
                 className="btn-secondary text-xs py-1 px-2.5"
-                title="Rename Category"
+                title="Rename category"
               >
                 Rename
               </button>
@@ -130,15 +127,15 @@ export function CategoryBlock({
                 }}
                 className="btn-secondary text-xs py-1 px-2.5"
               >
-                + Add Subcategory
+                + Subcategory
               </button>
               <button
                 type="button"
                 onClick={handleDelete}
                 className="text-xs text-red-600 hover:text-red-800 p-1"
-                title="Delete Category"
+                title="Delete category"
               >
-                Delete Category
+                Delete
               </button>
             </div>
           </>
@@ -160,7 +157,7 @@ export function CategoryBlock({
 
           {cat.subcategories.length === 0 ? (
             <p className="text-xs text-(--color-muted) italic py-2">
-              No subcategories in {cat.name} yet. Click &ldquo;+ Add Subcategory&rdquo; above.
+              No subcategories in {cat.name} yet. Use &ldquo;+ Subcategory&rdquo; above.
             </p>
           ) : (
             <div className="space-y-3">

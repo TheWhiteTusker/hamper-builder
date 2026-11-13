@@ -22,7 +22,7 @@ const COLUMNS: Column[] = [
   { header: "Source", width: 18 },
   { header: "Cost Price", width: 12, format: "money" },
   { header: "Markup %", width: 11, format: "percent" },
-  { header: "Default SP", width: 12, format: "money", formula: spFormula },
+  { header: "Selling Price", width: 13, format: "money", formula: spFormula },
   { header: "Active", width: 9 },
 ];
 

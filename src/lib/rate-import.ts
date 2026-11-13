@@ -155,7 +155,7 @@ export function planRateImport(grid: Grid, db: CostRows, onlyNew: boolean): Rate
     );
   if (repeated.length) plan.warnings.push(`Listed more than once, only the first is used: ${list(repeated)}`);
   if (skipped.length)
-    plan.warnings.push(`${skipped.length} already exist and were skipped. Use “Edit & add rates” to change them: ${list(skipped)}`);
+    plan.warnings.push(`${skipped.length} already exist and were skipped. Use Bulk edit to change them: ${list(skipped)}`);
   if (plan.reprice.length)
     plan.warnings.push(`${plan.reprice.length} rate or unit change(s): products costed with them are repriced on save.`);
 

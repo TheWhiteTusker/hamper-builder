@@ -78,5 +78,5 @@ export async function prepareSheetProducts(supabase: Supabase, result: ImportRes
   result.products = result.products.filter((p) => !existing.has(p.code));
   result.counts.products = result.products.length;
   const list = [...existing].slice(0, 8).join(", ") + (existing.size > 8 ? "…" : "");
-  result.warnings.push(`${existing.size} code(s) already exist and will be skipped. Use “Edit & add products” to change them: ${list}`);
+  result.warnings.push(`${existing.size} code(s) already exist and will be skipped. Use Bulk edit to change them: ${list}`);
 }

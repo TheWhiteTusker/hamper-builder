@@ -2,6 +2,7 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components
 import Link from "@/components/link";
 import { requireUser, isAdmin } from "@/lib/supabase/server";
 import { PageHeader, EmptyState } from "@/components/ui";
+import { Menu } from "@/components/ui/menu";
 import { LoadMore } from "@/components/load-more";
 import { pageLimit } from "@/lib/paging";
 import type { Category, ProductWithCategory } from "@/lib/types";
@@ -46,21 +47,24 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         title="Product Master"
         subtitle={`${total} product${total === 1 ? "" : "s"}${showInactive ? " including inactive" : ""}`}
       >
-        <a href="/api/products/export" className="btn-secondary">
-          Export CSV
-        </a>
-        {admin && (
+        {admin ? (
           <>
-            <Link href="/admin/products/add" className="btn-secondary">
-              Add new products
-            </Link>
-            <Link href="/admin/products/edit" className="btn-secondary">
-              Edit &amp; add products
-            </Link>
+            <Menu
+              label="Excel"
+              items={[
+                { href: "/admin/products/add", title: "Bulk add", hint: "Add many products from a sheet" },
+                { href: "/admin/products/edit", title: "Bulk edit", hint: "Change prices and details in Excel" },
+                { href: "/api/products/export", title: "Download list", hint: "All products as a CSV file", download: true },
+              ]}
+            />
             <Link href="/products/new" className="btn-primary">
               New product
             </Link>
           </>
+        ) : (
+          <a href="/api/products/export" className="btn-secondary">
+            Download list
+          </a>
         )}
       </PageHeader>
 
@@ -115,11 +119,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
           title={q || category ? "No products match that search" : "No products yet"}
           hint={
             admin
-              ? "Import your Product Master sheet, or add products one at a time."
+              ? "Bulk add them from an Excel sheet, or add one at a time with New product."
               : "An admin needs to add products before hampers can be built."
           }
           actionHref={admin ? "/admin/products/add" : undefined}
-          actionLabel={admin ? "Add products from Excel" : undefined}
+          actionLabel={admin ? "Bulk add from Excel" : undefined}
         />
       ) : (
         <div className="card overflow-x-auto">

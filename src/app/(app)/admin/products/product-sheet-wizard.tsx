@@ -10,16 +10,17 @@ export function ProductSheetWizard({ mode }: { mode: "add" | "edit" }) {
   const add = mode === "add";
   return (
     <SheetWizard
-      intro={
+      tips={
         add
-          ? "A blank sheet with the column headings. One row per new product; codes that already exist are skipped. Default SP = Cost Price ÷ (1 − Markup %), or type over it. Category must match an existing category; Active is Yes or No."
-          : "Every product, ready to edit. Change any cell, or add new rows at the bottom. Rows are matched on Product Code, so don't change existing codes. Default SP = Cost Price ÷ (1 − Markup %), or type over it."
+          ? ["One row per product. Codes that already exist are skipped.", "Category must match one in Settings. Active is Yes or No.", "Selling Price = Cost ÷ (1 − Markup %), rounded up to ₹10. You can type over it."]
+          : ["Change any cell, or add new rows at the bottom.", "Don't change existing Product Codes; that's how rows are matched.", "Selling Price = Cost ÷ (1 − Markup %), rounded up to ₹10. You can type over it."]
       }
-      downloadLabel={add ? "Download blank sheet" : "Download all products"}
+      downloadLabel={add ? "Download template" : "Download products"}
       fileName={add ? "new-products-template.xlsx" : `product-master-${stamp()}.xlsx`}
-      saveLabel={add ? "Add these products" : "Save changes"}
+      saveLabel={add ? "Add products" : "Save changes"}
+      saveText={({ products = 0 }) => `${add ? "Add" : "Save"} ${products} product${products === 1 ? "" : "s"}`}
       doneHref="/products"
-      doneLabel="View Product Master"
+      doneLabel="View products"
       build={async () => {
         const { buildProductSheet } = await import("@/lib/product-sheet");
         return buildProductSheet(add ? [] : await productsForSheet());

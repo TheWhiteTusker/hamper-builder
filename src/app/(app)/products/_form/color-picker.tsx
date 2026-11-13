@@ -44,7 +44,7 @@ export function ColorPicker({
     <div className="sm:col-span-2">
       <div className="flex items-center justify-between">
         <label className="label">Available Colors / Finishes</label>
-        <span className="text-xs text-[var(--color-muted)]">Manage the list in Cost Calculator → Rates & Hierarchy Master</span>
+        <span className="text-xs text-[var(--color-muted)]">Manage the list in Cost Calculator → Rates</span>
       </div>
       <div className="mt-1.5 flex flex-wrap gap-2">
         {allColors.map((col) => {

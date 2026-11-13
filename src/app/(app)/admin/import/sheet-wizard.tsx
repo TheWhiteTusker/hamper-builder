@@ -1,41 +1,45 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import Link from "@/components/link";
 import type { Grid } from "@/lib/import";
 import type { ImportReport } from "./actions";
 import { ImportReportView } from "./import-report";
 
 /**
- * Download an Excel sheet → fill it in → upload it back: checked first, saved
- * on a second click. Sheets are built and read in the browser (SheetJS loaded
- * on demand) to keep the work off the Worker's CPU budget.
+ * Download → fill in Excel → upload → save. The upload is checked first; nothing
+ * is written until Save. Sheets are built and read in the browser (SheetJS on
+ * demand) to keep the work off the Worker's CPU budget.
  */
 export function SheetWizard({
-  intro,
+  tips,
   downloadLabel,
   fileName,
   saveLabel,
+  saveText,
   doneHref,
   doneLabel,
   build,
   check,
 }: {
-  intro: string;
+  tips: string[];
   downloadLabel: string;
   fileName: string;
   saveLabel: string;
-  /** Offered once saved, e.g. back to the list. */
+  /** The Save button's wording once the check has counted what will change. */
+  saveText?: (counts: Record<string, number>) => string;
   doneHref: string;
   doneLabel: string;
   build: () => Promise<Uint8Array>;
   check: (grid: Grid, apply: boolean) => Promise<ImportReport>;
 }) {
+  const [downloaded, setDownloaded] = useState(false);
   const [grid, setGrid] = useState<Grid | null>(null);
   const [loaded, setLoaded] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<ImportReport | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [pending, startTransition] = useTransition();
 
   async function download() {
@@ -50,8 +54,9 @@ export function SheetWizard({
       a.download = fileName;
       a.click();
       URL.revokeObjectURL(a.href);
+      setDownloaded(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not prepare the Excel file. Try again.");
+      setError(e instanceof Error ? e.message : "Couldn't prepare the file. Try again.");
     } finally {
       setDownloading(false);
     }
@@ -61,7 +66,7 @@ export function SheetWizard({
     startTransition(async () => setReport(await check(rows, apply)));
   }
 
-  async function pick(file: File | null) {
+  async function pick(file: File | null | undefined) {
     setGrid(null);
     setReport(null);
     setError(null);
@@ -76,63 +81,95 @@ export function SheetWizard({
       setLoaded(file.name);
       run(rows, false);
     } catch {
-      setError(`Could not read ${file.name}. Check it is the .xlsx downloaded above.`);
+      setError(`Couldn't read ${file.name}. Use the .xlsx file from step 1.`);
     }
   }
 
-  const anything = Object.values(report?.counts ?? {}).some(Boolean);
+  const counts = report?.counts ?? {};
+  const anything = Object.values(counts).some(Boolean);
+  const saved = !!report?.applied && report.ok;
 
   return (
-    <div className="space-y-4">
-      <section className="card p-4">
-        <h2 className="text-sm font-semibold">1. Download the Excel sheet</h2>
-        <p className="mt-1 text-sm text-[var(--color-muted)]">{intro}</p>
-        <p className="mt-1 text-sm text-[var(--color-muted)]">
-          Blue headings are for typing in; grey headings are worked out by a formula. Keep the
-          columns in the same order.
-        </p>
+    <div className="space-y-3">
+      <Step n={1} title="Download" done={downloaded || !!grid}>
+        <ul className="list-disc space-y-0.5 pl-5 text-sm text-(--color-muted)">
+          {tips.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+          <li>Blue headings: type here. Grey: worked out for you.</li>
+        </ul>
         <button type="button" className="btn-secondary mt-3" onClick={download} disabled={downloading}>
           {downloading ? "Preparing…" : downloadLabel}
         </button>
-      </section>
+      </Step>
 
-      <section className="card p-4">
-        <h2 className="text-sm font-semibold">2. Upload the filled sheet</h2>
-        <p className="mt-1 text-sm text-[var(--color-muted)]">
-          It is checked first. Nothing is saved until you press the button below.
-        </p>
-        <input
-          type="file"
-          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          className="mt-3 w-full text-sm"
-          onChange={(e) => pick(e.target.files?.[0] ?? null)}
-        />
-        {loaded && <p className="mt-1 text-xs text-green-800">{loaded}</p>}
+      <Step n={2} title="Upload" done={!!grid}>
+        <label
+          onDragOver={(e) => (e.preventDefault(), setDragging(true))}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            pick(e.dataTransfer.files[0]);
+          }}
+          className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed px-4 py-6 text-center text-sm transition-colors ${
+            dragging ? "border-(--color-brand) bg-(--color-brand-soft)" : "border-line hover:bg-paper"
+          }`}
+        >
+          <span className="font-medium">{loaded || "Drop your Excel file here"}</span>
+          <span className="text-xs text-(--color-muted)">{loaded ? "Click to choose a different file" : "or click to choose"}</span>
+          <input
+            type="file"
+            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            className="sr-only"
+            onChange={(e) => pick(e.target.files?.[0])}
+          />
+        </label>
         {error && (
           <p role="alert" className="mt-3 text-sm text-red-700">
             {error}
           </p>
         )}
-        {pending && !report && <p className="mt-3 text-sm text-[var(--color-muted)]">Checking…</p>}
+        {pending && !report && <p className="mt-3 text-sm text-(--color-muted)">Checking…</p>}
         {report && <ImportReportView report={report} />}
-      </section>
+      </Step>
 
-      <section className="card p-4">
-        <h2 className="text-sm font-semibold">3. Save</h2>
-        <button
-          type="button"
-          className="btn-primary mt-3"
-          onClick={() => grid && run(grid, true)}
-          disabled={!grid || pending || !report?.ok || report.applied || !anything}
-        >
-          {pending ? "Saving…" : saveLabel}
-        </button>
-        {report?.applied && report.ok && (
-          <Link href={doneHref} className="btn-secondary mt-3 ml-2">
-            {doneLabel}
-          </Link>
-        )}
-      </section>
+      <Step n={3} title="Save" done={saved}>
+        <p className="text-sm text-(--color-muted)">Nothing changes until you press this.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => grid && run(grid, true)}
+            disabled={!grid || pending || !report?.ok || report.applied || !anything}
+          >
+            {pending && report ? "Saving…" : report?.ok && !report.applied && anything && saveText ? saveText(counts) : saveLabel}
+          </button>
+          {saved && (
+            <Link href={doneHref} className="btn-secondary">
+              {doneLabel}
+            </Link>
+          )}
+        </div>
+      </Step>
     </div>
+  );
+}
+
+function Step({ n, title, done, children }: { n: number; title: string; done: boolean; children: ReactNode }) {
+  return (
+    <section className="card p-4">
+      <h2 className="flex items-center gap-2 text-sm font-semibold">
+        <span
+          className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+            done ? "bg-emerald-600 text-white" : "bg-(--color-brand-soft) text-(--color-brand-dark)"
+          }`}
+        >
+          {done ? "✓" : n}
+        </span>
+        {title}
+      </h2>
+      <div className="mt-3">{children}</div>
+    </section>
   );
 }

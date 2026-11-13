@@ -141,7 +141,7 @@ export function VarietyDialog({
             Cancel
           </button>
           <button type="submit" disabled={isPending} className="btn-primary text-sm">
-            {isPending ? "Saving…" : "Save Variety"}
+            {isPending ? "Saving…" : "Save variety"}
           </button>
         </div>
       </form>

@@ -64,7 +64,7 @@ export default async function Dashboard() {
               : "Once an admin imports the product list you can start building quotes."
           }
           actionHref={profile.role === "admin" ? "/admin/import" : undefined}
-          actionLabel={profile.role === "admin" ? "Import from spreadsheet" : undefined}
+          actionLabel={profile.role === "admin" ? "Import old workbook" : undefined}
         />
       ) : (
         <>

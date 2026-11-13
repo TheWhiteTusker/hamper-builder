@@ -16,7 +16,7 @@ export default async function NewQuotePage({ searchParams }: { searchParams: Sea
   return (
     <>
       <PageHeader
-        title="New quotation"
+        title="New quote"
         subtitle="The document number is assigned when you save"
       />
       <QuoteBuilder

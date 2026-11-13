@@ -70,7 +70,7 @@ export function PrintDeck({ deck, slides }: { deck: { id: string; title: string 
               : `Preparing slide ${Math.min(done + 1, slides.length)} of ${slides.length}…`}
         </span>
         <button type="button" className="btn-primary ml-auto" disabled={!ready} onClick={() => window.print()}>
-          Print / Save as PDF
+          Print / PDF
         </button>
       </div>
 

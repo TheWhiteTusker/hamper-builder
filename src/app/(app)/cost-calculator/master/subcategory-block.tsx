@@ -87,11 +87,9 @@ export function SubcategoryBlock({
               className="flex min-w-0 items-center gap-2 text-left"
             >
               <Chevron open={open} />
-              <span className="font-semibold text-xs text-(--color-ink) truncate">
-                Subcategory: <span className="text-(--color-brand-dark) font-bold">{sub.name}</span>
-              </span>
-              <span className="shrink-0 text-[11px] text-(--color-muted)">
-                ({sub.varieties.length} {sub.varieties.length === 1 ? "variety" : "varieties"})
+              <span className="truncate text-sm font-medium text-(--color-brand-dark)">{sub.name}</span>
+              <span className="shrink-0 text-xs text-(--color-muted)">
+                {sub.varieties.length} {sub.varieties.length === 1 ? "variety" : "varieties"}
               </span>
             </button>
 
@@ -108,7 +106,7 @@ export function SubcategoryBlock({
                 }}
                 className="rounded bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-(--color-brand-dark) hover:bg-emerald-100 transition-colors"
               >
-                + Add Variety
+                + Variety
               </button>
               <button
                 type="button"
