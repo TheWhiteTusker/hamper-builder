@@ -114,7 +114,7 @@ export function dimensionArea(
     return (lInches * bInches) / 144;
   }
 
-  if (unitLower === "sq inch" || unitLower === "sq in" || unitLower === "sqin") {
+  if (unitLower === "sq inch" || unitLower === "sqinch" || unitLower === "sq in" || unitLower === "sqin") {
     return lInches * bInches;
   }
 

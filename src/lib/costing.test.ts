@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   calculateDimensionArea,
   calculateLineCost,
+  isSizedUnit,
 } from "./costing.ts";
 
 test("calculateDimensionArea handles inches to sq ft", () => {
@@ -108,4 +109,10 @@ test("calculateLineCost for sq cm finishing", () => {
 
   assert.equal(line.calculated_area, 200);
   assert.equal(line.line_total, 100);
+});
+
+test("isSizedUnit: dimensions count for length/area rates, not per piece", () => {
+  for (const u of ["sqft", "sq inch", "sqinch", "meter", "running ft", "", null]) assert.equal(isSizedUnit(u), true, String(u));
+  for (const u of ["piece", "set", "kg", "min"]) assert.equal(isSizedUnit(u), false, u);
+  assert.equal(calculateLineCost({ stage_code: "material", unit: "sqinch", rate: 2, qty: 1, length: 3, breadth: 4 }).line_total, 24);
 });

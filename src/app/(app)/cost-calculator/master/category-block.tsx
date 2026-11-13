@@ -71,7 +71,7 @@ export function CategoryBlock({
               onChange={(e) => setName(e.target.value)}
               autoFocus
               placeholder="Category name"
-              className="input text-xs py-1 font-bold uppercase tracking-wide w-full sm:w-auto sm:max-w-xs"
+              className="input text-xs py-1 font-bold w-full sm:w-auto sm:max-w-xs"
             />
             <button
               type="submit"

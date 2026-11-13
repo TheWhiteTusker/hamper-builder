@@ -1,4 +1,4 @@
-import { isTimeUnit, withOverhead } from "@/lib/costing.ts";
+import { isSizedUnit, isTimeUnit, withOverhead } from "@/lib/costing.ts";
 import { formatMoney, num } from "@/lib/pricing";
 import type { ProductCostLine } from "@/lib/types";
 
@@ -7,6 +7,7 @@ const DIM_LABEL: Record<string, string> = { inch: "″", mm: " mm", cm: " cm" };
 /** What was measured: the size for sized lines, minutes for machine time. */
 function size(l: ProductCostLine) {
   if (l.stage_code === "machine" && isTimeUnit(l.unit || "min")) return `${num(l.duration_minutes)} min`;
+  if (!isSizedUnit(l.unit)) return "—";
   const u = DIM_LABEL[l.dimension_unit ?? "inch"] ?? "";
   if (num(l.length) > 0 && num(l.breadth) > 0) return `${num(l.length)}${u} × ${num(l.breadth)}${u}`;
   if (num(l.length) > 0) return `${num(l.length)}${u}`;

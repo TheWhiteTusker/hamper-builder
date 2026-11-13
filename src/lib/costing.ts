@@ -10,6 +10,15 @@ const MINUTES_PER: Record<string, number> = { min: 1, mins: 1, minute: 1, minute
 /** A rate quoted per minute or per hour: priced on duration, not size. */
 export const isTimeUnit = (unit: string | null | undefined) => (unit ?? "").trim().toLowerCase() in MINUTES_PER;
 
+const LINEAR_UNITS = ["feet", "ft", "running ft", "rft", "inch", "in", "mm", "cm", "meter", "m"];
+const AREA_UNITS = ["sq ft", "sqft", "sft", "sq inch", "sqinch", "sq in", "sqin", "sq mm", "sqmm", "sq cm", "sqcm"];
+
+/** A rate priced on length or area, so the line's dimensions count. Blank means sq ft. */
+export const isSizedUnit = (unit: string | null | undefined) => {
+  const u = (unit || "sq ft").trim().toLowerCase();
+  return LINEAR_UNITS.includes(u) || AREA_UNITS.includes(u);
+};
+
 /**
  * Computes the line total cost for a cost item line.
  */
@@ -42,31 +51,8 @@ export function calculateLineCost(line: Partial<ProductCostLine>): {
   const l = num(line.length);
   const b = num(line.breadth);
 
-  const isLinearUnit = [
-    "feet",
-    "ft",
-    "running ft",
-    "rft",
-    "inch",
-    "in",
-    "mm",
-    "cm",
-    "meter",
-    "m",
-  ].includes(unit.trim().toLowerCase());
-
-  const isAreaUnit = [
-    "sq ft",
-    "sqft",
-    "sft",
-    "sq inch",
-    "sq in",
-    "sqin",
-    "sq mm",
-    "sqmm",
-    "sq cm",
-    "sqcm",
-  ].includes(unit.trim().toLowerCase());
+  const isLinearUnit = LINEAR_UNITS.includes(unit.trim().toLowerCase());
+  const isAreaUnit = AREA_UNITS.includes(unit.trim().toLowerCase());
 
   let area = 1;
   let baseCost = 0;

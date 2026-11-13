@@ -1,7 +1,7 @@
 "use client";
 
 import { formatMoney } from "@/lib/pricing";
-import { isTimeUnit, type DimensionUnit } from "@/lib/costing";
+import { isSizedUnit, isTimeUnit, type DimensionUnit } from "@/lib/costing";
 import type { CostStageWithHierarchy } from "@/lib/types";
 import { NumCell, RemoveButton, UnitCell } from "./cells";
 import { PickCells, TypedCells } from "./hierarchy-cells";
@@ -23,7 +23,9 @@ export function StageLineRow({
   const isMachine = stage.code === "machine";
   // Stages with a hierarchy take their rate and unit from the master.
   const fromMaster = stage.categories.length > 0 && !freeEntry;
-  const sized = !isMachine || !isTimeUnit(line.unit || "min");
+  const timed = isMachine && isTimeUnit(line.unit || "min");
+  // Length and breadth only count for rates per length or area, not per piece.
+  const sized = !timed && isSizedUnit(line.unit);
   const set = (patch: Partial<LineState>) => api.update(line.tempKey, patch);
 
   return (
@@ -78,11 +80,11 @@ export function StageLineRow({
         </>
       ) : (
         <td colSpan={3} className="p-2 text-center text-[11px] text-(--color-muted)">
-          Priced on time
+          {timed ? "Priced on time" : `Priced per ${line.unit}`}
         </td>
       )}
       {isMachine &&
-        (sized ? (
+        (!timed ? (
           <td className="p-2 text-center text-[11px] text-(--color-muted)">—</td>
         ) : (
           <td className="p-2">
