@@ -9,12 +9,15 @@ export function QuoteTotals({
   f,
   set,
   totals,
+  options,
   isCombined,
   canEdit,
 }: {
   f: QuoteFields;
   set: SetField;
   totals: QuotePricing;
+  /** Option-based only: each option's own totals. */
+  options: { label: string; totals: QuotePricing }[];
   isCombined: boolean;
   canEdit: boolean;
 }) {
@@ -46,13 +49,21 @@ export function QuoteTotals({
       </div>
 
       <div className="card p-4">
-        <h2 className="text-sm font-semibold">Order total</h2>
+        <h2 className="text-sm font-semibold">{isCombined ? "Order total" : "Option totals"}</h2>
 
         {!isCombined ? (
-          <p className="mt-3 text-sm text-[var(--color-muted)]">
-            Option-based quotations have no combined total. Each line is priced on its own so the client can choose
-            between them.
-          </p>
+          <>
+            <p className="mt-1 text-xs text-[var(--color-muted)]">
+              Each option is totalled on its own; the client picks one. Order discount and charges apply to combined
+              orders only.
+            </p>
+            <div className="mt-3">{amount("gstRate", "GST %", "max-w-[120px]")}</div>
+            <dl className="mt-4 space-y-1.5 border-t border-[var(--color-line)] pt-3 text-sm">
+              {options.map((o) => (
+                <Row key={o.label} label={`${o.label} (incl. GST)`} value={formatMoney(o.totals.grandTotal)} strong />
+              ))}
+            </dl>
+          </>
         ) : (
           <>
             <dl className="mt-3 space-y-1.5 text-sm">

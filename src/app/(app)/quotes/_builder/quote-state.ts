@@ -1,4 +1,4 @@
-import { COMBINED_ORDER, num, round2 } from "@/lib/pricing";
+import { COMBINED_ORDER, num, optionKey, round2 } from "@/lib/pricing";
 import type { ContentItem } from "@/components/hamper-contents";
 import type { Quote, QuoteItem, Settings } from "@/lib/types";
 
@@ -91,9 +91,9 @@ export const toLine = (item: QuoteItem): Line => ({
   packaging_treatment: item.packaging_treatment ?? "",
 });
 
-export const lineFromHamper = (hamper: HamperOption, index: number, settings: Settings): Line => ({
+export const lineFromHamper = (hamper: HamperOption, option: string, settings: Settings): Line => ({
   key: crypto.randomUUID(),
-  option_label: `Option ${index}`,
+  option_label: option,
   hamper_id: hamper.id,
   hamper_code: hamper.code,
   hamper_name: hamper.name,
@@ -108,9 +108,9 @@ export const lineFromHamper = (hamper: HamperOption, index: number, settings: Se
  * A product quoted on its own. It rides in the same hamper_code/hamper_name
  * columns with no hamper_id, so saving, converting and printing need no changes.
  */
-export const lineFromProduct = (product: ProductOption, index: number): Line => ({
+export const lineFromProduct = (product: ProductOption, option: string): Line => ({
   key: crypto.randomUUID(),
-  option_label: `Option ${index}`,
+  option_label: option,
   hamper_id: null,
   hamper_code: product.code,
   hamper_name: product.name,
@@ -120,6 +120,13 @@ export const lineFromProduct = (product: ProductOption, index: number): Line => 
   detail_mode: "",
   packaging_treatment: "",
 });
+
+/** The first "Option N" not already taken. */
+export function nextOptionLabel(taken: string[]) {
+  let n = taken.length + 1;
+  while (taken.includes(`Option ${n}`)) n++;
+  return `Option ${n}`;
+}
 
 /** A line as priceQuote()/priceQuoteLine() take it. */
 export const pricedLine = (l: Line) => ({
@@ -153,7 +160,8 @@ export const quotePayload = (f: QuoteFields, lines: Line[], quote?: Quote) =>
     follow_up_date: f.followUp || null,
     linked_doc_no: quote?.linked_doc_no ?? null,
     lines: lines.map((l) => ({
-      option_label: l.option_label || null,
+      // A combined order is one set of confirmed items: no options.
+      option_label: f.structure === COMBINED_ORDER ? null : optionKey(l.option_label),
       hamper_id: l.hamper_id,
       hamper_code: l.hamper_code || null,
       hamper_name: l.hamper_name || null,

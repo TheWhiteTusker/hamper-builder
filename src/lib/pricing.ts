@@ -118,6 +118,26 @@ export function priceQuoteLine(line: QuoteLineInput) {
 
 export const COMBINED_ORDER = "Combined Order";
 
+/** An option-based quote groups its lines by label; a blank label is the first option. */
+export const optionKey = (label: string | null | undefined) => label?.trim() || "Option 1";
+
+/** Lines grouped into options, in the order each option first appears. */
+export function groupByOption<T extends { option_label?: string | null }>(lines: T[]) {
+  const groups = new Map<string, T[]>();
+  for (const line of lines) {
+    const key = optionKey(line.option_label);
+    groups.set(key, [...(groups.get(key) ?? []), line]);
+  }
+  return [...groups].map(([label, items]) => ({ label, lines: items }));
+}
+
+/**
+ * One option of an option-based quote, priced like its own combined order:
+ * subtotal, GST, total. Order discount and charges belong to a combined order only.
+ */
+export const priceOption = (lines: QuoteLineInput[], gstRate: number) =>
+  priceQuote(lines, { quoteStructure: COMBINED_ORDER, gstRate });
+
 export type QuotePricing = {
   subtotal: number;
   totalQty: number;

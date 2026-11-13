@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { type ActionState, describeError } from "@/lib/forms";
 import { loadSettings } from "@/lib/settings";
+import { COMBINED_ORDER, optionKey } from "@/lib/pricing";
 
 const nullableText = z.string().trim().nullable().optional();
 const nullableDate = z
@@ -96,12 +97,16 @@ export async function deleteQuote(
  * Turns an accepted quotation into a proforma invoice: a new document with its
  * own LLPI- number, linked back to the quotation it came from. The Apps Script
  * had a "Linked Document No." column but nothing that ever filled it in.
+ *
+ * From an option-based quotation only the chosen option is carried across, and
+ * the invoice is a combined order: those are the confirmed items.
  */
 export async function convertToProforma(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
   const docNo = String(formData.get("doc_no") ?? "");
+  const option = String(formData.get("option") ?? "");
   if (!docNo) return { error: "Missing quotation." };
 
   const supabase = await createClient();
@@ -116,7 +121,13 @@ export async function convertToProforma(
 
   const { pi_terms } = await loadSettings(supabase);
 
-  const { quote_items: lines, id: _id, doc_no: _docNo, created_at, updated_at, ...rest } = quote;
+  const { quote_items: allLines, id: _id, doc_no: _docNo, created_at, updated_at, ...rest } = quote;
+  const isOptions = rest.quote_structure !== COMBINED_ORDER;
+  if (isOptions && !option) return { error: "Choose the option the client picked." };
+  const lines = isOptions
+    ? (allLines ?? []).filter((l: { option_label: string | null }) => optionKey(l.option_label) === option)
+    : allLines;
+  if (!lines?.length) return { error: isOptions ? `${option} has no items to invoice.` : "This quotation has no items." };
   void _id;
   void _docNo;
   void created_at;
@@ -126,6 +137,9 @@ export async function convertToProforma(
     p: {
       ...rest,
       doc_type: "proforma_invoice",
+      quote_structure: COMBINED_ORDER,
+      // An option is priced without order discount or charges; keep the invoice equal to it.
+      ...(isOptions && { order_discount: 0, adj1: 0, adj2: 0 }),
       status: "Draft",
       linked_doc_no: docNo,
       // A PI carries payment terms (advance, delivery), not quotation terms.
@@ -142,7 +156,7 @@ export async function convertToProforma(
           detail_mode: string | null;
           packaging_treatment: string | null;
         }) => ({
-          option_label: l.option_label,
+          option_label: null,
           hamper_id: l.hamper_id,
           hamper_code: l.hamper_code,
           hamper_name: l.hamper_name,

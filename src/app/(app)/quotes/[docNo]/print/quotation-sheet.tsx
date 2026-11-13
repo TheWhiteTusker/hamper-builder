@@ -1,8 +1,7 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { HamperContents } from "@/components/hamper-contents";
-import { COMBINED_ORDER, formatMoney, type QuotePricing } from "@/lib/pricing";
+import { COMBINED_ORDER, formatMoney, formatPct, groupByOption, priceOption, type QuotePricing } from "@/lib/pricing";
 import type { CompanySettings, HamperItem, QuoteItem, QuoteSummary } from "@/lib/types";
-import { QuotationTotals } from "./quotation-totals";
+import { LinesTable } from "./lines-table";
+import { QuotationTotals, TotalRow } from "./quotation-totals";
 
 /** The quotation as printed: letterhead, client, lines, totals and terms. */
 export function QuotationSheet({
@@ -80,64 +79,41 @@ export function QuotationSheet({
         )}
       </section>
 
-      {!isCombined && (
-        <p className="mt-5 rounded-md bg-[var(--color-brand-soft)] px-3 py-2 text-[var(--color-brand-dark)]">
-          The options below are priced individually. Please select the one you would like
-          to proceed with.
-        </p>
-      )}
-
       {/* ---------------- lines ---------------- */}
-      <Table className="mt-5">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-8">#</TableHead>
-            <TableHead>Item</TableHead>
-            <TableHead className="num w-16">Qty</TableHead>
-            <TableHead className="num w-24">Rate</TableHead>
-            <TableHead className="num w-24">Amount</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {lines.map((line, index) => {
-            const items = line.hamper_id ? (byHamper.get(line.hamper_id) ?? []) : [];
-
+      {isCombined ? (
+        <>
+          <div className="mt-5">
+            <LinesTable lines={lines} byHamper={byHamper} packagingCategories={packagingCategories} />
+          </div>
+          <QuotationTotals quote={quote} totals={totals} />
+        </>
+      ) : (
+        <>
+          <p className="mt-5 rounded-md bg-[var(--color-brand-soft)] px-3 py-2 text-[var(--color-brand-dark)]">
+            Each option below is a complete order with its own total. Please let us know which
+            option you would like to proceed with.
+          </p>
+          {groupByOption(lines).map((option) => {
+            const t = priceOption(
+              option.lines.map((l) => ({ qty: l.qty, cataloguePrice: l.catalogue_price, discountPct: l.discount_pct })),
+              quote.gst_rate,
+            );
             return (
-              <TableRow key={line.id} className="avoid-break align-top">
-                <TableCell className="text-[var(--color-muted)]">
-                  {line.option_label || index + 1}
-                </TableCell>
-
-                <TableCell>
-                  <div className="font-medium">{line.hamper_name}</div>
-
-                  <HamperContents
-                    items={items}
-                    detailMode={line.detail_mode}
-                    packagingTreatment={line.packaging_treatment}
-                    packagingCategories={packagingCategories}
-                  />
-                </TableCell>
-
-                <TableCell className="num">{line.qty}</TableCell>
-
-                <TableCell className="num">
-                  {formatMoney(line.final_rate)}
-                  {Number(line.discount_pct) > 0 && (
-                    <div className="text-xs text-[var(--color-muted)] line-through">
-                      {formatMoney(line.catalogue_price)}
-                    </div>
-                  )}
-                </TableCell>
-
-                <TableCell className="num font-medium">{formatMoney(line.amount)}</TableCell>
-              </TableRow>
+              <section key={option.label} className="mt-6">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-brand-dark)]">{option.label}</h3>
+                <LinesTable lines={option.lines} byHamper={byHamper} packagingCategories={packagingCategories} />
+                <dl className="avoid-break ml-auto mt-2 w-full max-w-[320px] space-y-1">
+                  <TotalRow label="Subtotal" value={formatMoney(t.subtotal)} />
+                  <TotalRow label={`GST @ ${formatPct(quote.gst_rate, 0)}`} value={formatMoney(t.gstAmount)} />
+                  <div className="mt-1 border-t border-[var(--color-line)] pt-1">
+                    <TotalRow label={`${option.label} total`} value={formatMoney(t.grandTotal)} strong />
+                  </div>
+                </dl>
+              </section>
             );
           })}
-        </TableBody>
-      </Table>
-
-      {isCombined && <QuotationTotals quote={quote} totals={totals} />}
+        </>
+      )}
 
       {/* ---------------- terms ---------------- */}
       {quote.terms && (

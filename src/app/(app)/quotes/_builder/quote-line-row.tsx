@@ -60,15 +60,6 @@ export function QuoteLineRow({
   return (
     <TableRow className="[&>td]:align-top">
       <TableCell>
-        <input
-          aria-label="Option label"
-          className="input"
-          value={line.option_label}
-          disabled={!canEdit}
-          onChange={(e) => onChange({ option_label: e.target.value })}
-        />
-      </TableCell>
-      <TableCell>
         <div className="font-medium">{line.hamper_name}</div>
         <div className="font-mono text-xs text-[var(--color-muted)]">{line.hamper_code}</div>
         {/* Read-only preview of what the printed document will list for this line. */}

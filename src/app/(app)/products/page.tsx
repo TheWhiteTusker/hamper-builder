@@ -51,8 +51,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         </a>
         {admin && (
           <>
-            <Link href="/admin/import" className="btn-secondary">
-              Import
+            <Link href="/admin/products/add" className="btn-secondary">
+              Add new products
+            </Link>
+            <Link href="/admin/products/edit" className="btn-secondary">
+              Edit &amp; add products
             </Link>
             <Link href="/products/new" className="btn-primary">
               New product
@@ -115,8 +118,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
               ? "Import your Product Master sheet, or add products one at a time."
               : "An admin needs to add products before hampers can be built."
           }
-          actionHref={admin ? "/admin/import" : undefined}
-          actionLabel={admin ? "Import from spreadsheet" : undefined}
+          actionHref={admin ? "/admin/products/add" : undefined}
+          actionLabel={admin ? "Add products from Excel" : undefined}
         />
       ) : (
         <div className="card overflow-x-auto">

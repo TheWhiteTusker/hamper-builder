@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "@/components/link";
 import type { ImportReport } from "./actions";
 
 /** What a dry run (or the real import) found: counts, warnings, and "done". */
@@ -34,9 +35,28 @@ export function ImportReportView({ report }: { report: ImportReport }) {
 
           {report.applied && (
             <p className="mt-3 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900">
-              Import complete. Document numbering now continues from the highest
-              imported code.
+              {report.message ??
+                "Import complete. Document numbering now continues from the highest imported code."}
             </p>
+          )}
+
+          {report.applied && !!report.added?.length && (
+            <div className="mt-3 rounded-md border border-[var(--color-line)] p-3">
+              <div className="label">Newly added ({report.added.length})</div>
+              <ul className="mt-1.5 max-h-72 space-y-1 overflow-y-auto text-sm">
+                {report.added.map((a) => (
+                  <li key={a.label}>
+                    {a.href ? (
+                      <Link href={a.href} className="text-(--color-brand) underline">
+                        {a.label}
+                      </Link>
+                    ) : (
+                      a.label
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </>
       )}
@@ -52,6 +72,10 @@ function labelFor(key: string) {
     hamperItems: "Hamper lines",
     quotes: "Quotations",
     quoteItems: "Quotation lines",
+    newCategories: "New categories",
+    newSubcategories: "New subcategories",
+    newVarieties: "New varieties",
+    updatedVarieties: "Varieties changed",
   };
   return labels[key] ?? key;
 }

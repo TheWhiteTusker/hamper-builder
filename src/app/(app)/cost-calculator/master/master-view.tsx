@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "@/components/link";
 import { markOtherPagesStale } from "@/components/stale-pages";
 import { applyCostChanges, buildCostTree, type CostRows } from "@/lib/cost-tree";
 import type { ProductColor } from "@/lib/product-code";
@@ -17,9 +18,11 @@ import { VarietyDialog } from "./variety-dialog";
 
 export function CostMasterView({
   rows: serverRows,
+  admin,
   productColors,
 }: {
   rows: CostRows;
+  admin: boolean;
   productColors: ProductColor[];
 }) {
   // Edits patch these rows in place; a server re-render (repricing, a refresh)
@@ -91,6 +94,25 @@ export function CostMasterView({
         aria-label="Search the rate and hierarchy master"
         className="input text-sm"
       />
+
+      {admin && (
+        <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
+          <div>
+            <h3 className="text-sm font-bold text-[var(--color-ink)]">Excel</h3>
+            <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+              Download the master as an Excel sheet, fill it in, and upload it back.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/cost-calculator/master/excel/add" className="btn-secondary text-xs">
+              Add new rates
+            </Link>
+            <Link href="/cost-calculator/master/excel/edit" className="btn-secondary text-xs">
+              Edit &amp; add rates
+            </Link>
+          </div>
+        </div>
+      )}
 
       <SyncRatesButton />
 

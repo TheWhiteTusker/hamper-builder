@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  groupByOption,
+  priceOption,
   priceHamper,
   priceQuote,
   priceQuoteLine,
@@ -110,6 +112,21 @@ test("option-style quotes have no order total", () => {
   assert.equal(q.subtotal, 1000); // lines still price individually
   assert.equal(q.taxableValue, null);
   assert.equal(q.grandTotal, null);
+});
+
+test("option-based lines group by label, each option priced on its own", () => {
+  const groups = groupByOption([
+    { option_label: "Option 1", qty: 10, cataloguePrice: 500 },
+    { option_label: "Option 2", qty: 10, cataloguePrice: 900 },
+    { option_label: " Option 1 ", qty: 10, cataloguePrice: 200 }, // same option, stray spaces
+    { option_label: null, qty: 1, cataloguePrice: 50 }, // blank joins the first option
+  ]);
+  assert.deepEqual(groups.map((g) => [g.label, g.lines.length]), [["Option 1", 3], ["Option 2", 1]]);
+
+  const first = priceOption(groups[0].lines, 0.18);
+  assert.equal(first.subtotal, 7050);
+  assert.equal(first.gstAmount, 1269);
+  assert.equal(first.grandTotal, 8319);
 });
 
 test("percentages survive both spreadsheet export shapes", () => {

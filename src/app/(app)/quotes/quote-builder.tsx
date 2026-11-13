@@ -2,11 +2,12 @@
 
 import { useActionState, useState } from "react";
 import Link from "@/components/link";
-import { saveQuote, deleteQuote, convertToProforma } from "./actions";
-import { priceQuote, num, COMBINED_ORDER } from "@/lib/pricing";
+import { saveQuote } from "./actions";
+import { priceQuote, num, COMBINED_ORDER, groupByOption, optionKey, priceOption } from "@/lib/pricing";
 import type { Client, Quote, QuoteItem, Settings } from "@/lib/types";
 import { QuoteDetails } from "./_builder/quote-details";
-import { QuoteLines } from "./_builder/quote-lines";
+import { QuoteActions } from "./_builder/quote-actions";
+import { QuoteLines, type AddItem } from "./_builder/quote-lines";
 import {
   initialFields,
   lineFromHamper,
@@ -48,8 +49,6 @@ export function QuoteBuilder({
   initialHamperCode?: string;
 }) {
   const [state, action, saving] = useActionState(saveQuote, {});
-  const [delState, delAction, deleting] = useActionState(deleteQuote, {});
-  const [convState, convAction, converting] = useActionState(convertToProforma, {});
 
   const [f, setFields] = useState<QuoteFields>(() => initialFields(quote, settings));
   const set: SetField = (key, value) => setFields((prev) => ({ ...prev, [key]: value }));
@@ -58,7 +57,7 @@ export function QuoteBuilder({
     if (items?.length) return items.map(toLine);
     // Arrived from a hamper page via "Add to a quote".
     const seed = initialHamperCode && hampers.find((h) => h.code === initialHamperCode);
-    return seed ? [lineFromHamper(seed, 1, settings)] : [];
+    return seed ? [lineFromHamper(seed, "Option 1", settings)] : [];
   });
 
   const isCombined = f.structure === COMBINED_ORDER;
@@ -70,15 +69,17 @@ export function QuoteBuilder({
     gstRate: num(f.gstRate) / 100,
   });
 
-  function addHamper(hamperId: string) {
-    const hamper = hampers.find((h) => h.id === hamperId);
-    if (hamper) setLines((prev) => [...prev, lineFromHamper(hamper, prev.length + 1, settings)]);
-  }
+  const options = isCombined
+    ? []
+    : groupByOption(lines).map((g) => ({ label: g.label, totals: priceOption(g.lines.map(pricedLine), num(f.gstRate) / 100) }));
 
-  function addProduct(productId: string) {
-    const product = products.find((p) => p.id === productId);
-    if (product) setLines((prev) => [...prev, lineFromProduct(product, prev.length + 1)]);
-  }
+  const addItem: AddItem = (kind, id, option) => {
+    const hamper = kind === "hamper" && hampers.find((h) => h.id === id);
+    const product = kind === "product" && products.find((p) => p.id === id);
+    const line = hamper ? lineFromHamper(hamper, option, settings) : product ? lineFromProduct(product, option) : null;
+    if (line) setLines((prev) => [...prev, line]);
+  };
+  const inOption = (label: string) => (l: Line) => optionKey(l.option_label) === label;
 
   // Copies the client's details onto the document, so a sent quote keeps the
   // address it went out with even if the client record changes later.
@@ -135,18 +136,20 @@ export function QuoteBuilder({
           settings={settings}
           packagingCategories={packagingCategories}
           canEdit={canEdit}
+          gstPct={f.gstRate}
           onStructure={(s) => set("structure", s)}
-          onAddHamper={addHamper}
-          onAddProduct={addProduct}
+          onAdd={addItem}
           onChange={(key, patch) => setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)))}
           onRemove={(key) => setLines((prev) => prev.filter((l) => l.key !== key))}
+          onRenameOption={(from, to) => setLines((prev) => prev.map((l) => (inOption(from)(l) ? { ...l, option_label: to } : l)))}
+          onRemoveOption={(label) => setLines((prev) => prev.filter((l) => !inOption(label)(l)))}
         />
 
-        <QuoteTotals f={f} set={set} totals={totals} isCombined={isCombined} canEdit={canEdit} />
+        <QuoteTotals f={f} set={set} totals={totals} options={options} isCombined={isCombined} canEdit={canEdit} />
 
-        {(state.error || delState.error || convState.error) && (
+        {state.error && (
           <p role="alert" className="text-sm text-red-700">
-            {state.error || delState.error || convState.error}
+            {state.error}
           </p>
         )}
 
@@ -163,29 +166,12 @@ export function QuoteBuilder({
       </form>
 
       {quote && (
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <Link href={`/quotes/${encodeURIComponent(quote.doc_no)}/print`} className="btn-secondary">
-            Print / PDF
-          </Link>
-
-          {canEdit && quote.doc_type === "quotation" && (
-            <form action={convAction}>
-              <input type="hidden" name="doc_no" value={quote.doc_no} />
-              <button type="submit" className="btn-secondary" disabled={converting}>
-                {converting ? "Converting…" : "Convert to proforma invoice"}
-              </button>
-            </form>
-          )}
-
-          {canEdit && (
-            <form action={delAction} className="ml-auto">
-              <input type="hidden" name="id" value={quote.id} />
-              <button type="submit" className="btn-danger" disabled={deleting}>
-                {deleting ? "Deleting…" : "Delete quotation"}
-              </button>
-            </form>
-          )}
-        </div>
+        <QuoteActions
+          quote={quote}
+          canEdit={canEdit}
+          // Saved options, not unsaved edits: converting reads the stored quotation.
+          options={quote.quote_structure === COMBINED_ORDER ? [] : groupByOption(items ?? []).map((g) => g.label)}
+        />
       )}
     </>
   );

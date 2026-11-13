@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { loadSettings, mergeList } from "@/lib/settings";
 import { buildImport, type ImportInput } from "@/lib/import";
 import { describeError } from "@/lib/forms";
+import { productHref } from "../../products/href";
+import { CHUNK, inChunks, prepareSheetProducts, saveByCode } from "./save";
 
 export type ImportReport = {
   ok: boolean;
@@ -12,16 +14,11 @@ export type ImportReport = {
   counts?: Record<string, number>;
   warnings?: string[];
   error?: string;
+  /** Shown once applied, in place of the full import's wording. */
+  message?: string;
+  /** What was newly created, listed under the confirmation. */
+  added?: { label: string; href?: string }[];
 };
-
-const CHUNK = 500;
-
-async function inChunks<T>(rows: T[], fn: (batch: T[]) => PromiseLike<{ error: unknown }>) {
-  for (let i = 0; i < rows.length; i += CHUNK) {
-    const { error } = await fn(rows.slice(i, i + CHUNK));
-    if (error) throw error;
-  }
-}
 
 /**
  * Dry run by default. Nothing is written unless `apply` is true, so the page
@@ -34,16 +31,25 @@ async function inChunks<T>(rows: T[], fn: (batch: T[]) => PromiseLike<{ error: u
 export async function runImport(
   input: ImportInput,
   apply: boolean,
+  /** From the Product Master Excel sheet: "add" leaves existing codes alone. */
+  sheet?: "add" | "edit",
 ): Promise<ImportReport> {
   const result = buildImport(input);
+  const supabase = await createClient();
+
+  if (sheet) {
+    try {
+      await prepareSheetProducts(supabase, result, sheet);
+    } catch (error) {
+      return { ok: false, applied: false, error: describeError(error) };
+    }
+  }
 
   if (!apply) {
     return { ok: true, applied: false, counts: result.counts, warnings: result.warnings };
   }
-  
 
-  const supabase = await createClient();
-
+  let addedCodes: string[] = [];
   try {
     // ---- categories ------------------------------------------------
     if (result.categories.length) {
@@ -69,16 +75,12 @@ export async function runImport(
           : null,
       }));
 
-      await inChunks(rows, (batch) =>
-        supabase.from("products").upsert(batch, { onConflict: "code" }),
-      );
+      addedCodes = await saveByCode(supabase, "products", rows);
     }
 
     // ---- hampers ---------------------------------------------------
     if (result.hampers.length) {
-      await inChunks(result.hampers, (batch) =>
-        supabase.from("hampers").upsert(batch, { onConflict: "code" }),
-      );
+      await saveByCode(supabase, "hampers", result.hampers);
     }
 
     const { data: hamperRows } = await supabase.from("hampers").select("id, code");
@@ -189,5 +191,8 @@ export async function runImport(
 
   revalidatePath("/", "layout");
 
-  return { ok: true, applied: true, counts: result.counts, warnings: result.warnings };
+  const added = result.products
+    .filter((p) => addedCodes.includes(p.code))
+    .map((p) => ({ label: `${p.code} · ${p.name}`, href: productHref(p.code) }));
+  return { ok: true, applied: true, counts: result.counts, warnings: result.warnings, added };
 }

@@ -32,7 +32,7 @@ export function QuotationTotals({ quote, totals }: { quote: QuoteSummary; totals
   );
 }
 
-function TotalRow({
+export function TotalRow({
   label,
   value,
   strong,

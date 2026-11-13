@@ -12,6 +12,8 @@ export type ImportResult = {
     target_margin: number;
     default_sp: number;
     is_active: boolean;
+    /** Whole percent; only the Product Master Excel sheet sets it. */
+    markup_pct?: number;
   }[];
   hampers: {
     code: string;
