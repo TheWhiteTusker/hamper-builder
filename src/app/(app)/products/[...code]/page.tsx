@@ -12,6 +12,7 @@ import { loadCostStages, loadProductCosting } from "../../cost-calculator/load";
 import { CostTable } from "./_view/cost-table";
 import { PriceSummary } from "./_view/price-summary";
 import { ProductCard } from "./_view/product-card";
+import { ChangeColor } from "./_view/change-color";
 
 /** A product's saved costing in the calculator's layout, read-only; Edit opens the calculator. */
 export default async function ProductPage({
@@ -56,6 +57,12 @@ export default async function ProductPage({
       </PageHeader>
 
       <div className="space-y-6">
+        <ChangeColor
+          id={product.id}
+          code={product.code}
+          current={costing.ownColor}
+          palette={resolveColors(settings.product_colors, settings.color_hex)}
+        />
         <ProductCard
           product={product}
           categoryName={categories?.find((c) => c.id === product.category_id)?.name ?? null}

@@ -48,6 +48,7 @@ export async function saveCostSheetAndProduct(payload: SaveCostSheetPayload) {
 
     if (!code) return { error: "Product code is required." };
     if (!name) return { error: "Product name is required." };
+    if (!payload.colors?.length) return { error: "Pick a colour: every product is one colour." };
 
     // Outsourced products type their bought-out items; they go into the master here.
     const master =

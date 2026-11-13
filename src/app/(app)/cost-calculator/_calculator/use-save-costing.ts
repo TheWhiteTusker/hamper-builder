@@ -50,6 +50,7 @@ export function useSaveCosting({
     const code = details.code.trim();
     if (!code) return setFeedback({ error: "Product Code is required." });
     if (!details.name.trim()) return setFeedback({ error: "Product Name is required." });
+    if (!details.selectedColors.length) return setFeedback({ error: "Pick a colour: every product is one colour." });
     if (ask) return setAsking(true);
     commit([]);
   }

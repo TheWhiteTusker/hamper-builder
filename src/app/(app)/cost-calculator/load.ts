@@ -117,6 +117,8 @@ export async function loadProductCosting(supabase: SupabaseClient, code: string)
 
   return {
     product: { ...product, colors: siblingColors.length > 0 ? siblingColors : product.colors },
+    /** This product's own colour, before the siblings' are merged in; "" when never set. */
+    ownColor: product.colors?.[0] ?? "",
     sheet: sheet ? { ...sheet, lines } : null,
     images: images ?? [],
     variantIds: variantIdsByColor(familyProducts),
