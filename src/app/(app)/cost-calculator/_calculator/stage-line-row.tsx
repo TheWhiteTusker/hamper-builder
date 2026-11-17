@@ -1,6 +1,6 @@
 "use client";
 
-import { formatMoney } from "@/lib/pricing";
+import { formatMoney, num } from "@/lib/pricing";
 import { isSizedUnit, isTimeUnit, type DimensionUnit } from "@/lib/costing";
 import type { CostStageWithHierarchy } from "@/lib/types";
 import { NumCell, RemoveButton, UnitCell } from "./cells";
@@ -117,6 +117,11 @@ export function StageLineRow({
       {stage.code === "bought_out" ? (
         <td className="p-2 text-center text-xs text-(--color-muted)" title="Bought-out items have 0% wastage">
           0%
+        </td>
+      ) : fromMaster ? (
+        // Like the rate, wastage comes from the Rates page.
+        <td className="p-2 text-center font-mono text-xs font-semibold" title="Set on the Rates page">
+          {line.variety_name ? `${num(line.wastage_pct)}%` : "—"}
         </td>
       ) : (
         <NumCell value={line.wastage_pct} min="0" onChange={(w) => set({ wastage_pct: w ?? 0 })} />

@@ -137,10 +137,12 @@ export function planRateImport(grid: Grid, db: CostRows, onlyNew: boolean): Rate
       notes: notes || existing.notes,
       is_active: true,
     };
-    const repricing = next.default_rate !== Number(existing.default_rate) || next.unit !== existing.unit;
+    const repricing =
+      next.default_rate !== Number(existing.default_rate) ||
+      next.unit !== existing.unit ||
+      next.default_wastage_pct !== Number(existing.default_wastage_pct);
     const changed =
       repricing ||
-      next.default_wastage_pct !== Number(existing.default_wastage_pct) ||
       next.notes !== existing.notes ||
       !existing.is_active;
     if (changed) plan.updates.push(next);
@@ -157,7 +159,7 @@ export function planRateImport(grid: Grid, db: CostRows, onlyNew: boolean): Rate
   if (skipped.length)
     plan.warnings.push(`${skipped.length} already exist and were skipped. Use Bulk edit to change them: ${list(skipped)}`);
   if (plan.reprice.length)
-    plan.warnings.push(`${plan.reprice.length} rate or unit change(s): products costed with them are repriced on save.`);
+    plan.warnings.push(`${plan.reprice.length} rate, unit or wastage change(s): products costed with them are repriced on save.`);
 
   plan.counts = {
     newCategories: plan.newCategories.size,

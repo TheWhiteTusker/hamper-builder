@@ -7,6 +7,7 @@ export type MasterRate = {
   name: string;
   default_rate: number;
   unit: string;
+  default_wastage_pct: number;
   subcategory_name?: string | null;
   category_name?: string | null;
 };
@@ -45,7 +46,9 @@ export function planReprice(input: {
     const v = l.cost_variety_id ? rates.get(l.cost_variety_id) : undefined;
     if (!v) return { line: l, changed: false };
     const rate = Number(v.default_rate);
-    const calc = calculateLineCost({ ...l, rate, unit: v.unit });
+    // Bought-out items never carry wastage.
+    const wastage_pct = l.stage_code === "bought_out" ? 0 : Number(v.default_wastage_pct);
+    const calc = calculateLineCost({ ...l, rate, unit: v.unit, wastage_pct });
     // Lines also take the master's current names, so renames show everywhere.
     const line: ProductCostLine = {
       ...l,
@@ -54,6 +57,7 @@ export function planReprice(input: {
       variety_name: v.name,
       rate,
       unit: v.unit,
+      wastage_pct,
       calculated_area: calc.calculated_area,
       line_total: calc.line_total,
     };

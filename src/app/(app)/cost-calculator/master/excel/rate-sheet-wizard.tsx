@@ -12,7 +12,7 @@ export function RateSheetWizard({ mode }: { mode: "add" | "edit" }) {
       tips={
         add
           ? ["One row per variety: Type (e.g. Material), Category, Subcategory, Variety.", "New categories and subcategories are created for you.", "Varieties that already exist are skipped."]
-          : ["Change rates, units, wastage or notes, or add rows at the bottom.", "Rename things in the master screen, not here. A blank cell keeps its value.", "A new rate or unit reprices the products that use it."]
+          : ["Change rates, units, wastage or notes, or add rows at the bottom.", "Rename things in the master screen, not here. A blank cell keeps its value.", "A new rate, unit or wastage reprices the products that use it."]
       }
       downloadLabel={add ? "Download template" : "Download rates"}
       fileName={add ? "new-rates-template.xlsx" : `rates-and-hierarchy-${stamp()}.xlsx`}

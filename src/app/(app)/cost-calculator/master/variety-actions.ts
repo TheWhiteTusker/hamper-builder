@@ -41,19 +41,23 @@ export async function saveCostVariety(formData: FormData): Promise<CostSaveResul
     return { ok: true, changes: [{ table: "varieties", upsert: [data] }] };
   }
 
-  // A new rate or unit reprices every product costed with this variety; a
-  // new name is copied onto their lines too.
+  // A new rate, unit or wastage reprices every product costed with this
+  // variety; a new name is copied onto their lines too.
   const { data: before } = await supabase
     .from("cost_varieties")
-    .select("default_rate, unit, name")
+    .select("default_rate, unit, name, default_wastage_pct")
     .eq("id", id)
-    .maybeSingle<{ default_rate: number; unit: string; name: string }>();
+    .maybeSingle<{ default_rate: number; unit: string; name: string; default_wastage_pct: number }>();
   const repricing =
-    !!before && (Number(before.default_rate) !== default_rate || before.unit !== unit || before.name !== name);
+    !!before &&
+    (Number(before.default_rate) !== default_rate ||
+      before.unit !== unit ||
+      before.name !== name ||
+      Number(before.default_wastage_pct) !== default_wastage_pct);
   if (repricing) {
     const { profile } = await requireUser();
     if (!isAdmin(profile.role)) {
-      return { error: "Only an admin can change a variety's name, rate or unit, because it updates the products that use it." };
+      return { error: "Only an admin can change a variety's name, rate, unit or wastage, because it updates the products that use it." };
     }
   }
 

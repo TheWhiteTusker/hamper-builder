@@ -72,8 +72,8 @@ export const toSavedLine = (l: LineState): ProductCostLine => ({
 });
 
 /**
- * A saved line brought up to its master variety: current names, rate and
- * unit. Found by the variety's id, so a rename in the master still matches.
+ * A saved line brought up to its master variety: current names, rate, unit
+ * and wastage. Found by the variety's id, so a rename in the master still matches.
  */
 export function withMaster(line: LineState, stages: CostStageWithHierarchy[]): LineState {
   if (!line.cost_variety_id) return line;
@@ -90,6 +90,7 @@ export function withMaster(line: LineState, stages: CostStageWithHierarchy[]): L
           item_name: `${sub.name} ${v.name}`,
           rate: Number(v.default_rate),
           unit: v.unit,
+          wastage_pct: line.stage_code === BOUGHT_OUT ? 0 : Number(v.default_wastage_pct),
         };
         const calc = calculateLineCost(next);
         return { ...next, calculated_area: calc.calculated_area, line_total: calc.line_total };

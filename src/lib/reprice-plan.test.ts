@@ -14,7 +14,7 @@ test("planReprice re-rates lines, keeps margin, and prices uncosted colour sibli
   } as unknown as ProductCostSheet;
 
   const plan = planReprice({
-    rates: [{ id: "v1", name: "New", default_rate: 20, unit: "pcs", subcategory_name: "Sub" }],
+    rates: [{ id: "v1", name: "New", default_rate: 20, unit: "pcs", default_wastage_pct: 10, subcategory_name: "Sub" }],
     lines: [line, untouched],
     sheets: [sheet],
     products: [
@@ -29,10 +29,11 @@ test("planReprice re-rates lines, keeps margin, and prices uncosted colour sibli
   assert.equal(plan.lines.length, 1);
   assert.equal(plan.lines[0].rate, 20);
   assert.equal(plan.lines[0].item_name, "Sub New");
+  assert.equal(plan.lines[0].wastage_pct, 10); // synced from the master like the rate
   // p1 is the sheet's own product, p2 an uncosted sibling; p3 has its own sheet, p4 is unrelated.
   assert.deepEqual(plan.products.map((p) => p.id).sort(), ["p1", "p2"]);
   const p1 = plan.products.find((p) => p.id === "p1")!;
-  assert.equal(p1.cost_price, 50); // 2 x 20 + 10
-  assert.equal(p1.default_sp, 100); // 60 x 50/30, margin kept
-  assert.equal(plan.sheets[0].calculated_sp, 100);
+  assert.equal(p1.cost_price, 54); // 2 x 20 x 1.10 + 10
+  assert.equal(p1.default_sp, 110); // 60 x 54/30 = 108, rounded up to the next 10
+  assert.equal(plan.sheets[0].calculated_sp, 110);
 });

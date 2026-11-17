@@ -8,6 +8,7 @@ type VarietyRow = {
   name: string;
   default_rate: number;
   unit: string;
+  default_wastage_pct: number;
   cost_subcategories: { name: string; cost_categories: { name: string } | null } | null;
 };
 
@@ -32,7 +33,7 @@ export async function repriceVarieties(
   const [{ data: varieties, error: vError }, { data: used, error: uError }] = await Promise.all([
     supabase
       .from("cost_varieties")
-      .select("id, name, default_rate, unit, cost_subcategories(name, cost_categories(name))")
+      .select("id, name, default_rate, unit, default_wastage_pct, cost_subcategories(name, cost_categories(name))")
       .in("id", varietyIds)
       .returns<VarietyRow[]>(),
     supabase.from("product_cost_lines").select("sheet_id").in("cost_variety_id", varietyIds),
@@ -55,6 +56,7 @@ export async function repriceVarieties(
     name: v.name,
     default_rate: v.default_rate,
     unit: v.unit,
+    default_wastage_pct: v.default_wastage_pct,
     subcategory_name: v.cost_subcategories?.name ?? null,
     category_name: v.cost_subcategories?.cost_categories?.name ?? null,
   }));

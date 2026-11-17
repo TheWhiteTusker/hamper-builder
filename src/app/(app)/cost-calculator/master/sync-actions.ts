@@ -10,6 +10,8 @@ type StoredLine = {
   cost_variety_id: string;
   rate: number;
   unit: string;
+  wastage_pct: number;
+  stage_code: string;
   variety_name: string | null;
   subcategory_name: string | null;
 };
@@ -18,12 +20,13 @@ type MasterVariety = {
   name: string;
   default_rate: number;
   unit: string;
+  default_wastage_pct: number;
   cost_subcategories: { name: string } | null;
 };
 
 /**
- * Brings every saved costing up to the master: lines whose rate, unit or
- * names differ from their variety are re-rated, and their products repriced
+ * Brings every saved costing up to the master: lines whose rate, unit,
+ * wastage or names differ from their variety are re-rated, and their products repriced
  * (same rules as editing a rate). Quotations and invoices are not touched.
  */
 export async function syncAllRates(): Promise<{ error?: string; message?: string }> {
@@ -33,12 +36,12 @@ export async function syncAllRates(): Promise<{ error?: string; message?: string
   const [{ data: lines, error }, { data: varieties, error: vError }] = await Promise.all([
     supabase
       .from("product_cost_lines")
-      .select("sheet_id, cost_variety_id, rate, unit, variety_name, subcategory_name")
+      .select("sheet_id, cost_variety_id, rate, unit, wastage_pct, stage_code, variety_name, subcategory_name")
       .not("cost_variety_id", "is", null)
       .returns<StoredLine[]>(),
     supabase
       .from("cost_varieties")
-      .select("id, name, default_rate, unit, cost_subcategories(name)")
+      .select("id, name, default_rate, unit, default_wastage_pct, cost_subcategories(name)")
       .returns<MasterVariety[]>(),
   ]);
   if (error || vError) return { error: describeError(error ?? vError) };
@@ -50,6 +53,7 @@ export async function syncAllRates(): Promise<{ error?: string; message?: string
       !!v &&
       (Number(l.rate) !== Number(v.default_rate) ||
         l.unit !== v.unit ||
+        Number(l.wastage_pct) !== (l.stage_code === "bought_out" ? 0 : Number(v.default_wastage_pct)) ||
         l.variety_name !== v.name ||
         l.subcategory_name !== (v.cost_subcategories?.name ?? l.subcategory_name))
     );
