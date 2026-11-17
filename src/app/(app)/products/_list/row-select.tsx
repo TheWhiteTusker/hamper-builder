@@ -18,21 +18,23 @@ export function SelectBox({ id, label }: { id: string; label: string }) {
   );
 }
 
+type DotsItem = { label: string; onClick: () => void; disabled?: boolean };
+
 /**
- * ⋮ menu beside Edit / Delete. A native popover, so the table card's
- * overflow can't clip it and it closes on an outside click or Escape.
+ * A ⋮ button with a short list of actions. A native popover, so the table
+ * card's overflow can't clip it and it closes on an outside click or Escape.
  */
-export function RowMenu({ id, label }: { id: string; label: string }) {
+function DotsMenu({ label, items, className }: { label: string; items: DotsItem[]; className: string }) {
   const popId = useId();
   const pop = useRef<HTMLDivElement>(null);
-  const on = useSelectedProducts().includes(id);
 
   return (
     <>
       <button
         type="button"
         popoverTarget={popId}
-        aria-label={`More actions for ${label}`}
+        aria-label={label}
+        title={label}
         onClick={(e) => {
           // Pin it under the button; the popover itself opens after this.
           const r = e.currentTarget.getBoundingClientRect();
@@ -42,7 +44,7 @@ export function RowMenu({ id, label }: { id: string; label: string }) {
             el.style.right = `${window.innerWidth - r.right}px`;
           }
         }}
-        className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-lg leading-none text-(--color-muted) hover:bg-paper hover:text-(--color-ink)"
+        className={className}
       >
         ⋮
       </button>
@@ -50,20 +52,54 @@ export function RowMenu({ id, label }: { id: string; label: string }) {
         ref={pop}
         id={popId}
         popover="auto"
-        className="fixed inset-auto m-0 w-36 rounded-lg border border-line bg-white p-1 text-left shadow-lg"
+        className="fixed inset-auto m-0 w-40 rounded-lg border border-line bg-white p-1 text-left shadow-lg"
       >
-        <button
-          type="button"
-          onClick={() => {
-            setSelected(id, !on);
-            pop.current?.hidePopover();
-          }}
-          className="block w-full rounded-md px-3 py-2 text-left text-sm font-medium text-(--color-ink) hover:bg-paper focus:bg-paper focus:outline-none"
-        >
-          {on ? "Unselect" : "Select"}
-        </button>
+        {items.map((i) => (
+          <button
+            key={i.label}
+            type="button"
+            disabled={i.disabled}
+            onClick={() => {
+              i.onClick();
+              pop.current?.hidePopover();
+            }}
+            className="block w-full rounded-md px-3 py-2 text-left text-sm font-medium text-(--color-ink) hover:bg-paper focus:bg-paper focus:outline-none disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent"
+          >
+            {i.label}
+          </button>
+        ))}
       </div>
     </>
+  );
+}
+
+/** ⋮ menu beside Edit / Delete. */
+export function RowMenu({ id, label }: { id: string; label: string }) {
+  const on = useSelectedProducts().includes(id);
+  return (
+    <DotsMenu
+      label={`More actions for ${label}`}
+      items={[{ label: on ? "Unselect" : "Select", onClick: () => setSelected(id, !on) }]}
+      className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-lg leading-none text-(--color-muted) hover:bg-paper hover:text-(--color-ink)"
+    />
+  );
+}
+
+/** ⋮ menu in the page header, beside Excel / New product. */
+export function ListMenu() {
+  const n = useSelectedProducts().length;
+  return (
+    <DotsMenu
+      label="More actions"
+      items={[
+        {
+          label: n ? `Deselect all (${n})` : "Deselect all",
+          disabled: n === 0,
+          onClick: () => confirm(`Unselect ${n === 1 ? "the 1 selected product" : `all ${n} selected products`}?`) && clearSelected(),
+        },
+      ]}
+      className="btn-secondary cursor-pointer px-3 text-base leading-5"
+    />
   );
 }
 

@@ -8,7 +8,7 @@ import { pageLimit } from "@/lib/paging";
 import type { Category, ProductWithCategory } from "@/lib/types";
 import { ProductRow } from "./_list/product-row";
 import { FilterForm } from "./_list/filter-form";
-import { SelectionCount } from "./_list/row-select";
+import { ListMenu, SelectionCount } from "./_list/row-select";
 import { RememberListPosition } from "./_list/list-position";
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
@@ -68,6 +68,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
             Download list
           </a>
         )}
+        <ListMenu />
       </PageHeader>
 
       {one(params.deleted) === "1" && (
