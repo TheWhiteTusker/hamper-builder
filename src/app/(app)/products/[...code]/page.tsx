@@ -13,6 +13,7 @@ import { CostTable } from "./_view/cost-table";
 import { PriceSummary } from "./_view/price-summary";
 import { ProductCard } from "./_view/product-card";
 import { ChangeColor } from "./_view/change-color";
+import { BackToProducts } from "../_list/list-position";
 
 /** A product's saved costing in the calculator's layout, read-only; Edit opens the calculator. */
 export default async function ProductPage({
@@ -47,6 +48,7 @@ export default async function ProductPage({
 
   return (
     <>
+      <BackToProducts />
       <PageHeader title={product.name} subtitle={product.code}>
         <Link href={costingHref(product.code)} className="btn-secondary">
           Edit

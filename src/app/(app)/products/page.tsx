@@ -8,6 +8,8 @@ import { pageLimit } from "@/lib/paging";
 import type { Category, ProductWithCategory } from "@/lib/types";
 import { ProductRow } from "./_list/product-row";
 import { FilterForm } from "./_list/filter-form";
+import { SelectionCount } from "./_list/row-select";
+import { RememberListPosition } from "./_list/list-position";
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
 
@@ -114,6 +116,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         </label>
       </FilterForm>
 
+      <SelectionCount />
+      <RememberListPosition />
+
       {rows.length === 0 ? (
         <EmptyState
           title={q || category ? "No products match that search" : "No products yet"}
@@ -130,6 +135,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-8" aria-label="Selected"></TableHead>
                 <TableHead className="w-12 text-center">Photo</TableHead>
                 <TableHead>Code</TableHead>
                 <TableHead>Product</TableHead>
