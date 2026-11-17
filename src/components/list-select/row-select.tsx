@@ -1,17 +1,22 @@
 "use client";
 
 import { useId, useRef } from "react";
-import { clearSelected, setSelected, useSelectedProducts } from "./selection";
+import { clearSelected, setSelected, useSelected, type ListKind } from "./selection";
 
-/** Tick box at the start of a row; shown only while the product is selected. */
-export function SelectBox({ id, label }: { id: string; label: string }) {
-  const on = useSelectedProducts().includes(id);
+// "products" -> "product", "hampers" -> "hamper"
+const one = (kind: ListKind) => kind.slice(0, -1);
+
+type Row = { kind: ListKind; id: string; label: string };
+
+/** Tick box at the start of a row; shown only while the row is selected. */
+export function SelectBox({ kind, id, label }: Row) {
+  const on = useSelected(kind).includes(id);
   if (!on) return null;
   return (
     <input
       type="checkbox"
       checked
-      onChange={() => setSelected(id, false)}
+      onChange={() => setSelected(kind, id, false)}
       aria-label={`Unselect ${label}`}
       className="h-4 w-4 cursor-pointer accent-(--color-brand)"
     />
@@ -73,21 +78,21 @@ function DotsMenu({ label, items, className }: { label: string; items: DotsItem[
   );
 }
 
-/** ⋮ menu beside Edit / Delete. */
-export function RowMenu({ id, label }: { id: string; label: string }) {
-  const on = useSelectedProducts().includes(id);
+/** ⋮ menu at the end of a row. */
+export function RowMenu({ kind, id, label }: Row) {
+  const on = useSelected(kind).includes(id);
   return (
     <DotsMenu
       label={`More actions for ${label}`}
-      items={[{ label: on ? "Unselect" : "Select", onClick: () => setSelected(id, !on) }]}
+      items={[{ label: on ? "Unselect" : "Select", onClick: () => setSelected(kind, id, !on) }]}
       className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-lg leading-none text-(--color-muted) hover:bg-paper hover:text-(--color-ink)"
     />
   );
 }
 
-/** ⋮ menu in the page header, beside Excel / New product. */
-export function ListMenu() {
-  const n = useSelectedProducts().length;
+/** ⋮ menu in the page header, beside its buttons. */
+export function ListMenu({ kind }: { kind: ListKind }) {
+  const n = useSelected(kind).length;
   return (
     <DotsMenu
       label="More actions"
@@ -95,7 +100,8 @@ export function ListMenu() {
         {
           label: n ? `Deselect all (${n})` : "Deselect all",
           disabled: n === 0,
-          onClick: () => confirm(`Unselect ${n === 1 ? "the 1 selected product" : `all ${n} selected products`}?`) && clearSelected(),
+          onClick: () => confirm(`Unselect ${n === 1 ? `the 1 selected ${one(kind)}` : `all ${n} selected ${kind}`}?`) &&
+            clearSelected(kind),
         },
       ]}
       className="btn-secondary cursor-pointer px-3 text-base leading-5"
@@ -104,17 +110,17 @@ export function ListMenu() {
 }
 
 /** "3 selected · Clear" above the list; hidden when nothing is selected. */
-export function SelectionCount() {
-  const n = useSelectedProducts().length;
+export function SelectionCount({ kind }: { kind: ListKind }) {
+  const n = useSelected(kind).length;
   if (n === 0) return null;
   return (
     <div className="mb-3 flex items-center gap-3 text-sm">
       <span className="font-medium text-(--color-ink)">
-        {n} product{n === 1 ? "" : "s"} selected
+        {n} {n === 1 ? one(kind) : kind} selected
       </span>
       <button
         type="button"
-        onClick={() => confirm("Unselect all products?") && clearSelected()}
+        onClick={() => confirm(`Unselect all ${kind}?`) && clearSelected(kind)}
         className="font-medium text-(--color-brand) hover:underline"
       >
         Clear

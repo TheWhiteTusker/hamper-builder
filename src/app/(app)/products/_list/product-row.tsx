@@ -6,14 +6,14 @@ import type { ProductWithCategory } from "@/lib/types";
 import { costingHref } from "../../cost-calculator/href";
 import { productHref } from "../href";
 import { DeleteProductButton } from "./delete-product-button";
-import { RowMenu, SelectBox } from "./row-select";
+import { RowMenu, SelectBox } from "@/components/list-select/row-select";
 
 /** One product in the Product Master table. */
 export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolean }) {
   return (
     <TableRow className={`has-checked:bg-(--color-brand)/5 ${p.is_active ? "" : "opacity-55"}`}>
       <TableCell className="w-8 px-2 text-center">
-        <SelectBox id={p.id} label={p.code} />
+        <SelectBox kind="products" id={p.id} label={p.code} />
       </TableCell>
       <TableCell className="w-12 py-1.5 px-2 text-center">
         {p.image_url ? (
@@ -73,7 +73,7 @@ export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolea
               Costing
             </Link>
           )}
-          <RowMenu id={p.id} label={p.code} />
+          <RowMenu kind="products" id={p.id} label={p.code} />
         </div>
       </TableCell>
     </TableRow>

@@ -8,6 +8,8 @@ import { pageLimit } from "@/lib/paging";
 import { HamperRow } from "./_list/hamper-row";
 import { Range } from "./_list/range";
 import type { HamperSummary } from "@/lib/types";
+import { ListMenu, SelectionCount } from "@/components/list-select/row-select";
+import { RememberListPosition } from "@/components/list-select/list-position";
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
@@ -66,6 +68,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
             New hamper
           </Link>
         )}
+        <ListMenu kind="hampers" />
       </PageHeader>
 
       {one(params.deleted) === "1" && (
@@ -80,12 +83,16 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
         </div>
       )}
 
+      <SelectionCount kind="hampers" />
+      <RememberListPosition kind="hampers" />
+
       {/* The form wraps the whole table so every filter can sit in the header
           cell of the column it filters. */}
       <form className="card overflow-x-auto">
         <Table className="min-w-[1200px]">
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8" aria-label="Selected"></TableHead>
               <TableHead className="w-14"></TableHead>
               <TableHead>Code</TableHead>
               <TableHead>Hamper</TableHead>
@@ -96,10 +103,11 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
               <TableHead className="num">Catalogue price</TableHead>
               <TableHead className="num">Profit</TableHead>
               <TableHead className="num">Margin</TableHead>
+              <TableHead className="w-10"></TableHead>
             </TableRow>
 
             <TableRow>
-              <TableHead className="pb-2"></TableHead>
+              <TableHead colSpan={2} className="pb-2"></TableHead>
               <TableHead colSpan={2} className="pb-2">
                 <input
                   name="q"
@@ -141,7 +149,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
               <TableHead className="pb-2">
                 <Range name="price" label="catalogue price" min={minPrice} max={maxPrice} />
               </TableHead>
-              <TableHead colSpan={2} className="pb-2">
+              <TableHead colSpan={3} className="pb-2">
                 <div className="flex items-center justify-end gap-2">
                   {filtered && (
                     <Link href="/hampers" className="btn-secondary">
@@ -159,7 +167,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="py-10 text-center text-sm text-[var(--color-muted)]">
+                <TableCell colSpan={12} className="py-10 text-center text-sm text-[var(--color-muted)]">
                   {filtered ? "No hampers match that search." : "No hampers yet."}
                   {manage && !filtered && (
                     <Link href="/hampers/new" className="ml-2 underline">

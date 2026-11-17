@@ -7,6 +7,7 @@ import { round2 } from "@/lib/pricing";
 import type { HamperSummary } from "@/lib/types";
 import { HamperLines, type PreviewItem } from "./_view/hamper-lines";
 import { HamperTotals } from "./_view/hamper-totals";
+import { BackToList } from "@/components/list-select/list-position";
 
 /** A saved hamper, read-only, laid out like a product's page; Edit opens the builder. */
 export default async function HamperPage({ params }: { params: Promise<{ code: string }> }) {
@@ -37,6 +38,7 @@ export default async function HamperPage({ params }: { params: Promise<{ code: s
 
   return (
     <>
+      <BackToList kind="hampers" />
       <PageHeader title={hamper.name} subtitle={hamper.code}>
         <span className="badge">{hamper.status}</span>
         {canManage(profile.role) && (

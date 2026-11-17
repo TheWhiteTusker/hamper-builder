@@ -2,11 +2,15 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import Link from "@/components/link";
 import { formatMoney, formatPct } from "@/lib/pricing";
 import type { HamperSummary } from "@/lib/types";
+import { RowMenu, SelectBox } from "@/components/list-select/row-select";
 
 /** One hamper in the list: picture, figures, and red where it loses money. */
 export function HamperRow({ h }: { h: HamperSummary }) {
   return (
-    <TableRow>
+    <TableRow className="has-checked:bg-(--color-brand)/5">
+      <TableCell className="w-8 px-2 text-center">
+        <SelectBox kind="hampers" id={h.id} label={h.code} />
+      </TableCell>
       <TableCell>
         <Link href={`/hampers/${encodeURIComponent(h.code)}`} className="block h-10 w-10">
           {h.image_url ? (
@@ -54,6 +58,11 @@ export function HamperRow({ h }: { h: HamperSummary }) {
         className={`num ${h.final_margin != null && h.final_margin < 0 ? "text-red-700" : ""}`}
       >
         {h.final_margin == null ? "—" : formatPct(h.final_margin)}
+      </TableCell>
+      <TableCell className="w-10">
+        <div className="flex justify-end">
+          <RowMenu kind="hampers" id={h.id} label={h.code} />
+        </div>
       </TableCell>
     </TableRow>
   );
