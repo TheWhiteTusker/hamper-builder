@@ -13,7 +13,11 @@ export type ImportInput = {
 
 export const cell = (row: string[] | undefined, i: number) => String(row?.[i] ?? "").trim();
 export const isYes = (v: string) => /^(yes|y|true|1|active)$/i.test(v.trim());
-export const body = (grid?: Grid) => (grid ?? []).slice(1).filter((r) => r.some((c) => String(c).trim()));
+const filled = (r: string[]) => r.some((c) => String(c).trim());
+export const body = (grid?: Grid) => (grid ?? []).slice(1).filter(filled);
+/** Like body(), with each row's number in the sheet; the grid must keep blank rows (blankrows: true). */
+export const numbered = (grid?: Grid) =>
+  (grid ?? []).flatMap((row, i) => (i > 0 && filled(row) ? [{ row, n: i + 1 }] : []));
 
 /**
  * Sheets export dates in whatever the locale was. ISO is tried first, then

@@ -31,10 +31,12 @@ export function SheetWizard({
   doneHref: string;
   doneLabel: string;
   build: () => Promise<Uint8Array>;
-  check: (grid: Grid, apply: boolean) => Promise<ImportReport>;
+  /** `tabs` is every tab of the upload by name; `grid` is the first. */
+  check: (grid: Grid, apply: boolean, tabs: Record<string, Grid>) => Promise<ImportReport>;
 }) {
   const [downloaded, setDownloaded] = useState(false);
   const [grid, setGrid] = useState<Grid | null>(null);
+  const [tabs, setTabs] = useState<Record<string, Grid>>({});
   const [loaded, setLoaded] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<ImportReport | null>(null);
@@ -62,8 +64,8 @@ export function SheetWizard({
     }
   }
 
-  function run(rows: Grid, apply: boolean) {
-    startTransition(async () => setReport(await check(rows, apply)));
+  function run(rows: Grid, all: Record<string, Grid>, apply: boolean) {
+    startTransition(async () => setReport(await check(rows, apply, all)));
   }
 
   async function pick(file: File | null | undefined) {
@@ -74,12 +76,16 @@ export function SheetWizard({
     try {
       const XLSX = await import("xlsx");
       const wb = XLSX.read(await file.arrayBuffer());
-      const ws = wb.Sheets[wb.SheetNames[0]]; // the downloads have one tab
       // raw: false so percentages arrive as "35.00%", which the mappers expect.
-      const rows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, raw: false, defval: "", blankrows: false });
+      // Blank rows kept so warnings name the right row; the readers skip them.
+      const all = Object.fromEntries(
+        wb.SheetNames.map((n) => [n, XLSX.utils.sheet_to_json<string[]>(wb.Sheets[n], { header: 1, raw: false, defval: "", blankrows: true })]),
+      );
+      const rows = all[wb.SheetNames[0]];
       setGrid(rows);
+      setTabs(all);
       setLoaded(file.name);
-      run(rows, false);
+      run(rows, all, false);
     } catch {
       setError(`Couldn't read ${file.name}. Use the .xlsx file from step 1.`);
     }
@@ -140,7 +146,7 @@ export function SheetWizard({
           <button
             type="button"
             className="btn-primary"
-            onClick={() => grid && run(grid, true)}
+            onClick={() => grid && run(grid, tabs, true)}
             disabled={!grid || pending || !report?.ok || report.applied || !anything}
           >
             {pending && report ? "Saving…" : report?.ok && !report.applied && anything && saveText ? saveText(counts) : saveLabel}

@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { COMMON_UNITS } from "@/lib/costing.ts";
+import { mrpMargin } from "@/lib/mrp";
+import { formatMoney, formatPct, num } from "@/lib/pricing";
+import type { ProductCostLine } from "@/lib/types";
 import { LINE_UNITS } from "./lines";
 
 /** A number input in a line table. `nullable` turns a cleared box into null rather than 0. */
@@ -48,6 +52,59 @@ export function UnitCell({ value, onChange }: { value: string; onChange: (unit: 
           <option value={value}>{value}</option>
         )}
       </select>
+    </td>
+  );
+}
+
+/**
+ * A bought-out item's printed MRP (per piece, GST included): a "+ MRP" button
+ * until one is typed, then the MRP with the margin it leaves at that price.
+ */
+export function MrpCell({
+  line,
+  gstRate,
+  onChange,
+}: {
+  line: ProductCostLine;
+  gstRate: number;
+  onChange: (mrp: number | null) => void;
+}) {
+  // Keeps the box open while it is cleared mid-typing.
+  const [open, setOpen] = useState(false);
+  if (!open && line.mrp == null) {
+    return (
+      <td className="p-2 text-center">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          title="This item has an MRP printed on it"
+          className="rounded border border-(--color-border) px-2 py-1 text-[11px] font-semibold text-(--color-brand) transition-colors hover:bg-emerald-50"
+        >
+          + MRP
+        </button>
+      </td>
+    );
+  }
+  const margin = mrpMargin(line, gstRate);
+  return (
+    <td className="p-2">
+      <input
+        type="number"
+        min="0"
+        step="any"
+        autoFocus={open}
+        value={line.mrp ?? ""}
+        onChange={(e) => onChange(Number(e.target.value) > 0 ? Number(e.target.value) : null)}
+        onBlur={() => setOpen(false)}
+        placeholder="MRP"
+        aria-label="MRP per piece, GST included"
+        className="input input-num font-mono text-xs py-1 px-2"
+      />
+      {margin != null && (
+        <div className={`mt-0.5 whitespace-nowrap text-[10px] ${margin > 0 ? "text-emerald-700" : "font-semibold text-red-600"}`}>
+          Max SP {formatMoney(num(line.mrp) / (1 + gstRate))} · {formatPct(margin, 0)} margin
+        </div>
+      )}
     </td>
   );
 }

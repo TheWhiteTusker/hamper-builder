@@ -3,10 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { loadSettings, mergeList } from "@/lib/settings";
-import { buildImport, type ImportInput } from "@/lib/import";
+import { buildImport, type Grid, type ImportInput } from "@/lib/import";
 import { describeError } from "@/lib/forms";
 import { productHref } from "../../products/href";
+import type { CostingPlan } from "@/lib/product-sheet-costing";
 import { CHUNK, inChunks, prepareSheetProducts, saveByCode } from "./save";
+import { planCostings, saveSheetCosting } from "./save-costing";
 
 export type ImportReport = {
   ok: boolean;
@@ -33,13 +35,21 @@ export async function runImport(
   apply: boolean,
   /** From the Product Master Excel sheet: "add" leaves existing codes alone. */
   sheet?: "add" | "edit",
+  /** That workbook's Cost Lines tab. */
+  costLines?: Grid,
 ): Promise<ImportReport> {
   const result = buildImport(input);
   const supabase = await createClient();
 
+  let costings: CostingPlan[] = [];
   if (sheet) {
     try {
-      await prepareSheetProducts(supabase, result, sheet);
+      const invalid = await prepareSheetProducts(supabase, result, sheet);
+      if (invalid) return { ok: false, applied: false, error: invalid };
+      const planned = await planCostings(supabase, result, input.products, costLines);
+      if (planned.errors.length) return { ok: false, applied: false, error: planned.errors.slice(0, 8).join(" ") };
+      costings = planned.plans;
+      if (costings.length) result.counts.costings = costings.length;
     } catch (error) {
       return { ok: false, applied: false, error: describeError(error) };
     }
@@ -76,6 +86,7 @@ export async function runImport(
       }));
 
       addedCodes = await saveByCode(supabase, "products", rows);
+      await saveSheetCosting(supabase, costings, result.products);
     }
 
     // ---- hampers ---------------------------------------------------

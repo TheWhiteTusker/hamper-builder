@@ -1,4 +1,5 @@
 import { calculateLineCost, COMMON_UNITS } from "@/lib/costing.ts";
+import { num } from "@/lib/pricing";
 import type { CostStageWithHierarchy, ProductCostLine } from "@/lib/types";
 
 export type LineState = ProductCostLine & { tempKey: string };
@@ -69,7 +70,12 @@ export const toSavedLine = (l: LineState): ProductCostLine => ({
   wastage_pct: l.wastage_pct,
   calculated_area: l.calculated_area,
   line_total: l.line_total,
+  mrp: l.mrp,
 });
+
+/** The lines a save sends: starter rows left empty are skipped. */
+export const savedLines = (lines: LineState[]) =>
+  lines.filter((l) => l.category_name || l.item_name || num(l.rate) > 0).map(toSavedLine);
 
 /**
  * A saved line brought up to its master variety: current names, rate, unit

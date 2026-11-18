@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { productHref } from "../products/href";
 import { createClient } from "@/lib/supabase/server";
 import { calculateCostSheetTotals } from "@/lib/costing.ts";
-import { roundUpToNext10 } from "@/lib/numbers.ts";
+import { mrpLimit, roundSp } from "@/lib/mrp.ts";
+import { loadSettings } from "@/lib/settings";
 import { describeError } from "@/lib/forms";
 import { getNextSerialForCategory } from "@/lib/product-code";
 import type { ProductCostLine } from "@/lib/types";
@@ -69,7 +70,9 @@ export async function saveCostSheetAndProduct(payload: SaveCostSheetPayload) {
       payload.sellingPrice != null && payload.sellingPrice > 0
         ? payload.sellingPrice
         : totals.calculated_sp;
-    const finalSellingPrice = roundUpToNext10(rawSellingPrice);
+    const { gst_rate } = await loadSettings(supabase);
+    // Rounding must not take an SP that is within the MRP limit over it.
+    const finalSellingPrice = roundSp(rawSellingPrice, mrpLimit(preparedLines, stageOverheads, totals.total_cost, gst_rate));
 
     const targetMargin =
       finalSellingPrice > 0 ? (finalSellingPrice - totals.total_cost) / finalSellingPrice : 0;

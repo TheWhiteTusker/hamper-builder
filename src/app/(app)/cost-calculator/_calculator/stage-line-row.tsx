@@ -3,7 +3,7 @@
 import { formatMoney, num } from "@/lib/pricing";
 import { isSizedUnit, isTimeUnit, type DimensionUnit } from "@/lib/costing";
 import type { CostStageWithHierarchy } from "@/lib/types";
-import { NumCell, RemoveButton, UnitCell } from "./cells";
+import { MrpCell, NumCell, RemoveButton, UnitCell } from "./cells";
 import { PickCells, TypedCells } from "./hierarchy-cells";
 import type { LineState } from "./lines";
 import type { CostLines } from "./use-cost-lines";
@@ -13,12 +13,14 @@ export function StageLineRow({
   line,
   api,
   freeEntry,
+  gstRate,
 }: {
   stage: CostStageWithHierarchy;
   line: LineState;
   api: CostLines;
   /** Names, rate and unit typed in rather than picked from the master. */
   freeEntry?: boolean;
+  gstRate: number;
 }) {
   const isMachine = stage.code === "machine";
   // Stages with a hierarchy take their rate and unit from the master.
@@ -115,9 +117,8 @@ export function StageLineRow({
       )}
       <NumCell value={line.qty} min="0" onChange={(qty) => set({ qty: qty ?? 0 })} />
       {stage.code === "bought_out" ? (
-        <td className="p-2 text-center text-xs text-(--color-muted)" title="Bought-out items have 0% wastage">
-          0%
-        </td>
+        // Bought-out items carry no wastage; this slot holds their MRP instead.
+        <MrpCell line={line} gstRate={gstRate} onChange={(mrp) => set({ mrp })} />
       ) : fromMaster ? (
         // Like the rate, wastage comes from the Rates page.
         <td className="p-2 text-center font-mono text-xs font-semibold" title="Set on the Rates page">

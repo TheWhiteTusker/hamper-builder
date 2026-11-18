@@ -1,4 +1,5 @@
 import { calculateCostSheetTotals, calculateLineCost, scaledPrice } from "./costing.ts";
+import { mrpLimit } from "./mrp.ts";
 import { parseProductCode } from "./product-code.ts";
 import type { ProductCostLine, ProductCostSheet } from "./types";
 
@@ -39,6 +40,8 @@ export function planReprice(input: {
   sheets: ProductCostSheet[];
   products: PricedProduct[];
   costedAlone: Set<string>;
+  /** GST rate for the MRP limit: a repriced SP never goes past it. */
+  gstRate?: number;
 }) {
   const rates = new Map(input.rates.map((r) => [r.id, r]));
 
@@ -69,14 +72,13 @@ export function planReprice(input: {
   const sheetRows = [];
 
   for (const sheet of input.sheets.filter((s) => changedSheets.has(s.id))) {
-    const t = calculateCostSheetTotals(
-      lines.filter((l) => l.line.sheet_id === sheet.id).map((l) => l.line),
-      sheet.markup_pct,
-      sheet.stage_overheads ?? {},
-    );
+    const sheetLines = lines.filter((l) => l.line.sheet_id === sheet.id).map((l) => l.line);
+    const t = calculateCostSheetTotals(sheetLines, sheet.markup_pct, sheet.stage_overheads ?? {});
+    const cap = mrpLimit(sheetLines, sheet.stage_overheads, t.total_cost, input.gstRate);
     const ids = new Set(productsOfSheet(sheet, input.products, input.costedAlone));
     for (const p of input.products.filter((p) => ids.has(p.id))) {
-      const sp = scaledPrice(p.cost_price, p.default_sp, t.total_cost, t.calculated_sp);
+      const scaled = scaledPrice(p.cost_price, p.default_sp, t.total_cost, t.calculated_sp);
+      const sp = cap != null ? Math.min(scaled, cap) : scaled;
       productRows.set(p.id, {
         id: p.id,
         code: p.code,

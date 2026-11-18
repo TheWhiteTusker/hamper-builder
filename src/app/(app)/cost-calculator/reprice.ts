@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { describeError } from "@/lib/forms";
+import { loadSettings } from "@/lib/settings";
 import { planReprice, type MasterRate, type PricedProduct } from "@/lib/reprice-plan";
 import type { ProductCostLine, ProductCostSheet } from "@/lib/types";
 
@@ -42,11 +43,12 @@ export async function repriceVarieties(
   const sheetIds = [...new Set((used ?? []).map((l: { sheet_id: string }) => l.sheet_id))];
   if (!sheetIds.length) return none;
 
-  const [lines, sheets, products, costed] = await Promise.all([
+  const [lines, sheets, products, costed, settings] = await Promise.all([
     supabase.from("product_cost_lines").select("*").in("sheet_id", sheetIds).returns<ProductCostLine[]>(),
     supabase.from("product_cost_sheets").select("*").in("id", sheetIds).returns<ProductCostSheet[]>(),
     supabase.from("products").select("id, code, name, cost_price, default_sp").returns<PricedProduct[]>(),
     supabase.from("product_cost_sheets").select("product_id").not("product_id", "is", null),
+    loadSettings(supabase),
   ]);
   const readError = lines.error ?? sheets.error ?? products.error ?? costed.error;
   if (readError) return { ...none, error: describeError(readError) };
@@ -66,6 +68,7 @@ export async function repriceVarieties(
     sheets: sheets.data ?? [],
     products: products.data ?? [],
     costedAlone: new Set((costed.data ?? []).map((s: { product_id: string }) => s.product_id)),
+    gstRate: settings.gst_rate,
   });
 
   // Upsert on id updates the existing rows in one request per table.

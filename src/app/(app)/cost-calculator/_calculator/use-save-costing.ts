@@ -1,10 +1,9 @@
 import { useState, useTransition } from "react";
 import { formatMoney, num } from "@/lib/pricing";
-import { roundUpToNext10 } from "@/lib/numbers.ts";
 import type { Product, ProductCostSheet } from "@/lib/types";
 import type { Sibling } from "./apply-price-dialog";
 import { costingSaved, saveCostSheetAndProduct } from "../actions";
-import { toSavedLine, type LineState } from "./lines";
+import { savedLines, type LineState } from "./lines";
 import type { Pricing } from "./use-pricing";
 import type { ProductDetails } from "./use-product-details";
 import type { ProductPhotos } from "./use-product-photos";
@@ -35,7 +34,7 @@ export function useSaveCosting({
   const [asking, setAsking] = useState(false);
 
   // What the save dialog shows; null when there is nothing to ask.
-  const newSp = roundUpToNext10(pricing.effectiveSp);
+  const newSp = pricing.effectiveSp; // already rounded, within the MRP limit when there is one
   const others = siblings; // every other colour is its own product: offer the price, never impose it
   const oldSp = num(initialProduct?.default_sp);
   const priceChanged =
@@ -51,6 +50,13 @@ export function useSaveCosting({
     if (!code) return setFeedback({ error: "Product Code is required." });
     if (!details.name.trim()) return setFeedback({ error: "Product Name is required." });
     if (!details.selectedColors.length) return setFeedback({ error: "Pick a colour: every product is one colour." });
+    if (
+      pricing.overMrp &&
+      !confirm(
+        `SP ${formatMoney(pricing.effectiveSp)} is above the MRP limit of ${formatMoney(pricing.mrpMax)} (MRP includes GST). Save anyway?`,
+      )
+    )
+      return;
     if (ask) return setAsking(true);
     commit([]);
   }
@@ -71,10 +77,7 @@ export function useSaveCosting({
         stageOverheads: pricing.stageOverheads,
         sellingPrice: pricing.effectiveSp,
         notes: details.notes.trim() || null,
-        // Skip starter rows left empty
-        lines: activeLines
-          .filter((l) => l.category_name || l.item_name || num(l.rate) > 0)
-          .map(toSavedLine),
+        lines: savedLines(activeLines),
         applyToIds,
       });
       setAsking(false);

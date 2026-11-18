@@ -133,6 +133,8 @@ export type ProductCostLine = {
   wastage_pct: number;
   calculated_area?: number | null;
   line_total: number;
+  /** MRP printed on a bought-out item, per piece and GST included; the SP must keep within it. */
+  mrp?: number | null;
   sort_order?: number;
 };
 

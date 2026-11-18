@@ -15,6 +15,7 @@ export function StageSection({
   overhead,
   onOverhead,
   freeEntry,
+  gstRate,
 }: {
   stage: CostStageWithHierarchy;
   api: CostLines;
@@ -25,6 +26,8 @@ export function StageSection({
   onOverhead: (pct: string) => void;
   /** Bought-out items typed in and saved to the master (outsourced products). */
   freeEntry?: boolean;
+  /** For a bought-out MRP: the most an item may sell for before GST. */
+  gstRate: number;
 }) {
   const stageLines = api.lines.filter((l) => l.stage_code === stage.code);
   const linesTotal = stageLines.reduce((acc, l) => acc + l.line_total, 0);
@@ -66,10 +69,10 @@ export function StageSection({
               ? "(Per minute or hour of machine time, or by size — as set in the master)"
               : isBoughtOut
                 ? freeEntry
-                  ? "(Type Category → Subcategory → Variety, rate & unit — new items are added to the Rates page on save)"
+                  ? "(Type Category → Subcategory → Variety, rate & unit — new items are added to the Rates page on save; + MRP for items with a printed MRP)"
                   : hasCats
-                  ? "(Category → Subcategory → Variety — Cost Price = Rate × Qty)"
-                  : "(Free-text description, rate & quantity — Cost Price = Rate × Qty)"
+                  ? "(Category → Subcategory → Variety — Cost Price = Rate × Qty; + MRP for items with a printed MRP)"
+                  : "(Free-text description, rate & quantity — Cost Price = Rate × Qty; + MRP for items with a printed MRP)"
                 : hasCats
                   ? "(Category → Subcategory → Variety, dimensions & wastage)"
                   : "(Free-text description, rate & quantity)"
@@ -114,7 +117,9 @@ export function StageSection({
                     </>
                   )}
                   <th className="p-2 min-w-16.25">Qty</th>
-                  <th className="p-2 min-w-18.75">Wastage %</th>
+                  <th className="p-2 min-w-18.75" title={isBoughtOut ? "Printed MRP per piece, GST included" : undefined}>
+                    {isBoughtOut ? "MRP" : "Wastage %"}
+                  </th>
                   <th className="p-2 text-right min-w-23.75">Total Cost</th>
                   <th className="p-2 text-center min-w-25">Actions</th>
                 </tr>
@@ -128,7 +133,14 @@ export function StageSection({
                   </tr>
                 ) : (
                   stageLines.map((line) => (
-                    <StageLineRow key={line.tempKey} stage={stage} line={line} api={api} freeEntry={freeEntry} />
+                    <StageLineRow
+                      key={line.tempKey}
+                      stage={stage}
+                      line={line}
+                      api={api}
+                      freeEntry={freeEntry}
+                      gstRate={gstRate}
+                    />
                   ))
                 )}
               </tbody>

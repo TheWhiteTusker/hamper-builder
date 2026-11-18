@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/supabase/server";
 import { loadSettings } from "@/lib/settings";
 import { resolveColors } from "@/lib/product-code";
 import { calculateCostSheetTotals } from "@/lib/costing.ts";
+import { mrpLimit } from "@/lib/mrp.ts";
 import { num } from "@/lib/pricing";
 import { PageHeader } from "@/components/ui";
 import type { Category } from "@/lib/types";
@@ -94,6 +95,7 @@ export default async function ProductPage({
           costPrice={product.cost_price}
           markupPct={sheet?.markup_pct ?? product.markup_pct}
           sellingPrice={product.default_sp}
+          mrpMax={totals && mrpLimit(lines, overheads, totals.total_cost, settings.gst_rate)}
           notes={sheet?.notes}
         />
       </div>

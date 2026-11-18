@@ -45,7 +45,9 @@ export function PricingBoxes({ pricing }: { pricing: Pricing; source?: string })
         )}
       </div>
 
-      <div className="rounded-xl border border-(--color-brand) bg-emerald-50/40 p-4 shadow-sm">
+      <div
+        className={`rounded-xl border p-4 shadow-sm ${pricing.overMrp ? "border-red-500 bg-red-50/60" : "border-(--color-brand) bg-emerald-50/40"}`}
+      >
         <label
           htmlFor="calc-sp"
           className="text-xs font-semibold text-(--color-brand-dark) uppercase tracking-wider"
@@ -66,6 +68,21 @@ export function PricingBoxes({ pricing }: { pricing: Pricing; source?: string })
           />
         </div>
         <p className={note}>Default catalogue price saved to product</p>
+        {pricing.mrpMax != null &&
+          (pricing.overMrp ? (
+            <div role="alert" className="mt-1 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-red-700">
+              Above MRP: max SP is {formatMoney(pricing.mrpMax)}
+              <button
+                type="button"
+                onClick={pricing.setSpToMrp}
+                className="rounded border border-red-300 bg-white px-2 py-0.5 text-red-700 transition-colors hover:bg-red-100"
+              >
+                Set to {formatMoney(pricing.mrpMax)}
+              </button>
+            </div>
+          ) : (
+            <p className={note}>Max {formatMoney(pricing.mrpMax)} under MRP (incl. GST)</p>
+          ))}
       </div>
 
       <div className={box}>

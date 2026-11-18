@@ -31,6 +31,7 @@ export function prepareLines(lines: ProductCostLine[]): ProductCostLine[] {
       wastage_pct: Number(l.wastage_pct) || 0,
       calculated_area: calc.calculated_area,
       line_total: calc.line_total,
+      mrp: Number(l.mrp) > 0 ? Number(l.mrp) : null,
       sort_order: index + 1,
     };
   });

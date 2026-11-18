@@ -8,6 +8,7 @@ export function PriceSummary({
   costPrice,
   markupPct,
   sellingPrice,
+  mrpMax,
   notes,
 }: {
   /** Stage totals from the saved lines, for the breakdown bar; null with no costing. */
@@ -15,6 +16,8 @@ export function PriceSummary({
   costPrice: number;
   markupPct: number | null | undefined;
   sellingPrice: number;
+  /** The highest SP its bought-out MRPs allow; null without one. */
+  mrpMax?: number | null;
   notes: string | null | undefined;
 }) {
   const sp = num(sellingPrice);
@@ -39,6 +42,11 @@ export function PriceSummary({
           </div>
         ))}
       </div>
+      {mrpMax != null && (
+        <p className={`mt-2 text-xs ${sp > mrpMax ? "font-semibold text-red-700" : "text-(--color-muted)"}`}>
+          {sp > mrpMax ? "Above MRP limit" : "MRP limit"}: max SP {formatMoney(mrpMax)} (MRP includes GST)
+        </p>
+      )}
 
       {notes && (
         <div className="mt-4">

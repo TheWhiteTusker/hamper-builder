@@ -6,7 +6,7 @@
  * tables, so a dry run can show it before anything is written.
  */
 import type { CostRows } from "./cost-tree.ts";
-import { body, cell, type Grid } from "./import-cells.ts";
+import { cell, numbered, type Grid } from "./import-cells.ts";
 import { num } from "./numbers.ts";
 import type { CostVariety } from "./types.ts";
 
@@ -91,9 +91,9 @@ export function planRateImport(grid: Grid, db: CostRows, onlyNew: boolean): Rate
     if (id && inactive.delete(id)) into.push(id);
   };
 
-  body(grid).forEach((row, i) => {
+  numbered(grid).forEach(({ row, n }) => {
     const [type, cat, sub, name, rate, unit, wastage, notes] = Array.from({ length: 8 }, (_, c) => cell(row, c));
-    if (!type || !cat || !sub || !name) return void incomplete.push(i + 2);
+    if (!type || !cat || !sub || !name) return void incomplete.push(n);
     const stage = stages.get(norm(type));
     if (!stage) return void unknownTypes.add(type);
 

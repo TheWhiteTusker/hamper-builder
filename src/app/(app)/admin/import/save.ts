@@ -1,6 +1,8 @@
 /** Bulk writes for the importers. Server-only: imported by the actions, never by a page. */
 import { createClient } from "@/lib/supabase/server";
 import type { ImportResult } from "@/lib/import";
+import { colorCode, parseProductCode } from "@/lib/product-code";
+import { loadSettings } from "@/lib/settings";
 
 export const CHUNK = 500;
 
@@ -53,18 +55,23 @@ export async function saveByCode<T extends { code: string }>(supabase: Supabase,
   return added;
 }
 
+/** The stored margin a price gives, as the cost calculator works it out. */
+export const marginOf = (sp: number, cost: number) => (sp > 0 ? Math.round(((sp - cost) / sp) * 10000) / 10000 : 0);
+
 /**
  * Rows from the Product Master Excel sheet. Column F is Markup % there (buildImport
  * reads it into target_margin), and its SP may be the formula or typed over, so the
  * stored margin is worked out from the price given, as the cost calculator does.
- * "add" drops codes that already exist (Bin included).
+ * "add" drops codes that already exist (Bin included). A new product takes its
+ * colour from its code (LC/0001/NT is Natural); returns an error when that isn't
+ * a colour in Settings, as every product must have one.
  */
 export async function prepareSheetProducts(supabase: Supabase, result: ImportResult, sheet: "add" | "edit") {
   for (const p of result.products) {
     p.markup_pct = Math.round(p.target_margin * 10000) / 100;
-    p.target_margin = p.default_sp > 0 ? Math.round(((p.default_sp - p.cost_price) / p.default_sp) * 10000) / 10000 : 0;
+    p.target_margin = marginOf(p.default_sp, p.cost_price);
   }
-  if (sheet !== "add" || !result.products.length) return;
+  if (!result.products.length) return;
 
   const codes = result.products.map((p) => p.code);
   const existing = new Set<string>();
@@ -73,10 +80,25 @@ export async function prepareSheetProducts(supabase: Supabase, result: ImportRes
     if (error) throw error;
     data.forEach((p) => existing.add(p.code));
   }
-  if (!existing.size) return;
+  const list = (xs: string[]) => xs.slice(0, 8).join(", ") + (xs.length > 8 ? "…" : "");
 
-  result.products = result.products.filter((p) => !existing.has(p.code));
-  result.counts.products = result.products.length;
-  const list = [...existing].slice(0, 8).join(", ") + (existing.size > 8 ? "…" : "");
-  result.warnings.push(`${existing.size} code(s) already exist and will be skipped. Use Bulk edit to change them: ${list}`);
+  if (sheet === "add" && existing.size) {
+    result.products = result.products.filter((p) => !existing.has(p.code));
+    result.counts.products = result.products.length;
+    result.warnings.push(`${existing.size} code(s) already exist and will be skipped. Use Bulk edit to change them: ${list([...existing])}`);
+  }
+
+  const { product_colors } = await loadSettings(supabase);
+  const colorBy = new Map(product_colors.map((c) => [colorCode(c), c]));
+  const uncoloured: string[] = [];
+  for (const p of result.products) {
+    if (existing.has(p.code)) continue;
+    const { isValid, colorCode: suffix } = parseProductCode(p.code);
+    const color = isValid ? colorBy.get(suffix) : undefined;
+    if (color) p.colors = [color];
+    else uncoloured.push(p.code);
+  }
+  if (!uncoloured.length) return;
+  const known = [...colorBy].map(([code, name]) => `${code} ${name}`).join(", ");
+  return `New product codes must look like AC/0006/NT, ending in a colour code from Settings (${known}). Check: ${list(uncoloured)}`;
 }

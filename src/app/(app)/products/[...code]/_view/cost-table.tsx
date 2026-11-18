@@ -84,6 +84,7 @@ export function CostTable({
                 <td className="p-2 text-(--color-muted)">{size(l)}</td>
                 <td className="p-2 whitespace-nowrap font-mono">
                   {formatMoney(l.rate)}/{l.unit}
+                  {num(l.mrp) > 0 && <div className="text-[11px] text-(--color-muted)">MRP {formatMoney(l.mrp)}</div>}
                 </td>
                 <td className="p-2 text-right tabular-nums">{num(l.qty)}</td>
                 <td className="p-2 text-right tabular-nums text-(--color-muted)">

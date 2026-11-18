@@ -1,5 +1,5 @@
 /**
- * A one-tab .xlsx with a coloured, frozen header row.
+ * An .xlsx whose tabs each have a coloured, frozen header row.
  *
  * SheetJS community edition cannot write styles or frozen panes, so the few
  * XML parts are written here and zipped with the CFB library SheetJS ships.
@@ -54,14 +54,13 @@ const STYLES = `${XML}<styleSheet ${NS}>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`;
 
+/** An empty row `r` that still carries the column formulas, so a row typed into works out like the rest. */
+export const formulaRow = (columns: Column[], r: number): Cell[] => columns.map((c) => (c.formula ? { f: c.formula(r) } : null));
+
 function sheetXml(columns: Column[], data: Cell[][], blankRows: number) {
   const styles = columns.map((c) => (c.format ? STYLE[c.format] : 0));
   const header = `<row r="1">${columns.map((c, i) => cellXml(c.header, `${col(i)}1`, c.formula ? 4 : 1)).join("")}</row>`;
-  // Blank rows carry the formulas, so a row typed into works out like the rest.
-  const blanks = Array.from({ length: blankRows }, (_, b) => {
-    const n = data.length + b + 2;
-    return columns.map((c) => (c.formula ? { f: c.formula(n) } : null));
-  });
+  const blanks = Array.from({ length: blankRows }, (_, b) => formulaRow(columns, data.length + b + 2));
   const body = [...data, ...blanks]
     .map((row, r) => {
       const n = r + 2;
@@ -75,19 +74,27 @@ function sheetXml(columns: Column[], data: Cell[][], blankRows: number) {
   return `${XML}<worksheet ${NS}><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="15"/><cols>${cols}</cols><sheetData>${header}${body}</sheetData></worksheet>`;
 }
 
-/** Bytes of the workbook: `rows` (row 2 onwards), then `blankRows` empty rows holding the formulas. */
-export function buildXlsx(sheetName: string, columns: Column[], rows: Cell[][], blankRows = 300): Uint8Array {
+/** One tab: `rows` (row 2 onwards), then `blankRows` empty rows holding the formulas. */
+export type Sheet = { name: string; columns: Column[]; rows: Cell[][]; blankRows?: number };
+
+/** Bytes of a workbook with one tab per sheet, in order. Formulas may refer across tabs. */
+export function buildWorkbook(sheets: Sheet[]): Uint8Array {
+  const tabs = sheets.map((s, i) => ({ ...s, n: i + 1 }));
   const parts: Record<string, string> = {
-    "[Content_Types].xml": `${XML}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="${CT}.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="${CT}.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="${CT}.styles+xml"/></Types>`,
+    "[Content_Types].xml": `${XML}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="${CT}.sheet.main+xml"/>${tabs.map(({ n }) => `<Override PartName="/xl/worksheets/sheet${n}.xml" ContentType="${CT}.worksheet+xml"/>`).join("")}<Override PartName="/xl/styles.xml" ContentType="${CT}.styles+xml"/></Types>`,
     "_rels/.rels": `${XML}<Relationships xmlns="${PKG}"><Relationship Id="rId1" Type="${REL}/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
-    "xl/workbook.xml": `${XML}<workbook ${NS} xmlns:r="${REL}"><sheets><sheet name="${esc(sheetName)}" sheetId="1" r:id="rId1"/></sheets><calcPr fullCalcOnLoad="1"/></workbook>`,
-    "xl/_rels/workbook.xml.rels": `${XML}<Relationships xmlns="${PKG}"><Relationship Id="rId1" Type="${REL}/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="${REL}/styles" Target="styles.xml"/></Relationships>`,
+    "xl/workbook.xml": `${XML}<workbook ${NS} xmlns:r="${REL}"><sheets>${tabs.map(({ name, n }) => `<sheet name="${esc(name)}" sheetId="${n}" r:id="rId${n}"/>`).join("")}</sheets><calcPr fullCalcOnLoad="1"/></workbook>`,
+    "xl/_rels/workbook.xml.rels": `${XML}<Relationships xmlns="${PKG}">${tabs.map(({ n }) => `<Relationship Id="rId${n}" Type="${REL}/worksheet" Target="worksheets/sheet${n}.xml"/>`).join("")}<Relationship Id="rId${tabs.length + 1}" Type="${REL}/styles" Target="styles.xml"/></Relationships>`,
     "xl/styles.xml": STYLES,
-    "xl/worksheets/sheet1.xml": sheetXml(columns, rows, blankRows),
   };
+  for (const t of tabs) parts[`xl/worksheets/sheet${t.n}.xml`] = sheetXml(t.columns, t.rows, t.blankRows ?? 300);
 
   const zip = CFB.utils.cfb_new({ root: "R" });
   const utf8 = new TextEncoder();
   for (const [path, xml] of Object.entries(parts)) CFB.utils.cfb_add(zip, path, utf8.encode(xml));
   return new Uint8Array(CFB.write(zip, { fileType: "zip", type: "array", compression: true }) as number[]);
 }
+
+/** A one-tab workbook. */
+export const buildXlsx = (name: string, columns: Column[], rows: Cell[][], blankRows = 300) =>
+  buildWorkbook([{ name, columns, rows, blankRows }]);

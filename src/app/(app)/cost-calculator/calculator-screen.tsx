@@ -41,6 +41,7 @@ export async function CalculatorScreen({
       ownColor={costing?.ownColor ?? ""}
       siblings={costing?.siblings ?? []}
       savedCodes={saved}
+      gstRate={settings.gst_rate}
     />
   );
 }

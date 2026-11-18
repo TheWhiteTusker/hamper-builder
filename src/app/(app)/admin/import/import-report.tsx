@@ -68,6 +68,7 @@ function labelFor(key: string) {
   const labels: Record<string, string> = {
     categories: "Categories",
     products: "Products",
+    costings: "Costings from Cost Lines",
     hampers: "Hampers",
     hamperItems: "Hamper lines",
     quotes: "Quotations",
