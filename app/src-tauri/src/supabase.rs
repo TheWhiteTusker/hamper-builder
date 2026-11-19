@@ -47,6 +47,16 @@ impl TokenResponse {
     }
 }
 
+/// Where and how an upload is stored.
+pub struct Upload<'a> {
+    pub bucket: &'a str,
+    pub path: &'a str,
+    pub content_type: &'a str,
+    /// Seconds, as `Cache-Control: max-age`.
+    pub cache_control: &'a str,
+    pub upsert: bool,
+}
+
 pub struct Supabase {
     http: reqwest::Client,
     url: String,
@@ -110,6 +120,11 @@ impl Supabase {
             .build()
             .map_err(|e| ApiError::Server(format!("Could not start the network client: {e}")))?;
         Ok(Self { http, url: url.trim_end_matches('/').to_string(), anon: anon.to_string() })
+    }
+
+    /// The shared network client, for the few calls that aren't Supabase's.
+    pub fn http(&self) -> &reqwest::Client {
+        &self.http
     }
 
     async fn send(&self, req: RequestBuilder, auth: bool) -> Result<Response, ApiError> {
@@ -196,6 +211,122 @@ impl Supabase {
             .next()
             .and_then(|n| n.parse().ok())
             .ok_or_else(|| ApiError::Server(format!("No row count came back for {table}.")))
+    }
+
+    /// Reads a write's response: the rows when `select` asked for them, else null.
+    async fn rows(resp: Response) -> Result<Value, ApiError> {
+        let text = resp.text().await.map_err(|e| net(&e))?;
+        if text.trim().is_empty() {
+            return Ok(Value::Null);
+        }
+        serde_json::from_str(&text).map_err(|e| ApiError::Server(format!("Unexpected answer from the database: {e}")))
+    }
+
+    /// `POST /rest/v1/<table>`: one row or many. With `on_conflict`, an upsert on those columns.
+    pub async fn insert(
+        &self,
+        token: &str,
+        table: &str,
+        rows: &Value,
+        on_conflict: Option<&str>,
+        select: Option<&str>,
+    ) -> Result<Value, ApiError> {
+        let mut prefer = vec![if select.is_some() { "return=representation" } else { "return=minimal" }];
+        let mut query: Vec<(&str, &str)> = Vec::new();
+        if let Some(cols) = on_conflict {
+            prefer.push("resolution=merge-duplicates");
+            query.push(("on_conflict", cols));
+        }
+        if let Some(s) = select {
+            query.push(("select", s));
+        }
+        let req = self
+            .http
+            .post(self.rest(table))
+            .bearer_auth(token)
+            .header("Prefer", prefer.join(","))
+            .query(&query)
+            .json(rows);
+        Self::rows(self.send(req, false).await?).await
+    }
+
+    /// `PATCH /rest/v1/<table>?<filter>`.
+    pub async fn update(
+        &self,
+        token: &str,
+        table: &str,
+        filter: &[(&str, &str)],
+        patch: &Value,
+        select: Option<&str>,
+    ) -> Result<Value, ApiError> {
+        let prefer = if select.is_some() { "return=representation" } else { "return=minimal" };
+        let mut query = filter.to_vec();
+        if let Some(s) = select {
+            query.push(("select", s));
+        }
+        let req =
+            self.http.patch(self.rest(table)).bearer_auth(token).header("Prefer", prefer).query(&query).json(patch);
+        Self::rows(self.send(req, false).await?).await
+    }
+
+    /// `DELETE /rest/v1/<table>?<filter>`, returning the deleted rows.
+    pub async fn delete(&self, token: &str, table: &str, filter: &[(&str, &str)]) -> Result<Value, ApiError> {
+        let req = self
+            .http
+            .delete(self.rest(table))
+            .bearer_auth(token)
+            .header("Prefer", "return=representation")
+            .query(filter);
+        Self::rows(self.send(req, false).await?).await
+    }
+
+    /// `POST /rest/v1/rpc/<name>`: a database function, run in one transaction.
+    pub async fn rpc(&self, token: &str, name: &str, args: &Value) -> Result<Value, ApiError> {
+        let req = self.http.post(self.rest(&format!("rpc/{name}"))).bearer_auth(token).json(args);
+        Self::rows(self.send(req, false).await?).await
+    }
+
+    fn storage(&self, path: &str) -> String {
+        format!("{}/storage/v1/{path}", self.url)
+    }
+
+    /// The public URL of an object in a public bucket.
+    pub fn public_url(&self, bucket: &str, path: &str) -> String {
+        format!("{}/storage/v1/object/public/{bucket}/{path}", self.url)
+    }
+
+    /// Stores `bytes` at `bucket/path` and returns its public URL.
+    pub async fn upload(&self, token: &str, u: &Upload<'_>, bytes: Vec<u8>) -> Result<String, ApiError> {
+        let req = self
+            .http
+            .post(self.storage(&format!("object/{}/{}", u.bucket, u.path)))
+            .bearer_auth(token)
+            .header("Content-Type", u.content_type)
+            .header("cache-control", format!("max-age={}", u.cache_control))
+            .header("x-upsert", if u.upsert { "true" } else { "false" })
+            .body(bytes);
+        self.send(req, false).await?;
+        Ok(self.public_url(u.bucket, u.path))
+    }
+
+    pub async fn remove(&self, token: &str, bucket: &str, paths: &[String]) -> Result<(), ApiError> {
+        if paths.is_empty() {
+            return Ok(());
+        }
+        let req = self
+            .http
+            .delete(self.storage(&format!("object/{bucket}")))
+            .bearer_auth(token)
+            .json(&json!({ "prefixes": paths }));
+        self.send(req, false).await.map(drop)
+    }
+
+    /// The objects directly inside `prefix` (one level, like the dashboard's folder view).
+    pub async fn list(&self, token: &str, bucket: &str, prefix: &str) -> Result<Value, ApiError> {
+        let body =
+            json!({ "prefix": prefix, "limit": 1000, "offset": 0, "sortBy": { "column": "name", "order": "asc" } });
+        let req = self.http.post(self.storage(&format!("object/list/{bucket}"))).bearer_auth(token).json(&body);
+        Self::rows(self.send(req, false).await?).await
     }
 }
 

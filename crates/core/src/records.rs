@@ -79,6 +79,55 @@ pub struct Product {
     pub deleted_at: Option<String>,
 }
 
+/// A product's category as embedded by `select=*,categories(name,counts_as_item)`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct CategoryRef {
+    pub name: String,
+    pub counts_as_item: bool,
+}
+
+/// A product joined to its category, the shape lists and the builders need.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ProductWithCategory {
+    #[serde(flatten)]
+    pub product: Product,
+    pub categories: Option<CategoryRef>,
+}
+
+/// One row of `product_cost_sheets` (its lines are loaded separately).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ProductCostSheet {
+    pub id: String,
+    pub product_id: Option<String>,
+    pub product_code: Option<String>,
+    #[serde(deserialize_with = "lenient::null_default")]
+    pub product_name: String,
+    #[serde(deserialize_with = "lenient::decimal")]
+    pub material_total: Decimal,
+    #[serde(deserialize_with = "lenient::decimal")]
+    pub hardware_total: Decimal,
+    #[serde(deserialize_with = "lenient::decimal")]
+    pub finishing_total: Decimal,
+    #[serde(deserialize_with = "lenient::decimal")]
+    pub machine_total: Decimal,
+    #[serde(deserialize_with = "lenient::decimal")]
+    pub total_cost: Decimal,
+    #[serde(deserialize_with = "lenient::decimal")]
+    pub markup_pct: Decimal,
+    #[serde(deserialize_with = "lenient::decimal")]
+    pub calculated_sp: Decimal,
+    /// Overhead % per stage code, already included in the stage totals.
+    #[serde(deserialize_with = "lenient::decimal_map")]
+    pub stage_overheads: crate::costing::StageOverheads,
+    pub notes: Option<String>,
+    pub created_by: Option<String>,
+    pub created_at: Option<String>,
+    pub updated_at: Option<String>,
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Hamper {

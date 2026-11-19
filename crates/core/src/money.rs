@@ -4,7 +4,7 @@ use crate::js::{self, f};
 use rust_decimal::Decimal;
 
 /// Indian digit grouping of a whole number: 1234567 → "12,34,567".
-fn group_indian(digits: &str) -> String {
+pub(crate) fn group_indian(digits: &str) -> String {
     let len = digits.len();
     if len <= 3 {
         return digits.to_string();

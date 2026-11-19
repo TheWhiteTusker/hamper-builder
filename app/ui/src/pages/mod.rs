@@ -1,6 +1,16 @@
+pub mod admin;
+pub mod bin;
+pub mod calculator;
+pub mod clients;
 pub mod dashboard;
+pub mod hampers;
 pub mod login;
+pub mod product;
+pub mod products;
+pub mod quotes;
+pub mod rates;
 pub mod reset;
+pub mod settings;
 
 use leptos::prelude::*;
 

@@ -10,7 +10,7 @@ use leptos_router::components::A;
 #[component]
 pub fn PageHeader(
     #[prop(into)] title: Signal<String>,
-    #[prop(optional, into)] subtitle: Option<String>,
+    #[prop(optional, into)] subtitle: Option<Signal<String>>,
     children: Children,
 ) -> impl IntoView {
     view! {

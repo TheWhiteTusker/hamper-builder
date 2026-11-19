@@ -131,11 +131,16 @@ pub fn use_query<T: DeserializeOwned + Clone + Send + Sync + 'static>(key: Query
     state
 }
 
-/// "just now", "5 min ago", "3 h ago", "2 d ago".
-pub fn age(fetched_at: i64) -> String {
+/// Unix seconds now.
+pub fn now() -> i64 {
     #[allow(clippy::cast_possible_truncation)]
     let now = (js_sys::Date::now() / 1000.0) as i64;
-    match (now - fetched_at).max(0) {
+    now
+}
+
+/// "just now", "5 min ago", "3 h ago", "2 d ago".
+pub fn age(fetched_at: i64) -> String {
+    match (now() - fetched_at).max(0) {
         s if s < 60 => "just now".into(),
         s if s < 3600 => format!("{} min ago", s / 60),
         s if s < 86_400 => format!("{} h ago", s / 3600),

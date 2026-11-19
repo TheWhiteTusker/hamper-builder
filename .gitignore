@@ -7,3 +7,5 @@
 /scripts/fixtures/*.local.json
 /app/src-tauri/gen/schemas
 /app/src-tauri/target
+/worker/target
+/worker/build

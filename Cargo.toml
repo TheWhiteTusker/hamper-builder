@@ -1,6 +1,8 @@
 [workspace]
 resolver = "3"
 members = ["crates/core", "app/src-tauri", "app/ui"]
+# Cloudflare-only (wasm32, built by worker-build); has its own lockfile.
+exclude = ["worker"]
 
 [workspace.package]
 edition = "2024"

@@ -115,4 +115,63 @@ body {
   body {
     background: #fff;
   }
+  /* The quotation is a real document: no app chrome, and rows never split. */
+  .print-sheet {
+    box-shadow: none !important;
+    border: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  tr,
+  .avoid-break {
+    break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
+  }
+}
+
+/* The design studio: Lattice Lane's palette, cream panels on a warm beige
+   pasteboard. The canvas draws with the same accent, guide and handle colours. */
+.studio {
+  --st-bg: #e7e1d0;
+  --st-panel: #faf8ee;
+  --st-panel-2: #f1ebe0;
+  --st-hover: #ebe4d3;
+  --st-line: #e3ddcc;
+  --st-text: #2c332f;
+  --st-muted: #66756b;
+  --st-accent: #54655b;
+  --st-accent-strong: #2c332f;
+  --st-accent-soft: rgb(84 101 91 / 0.14);
+  --st-on-accent: #faf8ee;
+  --st-gold: #ddcf8b;
+  --st-value: #8a6d24;
+  color-scheme: light;
+  color: var(--st-text);
+  font-size: 13px;
+}
+.studio .studio-topbar {
+  --st-panel: #54655b;
+  --st-text: #faf8ee;
+  --st-muted: #d5ddd4;
+  --st-hover: rgb(250 248 238 / 0.14);
+  --st-line: rgb(250 248 238 / 0.22);
+  --st-accent-soft: rgb(221 207 139 / 0.22);
+  background: var(--st-panel);
+  color: var(--st-text);
+}
+.studio input[type="range"] {
+  accent-color: var(--st-accent);
+}
+.studio .checkerboard {
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(45deg, #ece7d9 25%, transparent 25%),
+    linear-gradient(-45deg, #ece7d9 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ece7d9 75%),
+    linear-gradient(-45deg, transparent 75%, #ece7d9 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
 }

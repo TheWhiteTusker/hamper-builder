@@ -11,6 +11,9 @@ extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"], js_name = invoke, catch)]
     async fn tauri_invoke(cmd: &str, args: JsValue) -> Result<JsValue, JsValue>;
 
+    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"], js_name = invoke, catch)]
+    async fn tauri_invoke_with(cmd: &str, body: JsValue, options: JsValue) -> Result<JsValue, JsValue>;
+
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "event"], js_name = listen, catch)]
     async fn tauri_listen(event: &str, handler: &Closure<dyn FnMut(JsValue)>) -> Result<JsValue, JsValue>;
 }
@@ -30,9 +33,27 @@ fn from_js<T: DeserializeOwned>(value: JsValue) -> Result<T, ApiError> {
 pub async fn invoke<A: Serialize, R: DeserializeOwned>(cmd: &str, args: &A) -> Result<R, ApiError> {
     match tauri_invoke(cmd, to_js(args)?).await {
         Ok(v) => from_js(v),
-        Err(e) => Err(serde_wasm_bindgen::from_value::<ApiError>(e.clone()).unwrap_or_else(|_| {
-            ApiError::Server(e.as_string().unwrap_or_else(|| format!("The app could not run {cmd}.")))
-        })),
+        Err(e) => Err(api_error(cmd, e)),
+    }
+}
+
+fn api_error(cmd: &str, e: JsValue) -> ApiError {
+    serde_wasm_bindgen::from_value::<ApiError>(e.clone())
+        .unwrap_or_else(|_| ApiError::Server(e.as_string().unwrap_or_else(|| format!("The app could not run {cmd}."))))
+}
+
+/// Runs a command whose body is raw bytes (no JSON), with details in headers.
+pub async fn invoke_raw<R: DeserializeOwned>(cmd: &str, bytes: &[u8], headers: &[(&str, &str)]) -> Result<R, ApiError> {
+    let body = js_sys::Uint8Array::from(bytes);
+    let h = js_sys::Object::new();
+    for (k, v) in headers {
+        let _ = js_sys::Reflect::set(&h, &JsValue::from_str(k), &JsValue::from_str(v));
+    }
+    let options = js_sys::Object::new();
+    let _ = js_sys::Reflect::set(&options, &JsValue::from_str("headers"), &h);
+    match tauri_invoke_with(cmd, body.into(), options.into()).await {
+        Ok(v) => from_js(v),
+        Err(e) => Err(api_error(cmd, e)),
     }
 }
 

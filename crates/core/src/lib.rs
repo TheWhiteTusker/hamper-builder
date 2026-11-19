@@ -7,10 +7,13 @@
 
 pub mod api;
 pub mod bin_expiry;
+pub mod canvas;
 pub mod colors;
 pub mod cost_tree;
 pub mod costing;
+pub mod csv;
 pub mod dimensions;
+pub mod gstin;
 pub mod images;
 pub mod import;
 pub mod js;

@@ -1,8 +1,13 @@
 //! Lattice Lane UI, compiled to WASM and shown in the app's webview.
 
 mod components;
+mod data;
+mod db;
+mod kit;
 mod pages;
+mod photos;
 mod state;
+mod studio;
 mod tauri;
 
 use components::{Nav, OfflineBanner};
@@ -10,7 +15,7 @@ use lattice_core::api::{ApiError, SessionInfo};
 use leptos::prelude::*;
 use leptos_router::components::{Redirect, Route, Router, Routes};
 use leptos_router::path;
-use pages::{Coming, NotFound};
+use pages::{Coming, NotFound, admin, bin, clients, hampers, quotes, settings};
 use state::{Freshness, Phase};
 
 #[component]
@@ -53,13 +58,30 @@ fn Shell(info: SessionInfo) -> impl IntoView {
             <Routes fallback=|| view! { <NotFound /> }>
                 <Route path=path!("/") view=|| view! { <Redirect path="/dashboard" /> } />
                 <Route path=path!("/dashboard") view=move || view! { <pages::dashboard::Dashboard profile=dash.clone() /> } />
-                <Route path=path!("/hampers/*any") view=|| view! { <Coming title="Hampers" phase="Phase 3" /> } />
-                <Route path=path!("/quotes/*any") view=|| view! { <Coming title="Quotes" phase="Phase 3" /> } />
-                <Route path=path!("/clients") view=|| view! { <Coming title="Clients" phase="Phase 3" /> } />
-                <Route path=path!("/products/*any") view=|| view! { <Coming title="Products" phase="Phase 2" /> } />
+                <Route path=path!("/hampers") view=hampers::Hampers />
+                <Route path=path!("/hampers/new") view=hampers::NewHamper />
+                <Route path=path!("/hampers/:code/edit") view=hampers::EditHamper />
+                <Route path=path!("/hampers/:code/image") view=hampers::HamperImage />
+                <Route path=path!("/hampers/:code") view=hampers::HamperView />
+                <Route path=path!("/quotes") view=quotes::Quotes />
+                <Route path=path!("/quotes/new") view=quotes::NewQuote />
+                <Route path=path!("/quotes/:doc/print") view=quotes::PrintQuote />
+                <Route path=path!("/quotes/:doc") view=quotes::QuotePage />
+                <Route path=path!("/clients") view=clients::Clients />
+                <Route path=path!("/products") view=pages::products::Products />
+                <Route path=path!("/products/new") view=pages::calculator::NewProduct />
+                <Route path=path!("/products/*code") view=pages::product::ProductView />
+                <Route path=path!("/cost-calculator") view=|| view! { <Redirect path="/products/new" /> } />
+                <Route path=path!("/cost-calculator/master") view=|| view! { <pages::rates::RatesMaster /> } />
+                <Route path=path!("/cost-calculator/master/excel/:mode") view=admin::RateSheetPage />
+                <Route path=path!("/cost-calculator/*code") view=pages::calculator::ProductCostingPage />
                 <Route path=path!("/presentations/*any") view=|| view! { <Coming title="Presentations" phase="Phase 5" /> } />
-                <Route path=path!("/settings") view=|| view! { <Coming title="Settings" phase="Phase 3" /> } />
-                <Route path=path!("/admin/*any") view=|| view! { <Coming title="Admin" phase="Phase 4" /> } />
+                <Route path=path!("/settings") view=settings::SettingsPage />
+                <Route path=path!("/admin/import") view=admin::ImportWorkbook />
+                <Route path=path!("/admin/refresh-prices") view=admin::RefreshPrices />
+                <Route path=path!("/admin/products/export") view=admin::ProductsExport />
+                <Route path=path!("/admin/products/:mode") view=admin::ProductSheetPage />
+                <Route path=path!("/bin") view=bin::Bin />
             </Routes>
         </main>
     }

@@ -18,6 +18,14 @@ fn main() {
         }
         println!("cargo:rerun-if-env-changed={key}");
     }
+    // Optional: without it, GST lookup says it isn't configured.
+    let worker = std::env::var("LATTICE_WORKER_URL").ok().or_else(|| {
+        file.lines().filter_map(|l| l.split_once('=')).find(|(k, _)| k.trim() == "LATTICE_WORKER_URL").map(|(_, v)| v.trim().to_string())
+    });
+    if let Some(url) = worker {
+        println!("cargo:rustc-env=LATTICE_WORKER_URL={url}");
+    }
+    println!("cargo:rerun-if-env-changed=LATTICE_WORKER_URL");
     println!("cargo:rerun-if-changed=supabase.env");
     tauri_build::build();
 }

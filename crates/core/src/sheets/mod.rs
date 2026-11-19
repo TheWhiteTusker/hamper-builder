@@ -8,17 +8,18 @@ pub mod product;
 pub mod rates;
 
 use rust_decimal::Decimal;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::sync::Arc;
 
 /// A formula's value as last worked out, cached in the file.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Cached {
     Text(String),
     Num(Decimal),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Cell {
     Empty,
     Text(String),
@@ -48,7 +49,7 @@ impl From<Decimal> for Cell {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Format {
     Percent,
     Money,
@@ -105,6 +106,42 @@ pub struct Sheet {
     pub columns: Vec<Column>,
     pub rows: Vec<Vec<Cell>>,
     pub blank_rows: usize,
+}
+
+/// A tab with its formulas worked out row by row: what the native side
+/// writes to `.xlsx` (a [`Sheet`]'s formula closures can't cross IPC).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SheetData {
+    pub name: String,
+    pub columns: Vec<ColumnData>,
+    /// Row 2 onwards, the blank formula rows included.
+    pub rows: Vec<Vec<Cell>>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ColumnData {
+    pub header: String,
+    pub width: u16,
+    pub format: Option<Format>,
+    /// Calculated: a grey heading instead of blue.
+    pub calculated: bool,
+}
+
+impl Sheet {
+    pub fn data(&self) -> SheetData {
+        let first_blank = self.rows.len() + 2;
+        let mut rows = self.rows.clone();
+        rows.extend((0..self.blank_rows).map(|b| formula_row(&self.columns, first_blank + b)));
+        SheetData {
+            name: self.name.clone(),
+            columns: self
+                .columns
+                .iter()
+                .map(|c| ColumnData { header: c.header.clone(), width: c.width, format: c.format, calculated: c.formula.is_some() })
+                .collect(),
+            rows,
+        }
+    }
 }
 
 /// An empty row `r` that still carries the column formulas, so a row typed
@@ -170,6 +207,20 @@ pub(crate) mod testing {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn data_fills_formulas_down_the_blank_rows() {
+        let sheet = Sheet {
+            name: "T".into(),
+            columns: vec![Column::new("A", 10), Column::new("B", 10).calc(|r| format!("A{r}*2"))],
+            rows: vec![vec![Cell::text("x"), Cell::Empty]],
+            blank_rows: 2,
+        };
+        let d = sheet.data();
+        assert_eq!(d.rows.len(), 3);
+        assert_eq!(d.rows[2][1], Cell::Formula { f: "A4*2".into(), v: None });
+        assert!(d.columns[1].calculated && !d.columns[0].calculated);
+    }
 
     #[test]
     fn letters() {

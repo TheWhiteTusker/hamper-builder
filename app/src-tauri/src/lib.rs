@@ -3,8 +3,11 @@
 
 mod cache;
 mod commands;
+mod db;
+mod files;
 mod session;
 mod supabase;
+mod worker;
 
 use commands::AppState;
 use tauri::{AppHandle, Manager};
@@ -54,6 +57,7 @@ pub fn run() {
     let result = builder
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let handle = app.handle().clone();
             let guard = start_logging(&handle);
@@ -79,6 +83,17 @@ pub fn run() {
             if let Ok(Some(urls)) = app.deep_link().get_current() {
                 open_urls(&handle, urls);
             }
+            // Dev runs only: `LATTICE_OPEN=/products cargo tauri dev` opens on that screen.
+            #[cfg(debug_assertions)]
+            if let (Ok(path), Some(w), Some(dev)) =
+                (std::env::var("LATTICE_OPEN"), app.get_webview_window("main"), app.config().build.dev_url.clone())
+                && let Ok(url) = dev.join(path.trim_start_matches('/'))
+            {
+                let _ = w.navigate(url);
+                if let Some(zoom) = std::env::var("LATTICE_ZOOM").ok().and_then(|z| z.parse().ok()) {
+                    let _ = w.set_zoom(zoom);
+                }
+            }
             tracing::info!("Lattice Lane {} started", env!("CARGO_PKG_VERSION"));
             Ok(())
         })
@@ -90,6 +105,25 @@ pub fn run() {
             commands::request_password_reset,
             commands::update_password,
             commands::query,
+            db::db_select,
+            db::db_count,
+            db::db_insert,
+            db::db_update,
+            db::db_delete,
+            db::db_rpc,
+            db::cache_get,
+            db::cache_put,
+            db::cache_drop,
+            db::storage_upload,
+            db::storage_remove,
+            db::storage_list,
+            db::storage_public_url,
+            worker::gstin_lookup,
+            worker::print_page,
+            files::save_xlsx,
+            files::save_text,
+            files::read_xlsx,
+            files::save_bytes,
         ])
         .run(tauri::generate_context!());
 
