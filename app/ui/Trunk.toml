@@ -1,0 +1,12 @@
+[build]
+target = "index.html"
+dist = "dist"
+
+[serve]
+port = 3016
+# The webview loads this; nothing else should.
+addresses = ["127.0.0.1"]
+open = false
+
+[tools]
+tailwindcss = "4.1.11"

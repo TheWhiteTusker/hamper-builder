@@ -1,0 +1,118 @@
+@import "tailwindcss";
+@source "../src";
+
+/* Fonts ship with the app (no network): Cabin for headings, Figtree for body,
+   Geist Mono for codes. latin-ext carries the rupee sign. */
+@font-face { font-family: Cabin; font-weight: 400 700; font-display: swap; src: url("/assets/fonts/cabin-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: Cabin; font-weight: 400 700; font-display: swap; src: url("/assets/fonts/cabin-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: Figtree; font-weight: 300 900; font-display: swap; src: url("/assets/fonts/figtree-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: Figtree; font-weight: 300 900; font-display: swap; src: url("/assets/fonts/figtree-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Geist Mono"; font-weight: 100 900; font-display: swap; src: url("/assets/fonts/geist-mono-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Geist Mono"; font-weight: 100 900; font-display: swap; src: url("/assets/fonts/geist-mono-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+/* Palette from latticelane.com: cream #faf8ee, sage #54655b, soft gold
+   #ddcf8b, deep green #2c332f. Body text is the deeper green (not the site's
+   sage) so dense tables of numbers stay readable. Same tokens as the Next app. */
+@theme {
+  --color-ink: #2c332f;
+  --color-muted: #54655b;
+  --color-line: #e3ddcc;
+  --color-border: #e3ddcc;
+  --color-paper: #faf8ee;
+  --color-brand: #54655b;
+  --color-brand-dark: #2c332f;
+  --color-brand-soft: #f1ebe0;
+  --color-gold: #ddcf8b;
+  --font-sans: Figtree, ui-sans-serif, system-ui, sans-serif;
+  --font-display: Cabin, Figtree, ui-sans-serif, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+::selection {
+  background-color: var(--color-brand);
+  color: #ffffff;
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border border-line bg-white;
+  }
+
+  .label {
+    @apply block text-[11px] font-medium uppercase tracking-wide text-(--color-muted);
+  }
+
+  .input,
+  .select {
+    @apply w-full rounded-lg border border-line bg-white px-2.5 py-1.5
+           text-sm text-(--color-ink) outline-none
+           focus:border-(--color-brand) focus:ring-2 focus:ring-(--color-brand)/20
+           disabled:bg-paper disabled:text-(--color-muted);
+  }
+
+  .input-num {
+    @apply text-right tabular-nums;
+  }
+
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-1.5
+           text-sm font-medium whitespace-nowrap transition-colors
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-(--color-brand) text-white hover:bg-(--color-brand-dark);
+  }
+
+  .btn-secondary {
+    @apply border border-line bg-white text-(--color-ink) hover:bg-paper;
+  }
+
+  .btn-danger {
+    @apply border border-red-200 bg-white text-red-700 hover:bg-red-50;
+  }
+
+  .badge {
+    @apply inline-block rounded-full border border-line bg-paper px-2 py-0.5 text-[11px] font-medium;
+  }
+
+  .th {
+    @apply border-b border-line px-2.5 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted;
+  }
+
+  .td {
+    @apply border-b border-line px-2.5 py-1.5 align-middle;
+  }
+
+  .num {
+    @apply text-right tabular-nums;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}

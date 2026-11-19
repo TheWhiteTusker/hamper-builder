@@ -1,0 +1,25 @@
+[workspace]
+resolver = "3"
+members = ["crates/core", "app/src-tauri", "app/ui"]
+
+[workspace.package]
+edition = "2024"
+version = "0.1.0"
+license = "UNLICENSED"
+publish = false
+
+[workspace.dependencies]
+rust_decimal = { version = "1", default-features = false, features = ["std", "serde", "maths"] }
+rust_decimal_macros = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }
+time = { version = "0.3", features = ["parsing", "formatting", "macros", "serde"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+indexing_slicing = "warn"
