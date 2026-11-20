@@ -5,13 +5,14 @@
  * warnings show before Save; written after the products. Server-only, and a few
  * bulk requests however long the sheet is.
  */
-import type { createClient } from "@/lib/supabase/server";
+import { isAdmin, requireUser, type createClient } from "@/lib/supabase/server";
 import { body, cell, type Grid, type ImportResult } from "@/lib/import";
 import { mrpLimit } from "@/lib/mrp";
 import { planSheetCosting, readCostLines, readOverheads, type CostingPlan } from "@/lib/product-sheet-costing";
 import { loadSettings } from "@/lib/settings";
 import type { ProductCostLine } from "@/lib/types";
 import { loadCostStages } from "../../cost-calculator/load";
+import { repriceVarieties } from "../../cost-calculator/reprice";
 import { CHUNK, inChunks, marginOf } from "./save";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -21,18 +22,25 @@ type Row = {
   product_cost_sheets: { id: string; stage_overheads: Record<string, number> | null; product_cost_lines: ProductCostLine[] }[];
 };
 
-/** One plan per product whose costing the sheet changes; sets its cost_price and margin. */
+/**
+ * One plan per product whose costing the sheet changes; sets its cost_price and
+ * margin. `wastage` holds the Rates page wastage % the sheet changes.
+ */
 export async function planCostings(supabase: Supabase, result: ImportResult, products: Grid = [], linesGrid?: Grid) {
   const errors: string[] = [];
-  if (!body(linesGrid).length) return { plans: [], errors };
-  const sheetLines = readCostLines(linesGrid, await loadCostStages(supabase), result.warnings, errors);
+  const wastage = new Map<string, number>();
+  if (!body(linesGrid).length) return { plans: [], errors, wastage };
+  const sheetLines = readCostLines(linesGrid, await loadCostStages(supabase), result.warnings, errors, wastage);
+  if (wastage.size && !isAdmin((await requireUser()).profile.role)) {
+    errors.push("Only an admin can change a rate's wastage, because it updates the products that use it.");
+  }
 
   const overheads = new Map(body(products).map((row) => [cell(row, 0), readOverheads(row)]));
   const strays = [...sheetLines.keys()].filter((code) => !overheads.has(code));
   if (strays.length) result.warnings.push(`Cost Lines for codes not on the Product Master tab are ignored: ${strays.slice(0, 8).join(", ")}`);
 
   const costed = result.products.filter((p) => sheetLines.has(p.code));
-  if (!costed.length || errors.length) return { plans: [], errors };
+  if (!costed.length || errors.length) return { plans: [], errors, wastage };
 
   // A live product wins over binned copies of its code, as in saveByCode.
   const rows = new Map<string, Row>();
@@ -59,7 +67,21 @@ export async function planCostings(supabase: Supabase, result: ImportResult, pro
     if (limit != null && p.default_sp > limit) result.warnings.push(`${p.code}: SP ₹${p.default_sp} is above its MRP limit of ₹${limit}.`);
     plans.set(p.code, plan);
   }
-  return { plans: [...plans.values()], errors };
+  return { plans: [...plans.values()], errors, wastage };
+}
+
+/**
+ * Writes the sheet's wastage changes to the Rates page and reprices every
+ * product using those rates. Run before the sheet's own products are saved,
+ * so their typed prices land last.
+ */
+export async function saveSheetWastage(supabase: Supabase, wastage: Map<string, number>) {
+  for (const [id, default_wastage_pct] of wastage) {
+    const { error } = await supabase.from("cost_varieties").update({ default_wastage_pct }).eq("id", id);
+    if (error) throw error;
+  }
+  const res = await repriceVarieties(supabase, [...wastage.keys()]);
+  if (res.error) throw new Error(`Wastage saved, but repricing failed: ${res.error}`);
 }
 
 /** Writes the plans once their products are saved (new ones included). */

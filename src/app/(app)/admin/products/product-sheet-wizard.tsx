@@ -10,6 +10,7 @@ const stamp = () => new Date().toISOString().slice(0, 10);
 const NEW_TIP = "A new product: fill any blank row on Product Master. Its code's last part is its colour (AC/0006/NT is Natural); each colour is its own row.";
 const LINES_TIPS = [
   "Cost Lines tab: one row per costing line, as in the calculator. Pick the Type, Category, Subcategory and Variety from the Rates tab; Unit, Rate and Wastage fill in.",
+  "Type over a line's Wastage % to change it on the Rates page too: every product using that rate is repriced.",
   "Cost Price adds up the product's lines, plus each stage's overhead % (Product Master tab).",
 ];
 

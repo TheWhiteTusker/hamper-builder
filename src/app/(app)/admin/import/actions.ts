@@ -8,7 +8,7 @@ import { describeError } from "@/lib/forms";
 import { productHref } from "../../products/href";
 import type { CostingPlan } from "@/lib/product-sheet-costing";
 import { CHUNK, inChunks, prepareSheetProducts, saveByCode } from "./save";
-import { planCostings, saveSheetCosting } from "./save-costing";
+import { planCostings, saveSheetCosting, saveSheetWastage } from "./save-costing";
 
 export type ImportReport = {
   ok: boolean;
@@ -42,6 +42,7 @@ export async function runImport(
   const supabase = await createClient();
 
   let costings: CostingPlan[] = [];
+  let wastage = new Map<string, number>();
   if (sheet) {
     try {
       const invalid = await prepareSheetProducts(supabase, result, sheet);
@@ -49,6 +50,7 @@ export async function runImport(
       const planned = await planCostings(supabase, result, input.products, costLines);
       if (planned.errors.length) return { ok: false, applied: false, error: planned.errors.slice(0, 8).join(" ") };
       costings = planned.plans;
+      wastage = planned.wastage;
       if (costings.length) result.counts.costings = costings.length;
     } catch (error) {
       return { ok: false, applied: false, error: describeError(error) };
@@ -85,6 +87,7 @@ export async function runImport(
           : null,
       }));
 
+      if (wastage.size) await saveSheetWastage(supabase, wastage);
       addedCodes = await saveByCode(supabase, "products", rows);
       await saveSheetCosting(supabase, costings, result.products);
     }

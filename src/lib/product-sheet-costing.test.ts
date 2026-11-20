@@ -52,6 +52,28 @@ test("readCostLines: master items take the master's rate; others keep what was t
   assert.match(errors[0], /row 2: Type "Matrial" isn't one of Material, Hardware/);
 });
 
+test("readCostLines: a typed wastage changes the Rates item for all its lines", () => {
+  const birch = { Type: "Material", Category: "Woodbased", Subcategory: "Birch", Variety: "3mm", Length: "12", Breadth: "12" };
+  const [warnings, errors, wastage] = [[] as string[], [] as string[], new Map<string, number>()];
+  const lines = readCostLines(
+    grid(
+      row({ "Product Code": "A", ...birch, "Wastage %": "20" }),
+      row({ "Product Code": "B", ...birch, "Wastage %": "10" }), // untouched: still the Rates value
+    ),
+    buildCostTree(RATES),
+    warnings,
+    errors,
+    wastage,
+  );
+  assert.deepEqual(errors, []);
+  assert.deepEqual([...wastage], [["v1", 20]]);
+  assert.deepEqual([lines.get("A")![0].line_total, lines.get("B")![0].line_total], [108, 108], "1 sq ft × 90 + 20%, both lines");
+  assert.match(warnings[0], /wastage 10% → 20% on the Rates page/);
+
+  readCostLines(grid(row({ "Product Code": "A", ...birch, "Wastage %": "20" }), row({ "Product Code": "B", ...birch, "Wastage %": "15" })), buildCostTree(RATES), [], errors);
+  assert.match(errors[0], /row 3: .* has wastage 15% here but 20% on another row/);
+});
+
 test("planSheetCosting: unchanged is null; new lines or overheads replace the costing", () => {
   const lines = readCostLines(
     grid(row({ "Product Code": "A", Type: "Material", Category: "Woodbased", Subcategory: "Birch", Variety: "3mm", Length: "24", Breadth: "12" })),

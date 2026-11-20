@@ -55,12 +55,21 @@ export function readOverheads(row: string[]): Record<string, number> {
 
 /**
  * The Cost Lines tab as each product's lines. An item on the Rates page takes
- * its rate, unit and wastage from there, as the calculator does; one that is
- * not keeps what was typed, with a warning. An unknown Type is an error.
+ * its rate and unit from there, as the calculator does; one that is not keeps
+ * what was typed, with a warning. An unknown Type is an error.
+ * A wastage % typed over a Rates item's is a change to the Rates page: it goes
+ * into `wastage` (variety id -> new %) and onto every line of that item.
  */
-export function readCostLines(grid: Grid | undefined, stages: CostStageWithHierarchy[], warnings: string[], errors: string[]) {
+export function readCostLines(
+  grid: Grid | undefined,
+  stages: CostStageWithHierarchy[],
+  warnings: string[],
+  errors: string[],
+  wastage = new Map<string, number>(),
+) {
   const stageBy = new Map(stages.flatMap((s) => [norm(s.code), norm(s.name), norm(stageLabel(s.code))].map((k) => [k, s] as const)));
   const lines = new Map<string, ProductCostLine[]>();
+  const labels = new Map<string, [string, number]>();
   numbered(grid).forEach(({ row, n }) => {
     const get = (h: LineHeader) => cell(row, LINE_COL[h]);
     const code = get("Product Code");
@@ -95,14 +104,32 @@ export function readCostLines(grid: Grid | undefined, stages: CostStageWithHiera
       mrp: num(get("MRP")) > 0 ? num(get("MRP")) : null,
       line_total: 0,
     };
-    if (!v) {
-      const path = [get("Type"), get("Category"), get("Subcategory"), get("Variety")].filter(Boolean).join(" › ");
-      warnings.push(`${code}: ${path} isn't on the Rates page, so its typed rate ₹${line.rate} is used.`);
+    const path = [get("Type"), get("Category"), get("Subcategory"), get("Variety")].filter(Boolean).join(" › ");
+    if (!v) warnings.push(`${code}: ${path} isn't on the Rates page, so its typed rate ₹${line.rate} is used.`);
+    // Untouched rows still show the Rates value, so only a different one is an edit.
+    const typed = get("Wastage %");
+    if (v && !bought && typed !== "" && round2(num(typed)) !== Number(v.default_wastage_pct)) {
+      const w = round2(num(typed));
+      const seen = wastage.get(v.id);
+      if (seen != null && seen !== w) errors.push(`Cost Lines row ${n}: ${path} has wastage ${w}% here but ${seen}% on another row; use one.`);
+      wastage.set(v.id, w);
+      labels.set(v.id, [path, Number(v.default_wastage_pct)]);
     }
     const list = lines.get(code) ?? [];
-    list.push({ ...line, ...calculateLineCost(line), sort_order: list.length + 1 });
+    list.push({ ...line, sort_order: list.length + 1 });
     lines.set(code, list);
   });
+  for (const [id, w] of wastage) {
+    const [path, was] = labels.get(id)!;
+    warnings.push(`${path}: wastage ${was}% → ${w}% on the Rates page; every product using it is repriced.`);
+  }
+  for (const list of lines.values()) {
+    list.forEach((l, i) => {
+      const w = l.cost_variety_id ? wastage.get(l.cost_variety_id) : undefined;
+      const line = w == null || l.stage_code === "bought_out" ? l : { ...l, wastage_pct: w };
+      list[i] = { ...line, ...calculateLineCost(line) };
+    });
+  }
   return lines;
 }
 
