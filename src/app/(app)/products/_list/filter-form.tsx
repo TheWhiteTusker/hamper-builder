@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Form from "next/form";
 
 /**
@@ -10,9 +11,18 @@ import Form from "next/form";
  */
 export function FilterForm({ className, children }: { className?: string; children: React.ReactNode }) {
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const form = useRef<HTMLFormElement>(null);
+  const search = useSearchParams().toString();
+
+  // The URL changed from outside the bar (the nav's "Products" link, Back):
+  // show its filters, not the old text. Never while typing in the bar.
+  useEffect(() => {
+    if (form.current && !form.current.contains(document.activeElement)) form.current.reset();
+  }, [search]);
 
   return (
     <Form
+      ref={form}
       action=""
       replace
       scroll={false}
