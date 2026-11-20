@@ -62,7 +62,7 @@ export function PrintDeck({ deck, slides }: { deck: { id: string; title: string 
         <Link href={`/presentations/${deck.id}`} className="btn-secondary">
           Back
         </Link>
-        <span className="text-sm text-[var(--color-muted)]">
+        <span className="text-sm text-(--color-muted)">
           {failed
             ? "A slide could not be drawn. An image from another website may be blocking it."
             : ready
@@ -85,7 +85,7 @@ export function PrintDeck({ deck, slides }: { deck: { id: string; title: string 
               // eslint-disable-next-line @next/next/no-img-element
               <img src={images[i]!} alt={`Slide ${i + 1}`} className="h-full w-full object-contain" />
             ) : (
-              <span className="text-sm text-[var(--color-muted)]">Slide {i + 1}…</span>
+              <span className="text-sm text-(--color-muted)">Slide {i + 1}…</span>
             )}
           </div>
         ))}

@@ -33,7 +33,7 @@ export default async function QuotePage({
       .select("*")
       .eq("quote_id", quote.id)
       .order("line_no")
-      .returns<QuoteItem[]>(),
+      .overrideTypes<QuoteItem[], { merge: false }>(),
     loadQuoteOptions(supabase),
   ]);
 
@@ -56,7 +56,7 @@ export default async function QuotePage({
       )}
 
       {!canEdit && (
-        <p className="mb-4 rounded-md border border-[var(--color-line)] bg-white px-3 py-2 text-sm text-[var(--color-muted)]">
+        <p className="mb-4 rounded-md border border-(--color-line) bg-white px-3 py-2 text-sm text-(--color-muted)">
           This quotation belongs to someone else, so it is read only for you.
         </p>
       )}

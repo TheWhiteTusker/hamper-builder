@@ -53,19 +53,19 @@ export function AddOptionDialog({
         aria-labelledby="add-modal-title"
         className="card w-full max-w-md p-5 shadow-xl transition-all scale-100"
       >
-        <div className="flex items-start justify-between border-b border-[var(--color-line)] pb-3">
+        <div className="flex items-start justify-between border-b border-(--color-line) pb-3">
           <div>
-            <h3 id="add-modal-title" className="text-base font-semibold text-[var(--color-ink)]">
+            <h3 id="add-modal-title" className="text-base font-semibold text-(--color-ink)">
               Add new option
             </h3>
-            <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+            <p className="mt-0.5 text-xs text-(--color-muted)">
               Adding to <strong>{listLabel}</strong>
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1 text-[var(--color-muted)] hover:bg-slate-100 hover:text-[var(--color-ink)] transition-colors"
+            className="rounded-full p-1 text-(--color-muted) hover:bg-slate-100 hover:text-(--color-ink) transition-colors"
             aria-label="Close dialog"
           >
             <X className="h-4 w-4" />

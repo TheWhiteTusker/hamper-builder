@@ -37,14 +37,14 @@ export function TransformPanel({ ed }: { ed: Editor }) {
   const l = ed.selected;
 
   return (
-    <section className="shrink-0 border-t border-[var(--st-line)] p-3">
+    <section className="shrink-0 border-t border-(--st-line) p-3">
       <div className={cx(panelTitle, "mb-2")}>Transform</div>
       {ed.selection.length > 1 ? (
-        <p className="text-[12px] text-[var(--st-muted)]">
+        <p className="text-[12px] text-(--st-muted)">
           {ed.selection.length} layers selected. Drag any of them to move them together, or use Align in the toolbar.
         </p>
       ) : !l ? (
-        <p className="text-[12px] text-[var(--st-muted)]">
+        <p className="text-[12px] text-(--st-muted)">
           Select a layer to see its position and size. Shift-click for a range, Ctrl-click to add one.
         </p>
       ) : (

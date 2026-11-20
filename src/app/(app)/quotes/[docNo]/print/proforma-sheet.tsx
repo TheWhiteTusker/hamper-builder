@@ -47,7 +47,7 @@ export function ProformaSheet({
   const date = quote.doc_date.split("-").reverse().join("/");
 
   return (
-    <article className="print-sheet card mx-auto max-w-[820px] p-8 text-[13px] leading-snug text-neutral-800">
+    <article className="print-sheet card mx-auto max-w-205 p-8 text-[13px] leading-snug text-neutral-800">
       <div className={`border ${line}`}>
         {/* ---------------- logo + title ---------------- */}
         <header className={`flex items-end justify-between border-b ${line}`}>

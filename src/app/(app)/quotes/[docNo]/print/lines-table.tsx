@@ -27,7 +27,7 @@ export function LinesTable({
       <TableBody>
         {lines.map((line, index) => (
           <TableRow key={line.id} className="avoid-break align-top">
-            <TableCell className="text-[var(--color-muted)]">{index + 1}</TableCell>
+            <TableCell className="text-(--color-muted)">{index + 1}</TableCell>
             <TableCell>
               <div className="font-medium">{line.hamper_name}</div>
               <HamperContents
@@ -41,7 +41,7 @@ export function LinesTable({
             <TableCell className="num">
               {formatMoney(line.final_rate)}
               {Number(line.discount_pct) > 0 && (
-                <div className="text-xs text-[var(--color-muted)] line-through">{formatMoney(line.catalogue_price)}</div>
+                <div className="text-xs text-(--color-muted) line-through">{formatMoney(line.catalogue_price)}</div>
               )}
             </TableCell>
             <TableCell className="num font-medium">{formatMoney(line.amount)}</TableCell>

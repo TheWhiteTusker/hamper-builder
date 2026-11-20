@@ -15,13 +15,13 @@ export default async function Dashboard() {
       .select("*")
       .order("updated_at", { ascending: false })
       .limit(6)
-      .returns<HamperSummary[]>(),
+      .overrideTypes<HamperSummary[], { merge: false }>(),
     supabase
       .from("quote_summary")
       .select("*")
       .order("updated_at", { ascending: false })
       .limit(6)
-      .returns<QuoteSummary[]>(),
+      .overrideTypes<QuoteSummary[], { merge: false }>(),
     supabase.from("products").select("id", { count: "exact", head: true }).eq("is_active", true).is("deleted_at", null),
     supabase
       .from("quotes")
@@ -78,14 +78,14 @@ export default async function Dashboard() {
           {!!followUps.data?.length && (
             <section className="card mt-6 p-4">
               <h2 className="text-sm font-semibold">Follow-ups due</h2>
-              <ul className="mt-2 divide-y divide-[var(--color-line)]">
+              <ul className="mt-2 divide-y divide-(--color-line)">
                 {followUps.data.map((q) => (
                   <li key={q.doc_no} className="flex items-center justify-between py-2 text-sm">
                     <Link href={`/quotes/${q.doc_no}`} className="hover:underline">
                       <span className="font-mono">{q.doc_no}</span>
-                      <span className="ml-2 text-[var(--color-muted)]">{q.client_name}</span>
+                      <span className="ml-2 text-(--color-muted)">{q.client_name}</span>
                     </Link>
-                    <span className="text-[var(--color-muted)]">{q.follow_up_date}</span>
+                    <span className="text-(--color-muted)">{q.follow_up_date}</span>
                   </li>
                 ))}
               </ul>
@@ -105,14 +105,14 @@ export default async function Dashboard() {
 function RecentHampers({ rows }: { rows: HamperSummary[] }) {
   return (
     <section className="card overflow-hidden">
-      <div className="flex items-center justify-between border-b border-[var(--color-line)] px-4 py-2.5">
+      <div className="flex items-center justify-between border-b border-(--color-line) px-4 py-2.5">
         <h2 className="text-sm font-semibold">Recent hampers</h2>
-        <Link href="/hampers" className="text-sm text-[var(--color-brand)] hover:underline">
+        <Link href="/hampers" className="text-sm text-(--color-brand) hover:underline">
           View all
         </Link>
       </div>
       {rows.length === 0 ? (
-        <p className="px-4 py-6 text-sm text-[var(--color-muted)]">No hampers yet.</p>
+        <p className="px-4 py-6 text-sm text-(--color-muted)">No hampers yet.</p>
       ) : (
         <Table>
           <TableHeader>
@@ -146,14 +146,14 @@ function RecentHampers({ rows }: { rows: HamperSummary[] }) {
 function RecentQuotes({ rows }: { rows: QuoteSummary[] }) {
   return (
     <section className="card overflow-hidden">
-      <div className="flex items-center justify-between border-b border-[var(--color-line)] px-4 py-2.5">
+      <div className="flex items-center justify-between border-b border-(--color-line) px-4 py-2.5">
         <h2 className="text-sm font-semibold">Recent quotes</h2>
-        <Link href="/quotes" className="text-sm text-[var(--color-brand)] hover:underline">
+        <Link href="/quotes" className="text-sm text-(--color-brand) hover:underline">
           View all
         </Link>
       </div>
       {rows.length === 0 ? (
-        <p className="px-4 py-6 text-sm text-[var(--color-muted)]">No quotations yet.</p>
+        <p className="px-4 py-6 text-sm text-(--color-muted)">No quotations yet.</p>
       ) : (
         <Table>
           <TableHeader>

@@ -32,7 +32,7 @@ function TextEditor({ layer: t, view, doc }: { layer: TextLayer; view: StageView
       onChange={(e) => doc.tweak(t.id, { text: e.target.value })}
       onBlur={() => doc.setEditingId(null)}
       onKeyDown={(e) => e.key === "Escape" && e.currentTarget.blur()}
-      className="absolute resize-none overflow-hidden border-0 bg-transparent p-0 outline outline-2 outline-[var(--st-accent)]"
+      className="absolute resize-none overflow-hidden border-0 bg-transparent p-0 outline outline-2 outline-(--st-accent)"
       style={{
         left: ox + t.x * zoom,
         top: oy + t.y * zoom,
@@ -101,7 +101,7 @@ function PageResizeHandles({ view, doc }: { view: StageView; doc: CanvasDoc }) {
           title="Drag to resize the page (Shift on the corner keeps proportions)"
           onPointerDown={(e) => start(e, edge)}
           className={cx(
-            "absolute z-10 -translate-x-1/2 -translate-y-1/2 border-2 border-[var(--st-accent)] bg-[var(--st-panel)] shadow-sm hover:bg-[var(--st-gold)]",
+            "absolute z-10 -translate-x-1/2 -translate-y-1/2 border-2 border-(--st-accent) bg-(--st-panel) shadow-sm hover:bg-(--st-gold)",
             edge === "se" && "h-4 w-4 cursor-nwse-resize rounded-full",
             edge === "e" && "h-9 w-2.5 cursor-ew-resize rounded-full",
             edge === "s" && "h-2.5 w-9 cursor-ns-resize rounded-full",
@@ -114,7 +114,7 @@ function PageResizeHandles({ view, doc }: { view: StageView; doc: CanvasDoc }) {
       ))}
       {resizing && (
         <div
-          className="pointer-events-none absolute z-10 rounded-md bg-[var(--st-accent-strong)] px-2 py-1 text-[12px] tabular-nums text-[var(--st-on-accent)] shadow"
+          className="pointer-events-none absolute z-10 rounded-md bg-(--st-accent-strong) px-2 py-1 text-[12px] tabular-nums text-(--st-on-accent) shadow"
           style={{ left: ox + W * zoom + 14, top: oy + H * zoom + 14 }}
         >
           {W} × {H} px
@@ -145,13 +145,13 @@ export function BoardOverlays({
 
       {marquee && (
         <div
-          className="pointer-events-none absolute rounded-sm border border-[var(--st-accent)] bg-[var(--st-accent-soft)]"
+          className="pointer-events-none absolute rounded-sm border border-(--st-accent) bg-(--st-accent-soft)"
           style={{ left: marquee.x, top: marquee.y, width: marquee.width, height: marquee.height }}
         />
       )}
 
       {swapping && (
-        <div className="pointer-events-none absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-[var(--st-accent)] px-4 py-1.5 text-[12px] font-medium text-[var(--st-on-accent)] shadow-lg">
+        <div className="pointer-events-none absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-(--st-accent) px-4 py-1.5 text-[12px] font-medium text-(--st-on-accent) shadow-lg">
           Choose a new image from the Products panel
         </div>
       )}
@@ -161,7 +161,7 @@ export function BoardOverlays({
           role="status"
           className={cx(
             "absolute bottom-4 left-1/2 max-w-md -translate-x-1/2 rounded-lg px-4 py-2.5 text-[13px] shadow-2xl",
-            toast.kind === "error" ? "bg-red-700 text-white" : "bg-[var(--st-accent-strong)] text-[var(--st-on-accent)]",
+            toast.kind === "error" ? "bg-red-700 text-white" : "bg-(--st-accent-strong) text-(--st-on-accent)",
           )}
         >
           {toast.text}

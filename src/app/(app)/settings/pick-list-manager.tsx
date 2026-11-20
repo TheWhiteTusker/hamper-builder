@@ -96,7 +96,7 @@ export function PickListManager({ settings }: { settings: Settings }) {
               <span>Add new</span>
             </button>
           </div>
-          {activeConfig.hint && <p className="mt-1 text-xs text-[var(--color-muted)]">{activeConfig.hint}</p>}
+          {activeConfig.hint && <p className="mt-1 text-xs text-(--color-muted)">{activeConfig.hint}</p>}
         </div>
       </div>
 

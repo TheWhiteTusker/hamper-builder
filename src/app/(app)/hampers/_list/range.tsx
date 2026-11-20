@@ -20,7 +20,7 @@ export function Range({
         placeholder="min"
         className="input input-num"
       />
-      <span className="text-[var(--color-muted)]">–</span>
+      <span className="text-(--color-muted)">–</span>
       <input
         name={`${name}_max`}
         aria-label={`Maximum ${label}`}

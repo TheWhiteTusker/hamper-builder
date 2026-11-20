@@ -54,7 +54,7 @@ export function AddSlides({
           <button type="button" className="btn-primary" disabled={layingOut || !toAdd.length} onClick={addItems}>
             {layingOut ? "Laying out slides…" : `Add ${toAdd.length} slide${toAdd.length === 1 ? "" : "s"}`}
           </button>
-          <p className="text-xs text-[var(--color-muted)]">New slides go before the ending slide. They are saved when you click Save changes.</p>
+          <p className="text-xs text-(--color-muted)">New slides go before the ending slide. They are saved when you click Save changes.</p>
         </>
       )}
     </section>

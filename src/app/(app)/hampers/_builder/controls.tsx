@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown, X } from "lucide-react";
 
@@ -98,7 +98,6 @@ export function Combo({
   const [search, setSearch] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [mounted, setMounted] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number; width: number; transform: string }>({
     top: 0,
     left: 0,
@@ -106,24 +105,16 @@ export function Combo({
     transform: "none",
   });
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Synchronize search with value whenever value prop changes and user is not actively typing
-  useEffect(() => {
-    if (!isTyping) {
-      setSearch(value);
-    }
-  }, [value, isTyping]);
+  // What the box searches: the typed text while typing, otherwise the picked value.
+  const query = isTyping ? search : value;
 
   // When actively typing: search across allOptions (or options)
   // When not typing: show options (e.g. current category options)
   const filteredOptions = useMemo(() => {
-    if (!isTyping || !search.trim()) {
+    if (!isTyping || !query.trim()) {
       return options;
     }
-    const q = search.trim().toLowerCase();
+    const q = query.trim().toLowerCase();
     const source = allOptions && allOptions.length > 0 ? allOptions : options;
 
     const inCurrent: string[] = [];
@@ -141,7 +132,7 @@ export function Combo({
     }
 
     return [...inCurrent, ...inOther];
-  }, [options, allOptions, isTyping, search]);
+  }, [options, allOptions, isTyping, query]);
 
   const updatePosition = useCallback(() => {
     if (!inputRef.current) return;
@@ -161,19 +152,15 @@ export function Combo({
     });
   }, []);
 
-  // Set highlighted index when dropdown opens or filtered options change
-  useEffect(() => {
-    if (!isOpen) {
-      setHighlightedIndex(-1);
-      return;
-    }
-    if (!isTyping && value) {
-      const idx = filteredOptions.indexOf(value);
-      setHighlightedIndex(idx >= 0 ? idx : 0);
-    } else {
-      setHighlightedIndex(filteredOptions.length > 0 ? 0 : -1);
-    }
-  }, [isOpen, isTyping, value, filteredOptions]);
+  // Re-pick the highlighted row when the menu opens or its options change
+  // (during render, not in an effect, so there's no extra paint).
+  const highlightDeps = [isOpen, isTyping, value, filteredOptions] as const;
+  const [seenDeps, setSeenDeps] = useState(highlightDeps);
+  if (highlightDeps.some((d, i) => d !== seenDeps[i])) {
+    setSeenDeps(highlightDeps);
+    const idx = !isOpen ? -1 : !isTyping && value ? filteredOptions.indexOf(value) : -1;
+    setHighlightedIndex(!isOpen ? -1 : idx >= 0 ? idx : filteredOptions.length > 0 ? 0 : -1);
+  }
 
   // Scroll active item into view
   useEffect(() => {
@@ -330,7 +317,7 @@ export function Combo({
     return <span className="truncate pr-1">{opt}</span>;
   };
 
-  const displayValue = isOpen && isTyping ? search : value;
+  const displayValue = isOpen && isTyping ? query : value;
 
   return (
     <div ref={containerRef} className="relative w-full min-w-0">
@@ -348,7 +335,7 @@ export function Combo({
         onKeyDown={handleKeyDown}
       />
       <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-        {(value || (isOpen && search)) && !disabled && (
+        {(value || (isOpen && query)) && !disabled && (
           <button
             type="button"
             title={`Clear ${label}`}
@@ -374,8 +361,7 @@ export function Combo({
         </button>
       </div>
 
-      {mounted &&
-        isOpen &&
+      {isOpen &&
         createPortal(
           <div
             ref={dropdownRef}

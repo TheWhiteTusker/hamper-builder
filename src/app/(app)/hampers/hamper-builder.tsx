@@ -91,10 +91,10 @@ export function HamperBuilder({
         <HamperPricingStrip f={f} set={set} totals={totals} canEdit={canEdit} />
 
         <section className="card overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[var(--color-line)] px-4 py-2.5">
+          <div className="flex items-center justify-between border-b border-(--color-line) px-4 py-2.5">
             <h2 className="text-sm font-semibold">
               Products
-              <span className="ml-2 font-normal text-[var(--color-muted)]">
+              <span className="ml-2 font-normal text-(--color-muted)">
                 {filled} line{filled === 1 ? "" : "s"}
               </span>
             </h2>
@@ -106,19 +106,19 @@ export function HamperBuilder({
           </div>
 
           <div className="overflow-x-auto">
-            <Table className="min-w-[1060px]">
+            <Table className="min-w-265">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[170px]">Category</TableHead>
-                  <TableHead className="w-[280px]">Product</TableHead>
-                  <TableHead className="w-[110px]">Code</TableHead>
-                  <TableHead className="w-[80px] num">Qty</TableHead>
-                  <TableHead className="w-[110px] num">Unit cost</TableHead>
-                  <TableHead className="w-[110px] num">Total cost</TableHead>
-                  <TableHead className="w-[90px] num">Margin %</TableHead>
-                  <TableHead className="w-[110px] num">Unit price</TableHead>
-                  <TableHead className="w-[110px] num">Total price</TableHead>
-                  {canEdit && <TableHead className="w-[90px]"></TableHead>}
+                  <TableHead className="w-42.5">Category</TableHead>
+                  <TableHead className="w-70">Product</TableHead>
+                  <TableHead className="w-27.5">Code</TableHead>
+                  <TableHead className="w-20 num">Qty</TableHead>
+                  <TableHead className="w-27.5 num">Unit cost</TableHead>
+                  <TableHead className="w-27.5 num">Total cost</TableHead>
+                  <TableHead className="w-22.5 num">Margin %</TableHead>
+                  <TableHead className="w-27.5 num">Unit price</TableHead>
+                  <TableHead className="w-27.5 num">Total price</TableHead>
+                  {canEdit && <TableHead className="w-22.5"></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>

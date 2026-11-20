@@ -10,11 +10,11 @@ function CustomSize({ width, height, onApply }: { width: number; height: number;
   const [h, setH] = useState(String(height));
   const valid = (v: string) => /^\d+$/.test(v.trim()) && Number(v) >= 100 && Number(v) <= 8000;
   const ok = valid(w) && valid(h);
-  const box = cx(fieldCls, "w-[72px] text-right tabular-nums");
+  const box = cx(fieldCls, "w-18 text-right tabular-nums");
 
   return (
     <form
-      className="mb-1 border-b border-[var(--st-line)] px-2 pb-3"
+      className="mb-1 border-b border-(--st-line) px-2 pb-3"
       onSubmit={(e) => {
         e.preventDefault();
         if (ok) onApply(Number(w), Number(h));
@@ -23,14 +23,14 @@ function CustomSize({ width, height, onApply }: { width: number; height: number;
       <div className={cx(panelTitle, "mb-1.5")}>Custom size</div>
       <div className="flex items-center gap-1.5">
         <input aria-label="Page width in pixels" inputMode="numeric" className={box} value={w} onChange={(e) => setW(e.target.value)} />
-        <span className="text-[var(--st-muted)]">×</span>
+        <span className="text-(--st-muted)">×</span>
         <input aria-label="Page height in pixels" inputMode="numeric" className={box} value={h} onChange={(e) => setH(e.target.value)} />
-        <span className="text-[11px] text-[var(--st-muted)]">px</span>
+        <span className="text-[11px] text-(--st-muted)">px</span>
         <button type="submit" className={cx(accentBtn, "ml-auto px-2.5")} disabled={!ok}>
           Apply
         </button>
       </div>
-      <p className="mt-1.5 text-[11px] leading-snug text-[var(--st-muted)]">
+      <p className="mt-1.5 text-[11px] leading-snug text-(--st-muted)">
         100–8000 px. You can also drag the handles on the page&apos;s right and bottom edges.
       </p>
     </form>
@@ -57,12 +57,12 @@ export function ResizeMenu({
           type="button"
           onClick={() => onResize(p.width, p.height)}
           className={cx(
-            "flex w-full items-center justify-between rounded px-2 py-1.5 hover:bg-[var(--st-hover)]",
-            p.width === width && p.height === height && "text-[var(--st-accent)]",
+            "flex w-full items-center justify-between rounded px-2 py-1.5 hover:bg-(--st-hover)",
+            p.width === width && p.height === height && "text-(--st-accent)",
           )}
         >
           {p.label}
-          <span className="text-[11px] tabular-nums text-[var(--st-muted)]">
+          <span className="text-[11px] tabular-nums text-(--st-muted)">
             {p.width}×{p.height}
           </span>
         </button>

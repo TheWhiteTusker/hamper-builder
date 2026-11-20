@@ -37,7 +37,7 @@ export default async function RefreshPricesPage({ searchParams }: { searchParams
         subtitle="Re-reads saved hampers against the current Product Master"
       />
 
-      <p className="card mb-4 p-4 text-sm text-[var(--color-muted)]">
+      <p className="card mb-4 p-4 text-sm text-(--color-muted)">
         Saved hampers keep their own copy of each product&rsquo;s cost and price, so changing
         the Product Master never moves them on its own. This is where you pull those copies
         up to date. Final catalogue prices are left exactly as approved, and quotations are
@@ -59,7 +59,7 @@ export default async function RefreshPricesPage({ searchParams }: { searchParams
       {changed.length === 0 && missing.length === 0 ? (
         <div className="card p-8 text-center">
           <p className="font-medium">Everything is already up to date.</p>
-          <p className="mt-1 text-sm text-[var(--color-muted)]">
+          <p className="mt-1 text-sm text-(--color-muted)">
             No saved hamper differs from the Product Master.
           </p>
         </div>
@@ -77,7 +77,7 @@ export default async function RefreshPricesPage({ searchParams }: { searchParams
           </div>
 
           <div className="card overflow-x-auto">
-            <Table className="min-w-[900px]">
+            <Table className="min-w-225">
               <TableHeader>
                 <TableRow>
                   <TableHead>Hamper</TableHead>
@@ -94,18 +94,18 @@ export default async function RefreshPricesPage({ searchParams }: { searchParams
                 {diffs.map((d) => (
                   <TableRow key={`${d.hamper_code}-${d.line_no}`}>
                     <TableCell className="font-mono whitespace-nowrap">{d.hamper_code}</TableCell>
-                    <TableCell className="text-[var(--color-muted)]">{d.line_no}</TableCell>
+                    <TableCell className="text-(--color-muted)">{d.line_no}</TableCell>
                     <TableCell>
                       {d.product_name}
-                      <span className="ml-2 font-mono text-xs text-[var(--color-muted)]">
+                      <span className="ml-2 font-mono text-xs text-(--color-muted)">
                         {d.product_code}
                       </span>
                     </TableCell>
-                    <TableCell className="num text-[var(--color-muted)]">{formatMoney(d.old_cp)}</TableCell>
+                    <TableCell className="num text-(--color-muted)">{formatMoney(d.old_cp)}</TableCell>
                     <TableCell className="num font-medium">
                       {d.note === "missing" ? "—" : formatMoney(d.new_cp)}
                     </TableCell>
-                    <TableCell className="num text-[var(--color-muted)]">{formatMoney(d.old_sp)}</TableCell>
+                    <TableCell className="num text-(--color-muted)">{formatMoney(d.old_sp)}</TableCell>
                     <TableCell className="num font-medium">
                       {d.note === "missing" ? "—" : formatMoney(d.new_sp)}
                     </TableCell>

@@ -31,7 +31,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
   if (type) query = query.eq("doc_type", type);
 
   const [{ data: quotes, count }, settings] = await Promise.all([
-    query.range(0, limit - 1).returns<QuoteSummary[]>(),
+    query.range(0, limit - 1).overrideTypes<QuoteSummary[], { merge: false }>(),
     loadSettings(supabase),
   ]);
 
@@ -50,7 +50,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
       </PageHeader>
 
       <form key={[q, type, status].join("|")} className="card mb-4 flex flex-wrap items-end gap-3 p-3">
-        <div className="min-w-[220px] flex-1">
+        <div className="min-w-55 flex-1">
           <label className="label" htmlFor="q">
             Search
           </label>
@@ -63,7 +63,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
           />
         </div>
 
-        <div className="min-w-[150px]">
+        <div className="min-w-37.5">
           <label className="label" htmlFor="type">
             Type
           </label>
@@ -74,7 +74,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
           </select>
         </div>
 
-        <div className="min-w-[150px]">
+        <div className="min-w-37.5">
           <label className="label" htmlFor="status">
             Status
           </label>
@@ -102,7 +102,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
         />
       ) : (
         <div className="card overflow-x-auto">
-          <Table className="min-w-[1050px]">
+          <Table className="min-w-262.5">
             <TableHeader>
               <TableRow>
                 <TableHead>Document</TableHead>
@@ -128,22 +128,22 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
                       {quote.doc_no}
                     </Link>
                     {quote.linked_doc_no && (
-                      <div className="text-xs text-[var(--color-muted)]">
+                      <div className="text-xs text-(--color-muted)">
                         from {quote.linked_doc_no}
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap text-[var(--color-muted)]">
+                  <TableCell className="whitespace-nowrap text-(--color-muted)">
                     {DOC_LABEL[quote.doc_type]}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">{quote.doc_date}</TableCell>
                   <TableCell>{quote.client_name}</TableCell>
-                  <TableCell className="text-[var(--color-muted)]">{quote.occasion ?? "—"}</TableCell>
+                  <TableCell className="text-(--color-muted)">{quote.occasion ?? "—"}</TableCell>
                   <TableCell className="num">{quote.line_count}</TableCell>
                   <TableCell className="num">{quote.total_qty}</TableCell>
                   <TableCell className="num">
                     {quote.grand_total == null ? (
-                      <span className="text-[var(--color-muted)]" title="Option based quotation">
+                      <span className="text-(--color-muted)" title="Option based quotation">
                         by option
                       </span>
                     ) : (
@@ -153,7 +153,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
                   <TableCell>
                     <span className="badge">{quote.status}</span>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap text-[var(--color-muted)]">
+                  <TableCell className="whitespace-nowrap text-(--color-muted)">
                     {quote.follow_up_date ?? "—"}
                   </TableCell>
                 </TableRow>

@@ -10,7 +10,7 @@ import { useImageActions } from "./product-images/use-image-actions";
 
 const tabClass = (active: boolean) =>
   `rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
-    active ? "bg-[var(--color-brand)] text-white shadow-xs" : "text-[var(--color-muted)] hover:bg-slate-100"
+    active ? "bg-(--color-brand) text-white shadow-xs" : "text-(--color-muted) hover:bg-slate-100"
   }`;
 
 const isOfColor = (img: ProductImage, col: ProductColor) =>
@@ -62,10 +62,10 @@ function Manager({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-(--color-border) pb-3">
         <div>
-          <h3 className="text-sm font-bold text-[var(--color-ink)]">Product Images & Color Variations</h3>
-          <p className="text-xs text-[var(--color-muted)] mt-0.5">
+          <h3 className="text-sm font-bold text-(--color-ink)">Product Images & Color Variations</h3>
+          <p className="text-xs text-(--color-muted) mt-0.5">
             {canUpload
               ? "Pick a color tab, then upload its photos. Multiple images supported per color."
               : "Set the cover, change a photo's color or remove it. Add photos in the color rows above."}
@@ -75,7 +75,7 @@ function Manager({
           <button
             type="button"
             onClick={() => setShowUrlInput(!showUrlInput)}
-            className="text-xs text-[var(--color-brand)] hover:underline font-medium"
+            className="text-xs text-(--color-brand) hover:underline font-medium"
           >
             {showUrlInput ? "Hide URL Option" : "+ Add via URL"}
           </button>
@@ -139,7 +139,7 @@ function Manager({
       )}
 
       {filteredImages.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-slate-200 p-8 text-center text-xs text-[var(--color-muted)]">
+        <div className="rounded-lg border border-dashed border-slate-200 p-8 text-center text-xs text-(--color-muted)">
           No images uploaded for {activeTab === "all" ? "this product" : `${activeTab} finish`} yet.
         </div>
       ) : (

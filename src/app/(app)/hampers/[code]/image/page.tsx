@@ -27,7 +27,7 @@ export default async function HamperImagePage({
       .from("hamper_items")
       .select("product_id")
       .eq("hamper_id", hamper.id)
-      .returns<{ product_id: string | null }[]>(),
+      .overrideTypes<{ product_id: string | null }[], { merge: false }>(),
     loadCatalog(supabase),
   ]);
 

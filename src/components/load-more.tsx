@@ -41,7 +41,7 @@ export function LoadMore({ shown, total }: { shown: number; total: number }) {
   if (!more) return null;
 
   return (
-    <div ref={ref} className="py-4 text-center text-sm text-[var(--color-muted)]">
+    <div ref={ref} className="py-4 text-center text-sm text-(--color-muted)">
       Loading more…
     </div>
   );

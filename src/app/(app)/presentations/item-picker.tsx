@@ -78,25 +78,25 @@ export function ItemPicker({
           />
         </div>
 
-        <ul className="max-h-[480px] divide-y divide-[var(--color-line)] overflow-y-auto">
-          {list.length === 0 && <li className="py-8 text-center text-sm text-[var(--color-muted)]">Nothing matches.</li>}
+        <ul className="max-h-120 divide-y divide-(--color-line) overflow-y-auto">
+          {list.length === 0 && <li className="py-8 text-center text-sm text-(--color-muted)">Nothing matches.</li>}
           {list.map((i) => {
             const on = picked.has(`${i.type}:${i.id}`);
             return (
               <li key={i.id}>
-                <label className="flex cursor-pointer items-center gap-3 px-2 py-2 hover:bg-[var(--color-paper)]">
-                  <input type="checkbox" checked={on} onChange={() => toggle(i)} className="h-4 w-4 accent-[var(--color-brand)]" />
+                <label className="flex cursor-pointer items-center gap-3 px-2 py-2 hover:bg-paper">
+                  <input type="checkbox" checked={on} onChange={() => toggle(i)} className="h-4 w-4 accent-(--color-brand)" />
                   {i.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img {...thumbProps(i.image_url)} alt="" loading="lazy" className="h-10 w-10 rounded-md border border-[var(--color-line)] object-cover" />
+                    <img {...thumbProps(i.image_url)} alt="" loading="lazy" className="h-10 w-10 rounded-md border border-(--color-line) object-cover" />
                   ) : (
-                    <span className="h-10 w-10 rounded-md border border-dashed border-[var(--color-line)] bg-[var(--color-paper)]" />
+                    <span className="h-10 w-10 rounded-md border border-dashed border-(--color-line) bg-paper" />
                   )}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{i.name}</span>
-                    <span className="font-mono text-xs text-[var(--color-muted)]">{i.code}</span>
+                    <span className="font-mono text-xs text-(--color-muted)">{i.code}</span>
                   </span>
-                  <span className="text-sm tabular-nums text-[var(--color-muted)]">
+                  <span className="text-sm tabular-nums text-(--color-muted)">
                     {i.price == null ? "—" : formatMoney(i.price)}
                   </span>
                 </label>
@@ -109,14 +109,14 @@ export function ItemPicker({
       <div className="card self-start p-3">
         <div className="label mb-2">Slide order ({value.length})</div>
         {value.length === 0 ? (
-          <p className="py-6 text-center text-sm text-[var(--color-muted)]">Tick hampers or products to add their slides.</p>
+          <p className="py-6 text-center text-sm text-(--color-muted)">Tick hampers or products to add their slides.</p>
         ) : (
           <ol className="space-y-1">
             {value.map((v, index) => {
               const item = byKey.get(`${v.type}:${v.id}`);
               return (
-                <li key={`${v.type}:${v.id}`} className="flex items-center gap-2 rounded-md bg-[var(--color-paper)] px-2 py-1.5 text-sm">
-                  <span className="w-5 text-right tabular-nums text-[var(--color-muted)]">{index + 1}</span>
+                <li key={`${v.type}:${v.id}`} className="flex items-center gap-2 rounded-md bg-paper px-2 py-1.5 text-sm">
+                  <span className="w-5 text-right tabular-nums text-(--color-muted)">{index + 1}</span>
                   <span className="min-w-0 flex-1 truncate">{item?.name ?? "Unknown"}</span>
                   <span className="badge">{v.type}</span>
                   <button type="button" aria-label="Move up" className="px-1 disabled:opacity-30" disabled={index === 0} onClick={() => move(index, -1)}>

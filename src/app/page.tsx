@@ -10,9 +10,9 @@ export default async function LandingPage() {
   const { isLoggedIn, col1, col2, col4, col5 } = await getLandingData();
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[var(--color-paper)] text-[var(--color-ink)] flex flex-col select-none">
+    <div className="relative h-screen w-screen overflow-hidden bg-paper text-(--color-ink) flex flex-col select-none">
       {/* Top Glassmorphic Navigation Bar */}
-      <header className="z-30 shrink-0 border-b border-[var(--color-line)]/80 bg-[var(--color-paper)]/90 backdrop-blur-md px-6 py-3.5 flex items-center justify-between">
+      <header className="z-30 shrink-0 border-b border-(--color-line)/80 bg-paper/90 backdrop-blur-md px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2 group focus:outline-none">
             <Image
@@ -24,7 +24,7 @@ export default async function LandingPage() {
               className="h-6 sm:h-7 w-auto object-contain transition-opacity group-hover:opacity-85"
             />
           </Link>
-          <span className="hidden sm:inline-block text-[11px] uppercase tracking-widest text-[var(--color-muted)] font-semibold border-l border-[var(--color-line)] pl-3">
+          <span className="hidden sm:inline-block text-[11px] uppercase tracking-widest text-(--color-muted) font-semibold border-l border-(--color-line) pl-3">
             House of Gifting
           </span>
         </div>
@@ -61,8 +61,8 @@ export default async function LandingPage() {
         {/* Hardware-accelerated top and bottom edge fade overlays.
             Using static gradient overlays instead of CSS mask-image prevents continuous GPU repaints
             and makes the infinite vertical marquee silky smooth at 60fps/120fps. */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[var(--color-paper)] via-[var(--color-paper)]/85 to-transparent z-20" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--color-paper)] via-[var(--color-paper)]/85 to-transparent z-20" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b from-paper via-paper/85 to-transparent z-20" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-paper via-paper/85 to-transparent z-20" />
 
         {/* 5 Vertical Layout Container */}
         <div className="relative w-full h-full flex items-stretch justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-5">
@@ -85,7 +85,7 @@ export default async function LandingPage() {
           </div>
 
           {/* Column 3 (Center Hero - Wider / Elevated) */}
-          <div className="flex-[1.4] sm:flex-[1.3] md:flex-[1.35] lg:flex-[1.25] min-w-[290px] max-w-[480px] h-full flex flex-col justify-center items-center z-20 px-1 py-2">
+          <div className="flex-[1.4] sm:flex-[1.3] md:flex-[1.35] lg:flex-[1.25] min-w-72.5 max-w-120 h-full flex flex-col justify-center items-center z-20 px-1 py-2">
             <HeroCard isLoggedIn={isLoggedIn} />
           </div>
 

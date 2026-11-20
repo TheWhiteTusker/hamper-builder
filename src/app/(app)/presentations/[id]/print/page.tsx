@@ -14,7 +14,7 @@ export default async function PrintPresentationPage({ params }: { params: Promis
       .select("id, canvas")
       .eq("presentation_id", id)
       .order("position")
-      .returns<{ id: string; canvas: unknown }[]>(),
+      .overrideTypes<{ id: string; canvas: unknown }[], { merge: false }>(),
   ]);
   if (!deck) redirect("/presentations"); // deleted, or a stale link
 

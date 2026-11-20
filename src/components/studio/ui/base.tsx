@@ -5,16 +5,16 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
 export const toolBtn =
-  "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md px-2 text-[13px] text-[var(--st-text)] " +
-  "transition-colors hover:bg-[var(--st-hover)] disabled:pointer-events-none disabled:opacity-35";
-export const toolBtnActive = "bg-[var(--st-accent-soft)] text-[var(--st-accent-strong)] hover:bg-[var(--st-accent-soft)]";
+  "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md px-2 text-[13px] text-(--st-text) " +
+  "transition-colors hover:bg-(--st-hover) disabled:pointer-events-none disabled:opacity-35";
+export const toolBtnActive = "bg-(--st-accent-soft) text-(--st-accent-strong) hover:bg-(--st-accent-soft)";
 export const fieldCls =
-  "h-8 rounded-md border border-[var(--st-line)] bg-[var(--st-panel-2)] px-2 text-[13px] text-[var(--st-text)] " +
-  "outline-none focus:border-[var(--st-accent)]";
+  "h-8 rounded-md border border-(--st-line) bg-(--st-panel-2) px-2 text-[13px] text-(--st-text) " +
+  "outline-none focus:border-(--st-accent)";
 export const accentBtn =
-  "inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-[var(--st-accent)] px-3 text-[13px] font-medium " +
-  "text-[var(--st-on-accent)] hover:bg-[var(--st-accent-strong)] disabled:opacity-50";
-export const panelTitle = "text-[11px] font-semibold uppercase tracking-wider text-[var(--st-muted)]";
+  "inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-(--st-accent) px-3 text-[13px] font-medium " +
+  "text-(--st-on-accent) hover:bg-(--st-accent-strong) disabled:opacity-50";
+export const panelTitle = "text-[11px] font-semibold uppercase tracking-wider text-(--st-muted)";
 
 export function ToolButton({
   title,
@@ -30,7 +30,7 @@ export function ToolButton({
   );
 }
 
-export const Divider = () => <span className="mx-1 h-5 w-px shrink-0 bg-[var(--st-line)]" />;
+export const Divider = () => <span className="mx-1 h-5 w-px shrink-0 bg-(--st-line)" />;
 
 /** A toolbar button that opens a panel beneath it; closes on outside click or Escape. */
 export function Popover({
@@ -76,7 +76,7 @@ export function Popover({
         <div
           data-popover
           className={cx(
-            "absolute top-full z-50 mt-1.5 rounded-lg border border-[var(--st-line)] bg-[var(--st-panel)] p-3 shadow-xl shadow-[#2c332f]/15",
+            "absolute top-full z-50 mt-1.5 rounded-lg border border-(--st-line) bg-(--st-panel) p-3 shadow-xl shadow-[#2c332f]/15",
             align === "right" ? "right-0" : "left-0",
           )}
           style={{ width }}
@@ -108,9 +108,9 @@ export function Slider({
 }) {
   return (
     <label className="block">
-      <span className="flex justify-between text-[12px] text-[var(--st-muted)]">
+      <span className="flex justify-between text-[12px] text-(--st-muted)">
         {label}
-        <span className="tabular-nums text-[var(--st-text)]">
+        <span className="tabular-nums text-(--st-text)">
           {Number(value.toFixed(2))}
           {suffix}
         </span>

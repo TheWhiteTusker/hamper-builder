@@ -78,10 +78,10 @@ export function QuoteLines({
 
   return (
     <section className="card overflow-hidden">
-      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--color-line)] px-4 py-2.5">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-(--color-line) px-4 py-2.5">
         <div>
           <h2 className="text-sm font-semibold">Hampers & products</h2>
-          <p className="text-xs text-[var(--color-muted)]">
+          <p className="text-xs text-(--color-muted)">
             {isCombined
               ? "Combined order: the confirmed items, with one total."
               : "Option based: each option is its own set of items with its own total, for the client to choose from."}
@@ -132,7 +132,7 @@ export function QuoteLines({
             </OptionGroup>
           ))}
           {canEdit && (
-            <div className="border-t border-[var(--color-line)] px-4 py-3">
+            <div className="border-t border-(--color-line) px-4 py-3">
               <button
                 type="button"
                 className="btn-secondary"

@@ -38,11 +38,11 @@ export async function syncAllRates(): Promise<{ error?: string; message?: string
       .from("product_cost_lines")
       .select("sheet_id, cost_variety_id, rate, unit, wastage_pct, stage_code, variety_name, subcategory_name")
       .not("cost_variety_id", "is", null)
-      .returns<StoredLine[]>(),
+      .overrideTypes<StoredLine[], { merge: false }>(),
     supabase
       .from("cost_varieties")
       .select("id, name, default_rate, unit, default_wastage_pct, cost_subcategories(name)")
-      .returns<MasterVariety[]>(),
+      .overrideTypes<MasterVariety[], { merge: false }>(),
   ]);
   if (error || vError) return { error: describeError(error ?? vError) };
 

@@ -33,7 +33,7 @@ export function ProductDetailsCard({
   const { source } = details;
   return (
     <div className="card p-5">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--color-border)] pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-(--color-border) pb-4">
         <div className="flex items-center gap-3">
           {imageUrl && (
             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-xs">
@@ -41,8 +41,8 @@ export function ProductDetailsCard({
             </div>
           )}
           <div>
-            <h2 className="text-lg font-bold text-[var(--color-ink)]">Product & Costing Specification</h2>
-            <p className="text-sm text-[var(--color-muted)]">
+            <h2 className="text-lg font-bold text-(--color-ink)">Product & Costing Specification</h2>
+            <p className="text-sm text-(--color-muted)">
               {details.editing
                 ? "Each colour is its own product with its own costing. Changes here save to this colour only."
                 : "Code format CATEGORY/0001/COLOUR (e.g. LC/0001/WL). Tick several colours to create one product per colour."}
@@ -52,12 +52,12 @@ export function ProductDetailsCard({
 
         {siblings.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="font-semibold text-[var(--color-muted)]">Other colours:</span>
+            <span className="font-semibold text-(--color-muted)">Other colours:</span>
             {siblings.map((s) => (
               <Link
                 key={s.id}
                 href={costingHref(s.code)}
-                className="rounded-full bg-[var(--color-sheet)] px-2.5 py-1 font-medium hover:bg-slate-200"
+                className="rounded-full bg-(--color-sheet) px-2.5 py-1 font-medium hover:bg-slate-200"
                 title={`Edit ${s.color} (a separate product)`}
               >
                 {s.color} <span className="font-mono">{formatMoney(s.sp)}</span>
@@ -122,7 +122,7 @@ export function ProductDetailsCard({
               </option>
             ))}
           </select>
-          <p className="mt-1 text-[11px] text-[var(--color-muted)]">
+          <p className="mt-1 text-[11px] text-(--color-muted)">
             {source === "In-house"
               ? "In-house manufacturing stages and bought-out items apply."
               : source === "Outsource"
@@ -132,23 +132,23 @@ export function ProductDetailsCard({
         </div>
       </div>
 
-      <div className="mt-4 border-t border-[var(--color-border)] pt-4">
+      <div className="mt-4 border-t border-(--color-border) pt-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-xs font-semibold text-[var(--color-ink)]">
+          <span className="text-xs font-semibold text-(--color-ink)">
             {details.editing ? "Colour & photos" : "Colours to create & photos"}
           </span>
-          <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-ink)] cursor-pointer">
+          <label className="flex items-center gap-2 text-sm font-medium text-(--color-ink) cursor-pointer">
             <input
               type="checkbox"
               checked={details.isActive}
               onChange={(e) => details.setIsActive(e.target.checked)}
-              className="h-4 w-4 rounded text-[var(--color-brand)] focus:ring-[var(--color-brand)]"
+              className="h-4 w-4 rounded text-(--color-brand) focus:ring-(--color-brand)"
             />
             <span>Active in Product Master & Hamper Builder</span>
           </label>
         </div>
         {!details.selectedProductId && (
-          <p className="mt-1 text-xs text-[var(--color-muted)]">
+          <p className="mt-1 text-xs text-(--color-muted)">
             Photos you add now upload automatically when you save the product.
           </p>
         )}

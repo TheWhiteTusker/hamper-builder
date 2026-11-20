@@ -21,7 +21,7 @@ export async function CalculatorScreen({
   const { supabase } = await requireUser();
   const [stages, { data: categories }, settings, costing] = await Promise.all([
     loadCostStages(supabase),
-    supabase.from("categories").select("*").order("sort_order").returns<Category[]>(),
+    supabase.from("categories").select("*").order("sort_order").overrideTypes<Category[], { merge: false }>(),
     loadSettings(supabase),
     code ? loadProductCosting(supabase, code) : null,
   ]);

@@ -19,15 +19,15 @@ export function LayersPanel({ ed }: { ed: Editor }) {
 
   return (
     <section className="flex min-h-0 flex-1 flex-col">
-      <header className="flex h-10 shrink-0 items-center gap-2 border-b border-[var(--st-line)] px-3">
-        <Layers className="h-4 w-4 text-[var(--st-muted)]" />
+      <header className="flex h-10 shrink-0 items-center gap-2 border-b border-(--st-line) px-3">
+        <Layers className="h-4 w-4 text-(--st-muted)" />
         <span className="font-semibold">Layers</span>
-        <span className="ml-auto text-[11px] text-[var(--st-muted)]">{layers.length}</span>
+        <span className="ml-auto text-[11px] text-(--st-muted)">{layers.length}</span>
       </header>
 
       <ul className="min-h-0 flex-1 overflow-y-auto py-1" onDragLeave={() => setOverId(null)}>
         {shown.length === 0 && (
-          <li className="px-3 py-6 text-center text-[12px] text-[var(--st-muted)]">
+          <li className="px-3 py-6 text-center text-[12px] text-(--st-muted)">
             Nothing here yet. Add products, text or shapes from the left.
           </li>
         )}
@@ -71,19 +71,19 @@ export function LayersPanel({ ed }: { ed: Editor }) {
               }}
               className={cx(
                 "group mx-1 flex cursor-default items-center gap-2 rounded-md border-t-2 border-transparent px-1.5 py-1",
-                selected ? "bg-[var(--st-accent-soft)]" : "hover:bg-[var(--st-hover)]",
-                overId === l.id && dragId !== l.id && "border-t-[var(--st-accent)]",
+                selected ? "bg-(--st-accent-soft)" : "hover:bg-(--st-hover)",
+                overId === l.id && dragId !== l.id && "border-t-(--st-accent)",
                 dragId === l.id && "opacity-40",
                 !l.visible && "opacity-50",
               )}
             >
-              <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-[var(--st-muted)] opacity-0 group-hover:opacity-100" />
+              <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-(--st-muted) opacity-0 group-hover:opacity-100" />
               <Thumb l={l} />
               {renaming === l.id ? (
                 <input
                   autoFocus
                   defaultValue={layerLabel(l)}
-                  className="h-6 min-w-0 flex-1 rounded border border-[var(--st-accent)] bg-[var(--st-panel-2)] px-1 text-[12px] outline-none"
+                  className="h-6 min-w-0 flex-1 rounded border border-(--st-accent) bg-(--st-panel-2) px-1 text-[12px] outline-none"
                   onFocus={(e) => e.target.select()}
                   onBlur={(e) => {
                     ed.patch(l.id, { name: e.target.value.trim() || undefined });

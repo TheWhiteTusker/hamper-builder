@@ -46,7 +46,7 @@ export function CodeField({
         </div>
       ) : (
         <div className="mt-1 flex items-center justify-between text-xs">
-          <span className={parsedCode.isValid ? "text-emerald-700 font-medium" : "text-[var(--color-muted)]"}>
+          <span className={parsedCode.isValid ? "text-emerald-700 font-medium" : "text-(--color-muted)"}>
             {details.fetchingCode
               ? "Finding the next number…"
               : parsedCode.isValid

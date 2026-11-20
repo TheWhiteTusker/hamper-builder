@@ -43,8 +43,8 @@ export function ScrollingProductColumn({
 
 function ProductCard({ item }: { item: DisplayProduct }) {
   return (
-    <article className="shrink-0 w-full rounded-2xl bg-white p-2.5 border border-[var(--color-line)] shadow-xs transition-shadow duration-200 group cursor-default">
-      <div className="aspect-[4/3] w-full rounded-xl overflow-hidden bg-[var(--color-paper)] relative">
+    <article className="shrink-0 w-full rounded-2xl bg-white p-2.5 border border-(--color-line) shadow-xs transition-shadow duration-200 group cursor-default">
+      <div className="aspect-4/3 w-full rounded-xl overflow-hidden bg-paper relative">
         {/* eslint-disable-next-line @next/next/no-img-element -- remote catalogue and Unsplash photos */}
         <img
           src={thumbUrl(item.url)}
@@ -55,10 +55,10 @@ function ProductCard({ item }: { item: DisplayProduct }) {
         />
       </div>
       <div className="mt-2 text-left px-0.5">
-        <p className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-[var(--color-muted)] truncate">
+        <p className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-(--color-muted) truncate">
           {item.category}
         </p>
-        <h3 className="text-xs sm:text-sm font-medium text-[var(--color-ink)] truncate group-hover:text-[var(--color-brand)] transition-colors">
+        <h3 className="text-xs sm:text-sm font-medium text-(--color-ink) truncate group-hover:text-(--color-brand) transition-colors">
           {item.name}
         </h3>
       </div>

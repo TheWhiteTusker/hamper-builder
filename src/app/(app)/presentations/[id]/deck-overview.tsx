@@ -167,7 +167,7 @@ export function DeckOverview({
         </button>
       </div>
 
-      <p className="mb-3 text-sm text-[var(--color-muted)]">
+      <p className="mb-3 text-sm text-(--color-muted)">
         Add, remove and reorder slides, then click <strong>Save changes</strong>. Click a slide to edit it in the photo editor.
       </p>
 

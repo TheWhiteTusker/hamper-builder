@@ -21,7 +21,7 @@ export function ImageTools({ ed, l }: { ed: Editor; l: Extract<Layer, { kind: "i
           {(close) => (
             <div className="space-y-3">
               <Slider label="Tolerance" value={tolerance} min={5} max={120} onChange={setTolerance} />
-              <p className="text-[11.5px] leading-snug text-[var(--st-muted)]">
+              <p className="text-[11.5px] leading-snug text-(--st-muted)">
                 Works on plain backdrops. Raise it if some backdrop is left; lower it if the product gets cut. Undo brings the original back.
               </p>
               <button
@@ -53,7 +53,7 @@ export function ImageTools({ ed, l }: { ed: Editor; l: Extract<Layer, { kind: "i
               <button
                 key={axis}
                 type="button"
-                className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-[var(--st-hover)]"
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-(--st-hover)"
                 onClick={() => {
                   ed.flip(l.id, axis);
                   close();

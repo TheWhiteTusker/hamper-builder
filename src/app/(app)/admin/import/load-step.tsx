@@ -19,17 +19,17 @@ export function LoadStep({
   return (
     <section className="card p-4">
       <h2 className="text-sm font-semibold">1. Load the spreadsheet</h2>
-      <p className="mt-1 text-sm text-[var(--color-muted)]">
+      <p className="mt-1 text-sm text-(--color-muted)">
         Easiest: File → Download → Microsoft Excel (.xlsx) once, and drop the whole
         workbook here. Columns are read by position, so leave the layout exactly as it is —
         renamed headers are fine, reordered columns are not.
       </p>
 
-      <div className="mt-3 rounded-md border border-[var(--color-line)] p-3">
+      <div className="mt-3 rounded-md border border-(--color-line) p-3">
         <label className="label" htmlFor="workbook">
           Whole workbook (.xlsx)
         </label>
-        <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+        <p className="mt-0.5 text-xs text-(--color-muted)">
           Splits into the six tabs below by name
         </p>
         <input
@@ -41,11 +41,11 @@ export function LoadStep({
         />
       </div>
 
-      <div className="mt-4 rounded-md border border-[var(--color-line)] p-3">
+      <div className="mt-4 rounded-md border border-(--color-line) p-3">
         <label className="label" htmlFor="csv-many">
           Several CSV files at once
         </label>
-        <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+        <p className="mt-0.5 text-xs text-(--color-muted)">
           Select them together; each is matched to its tab by file name, e.g. “Product Master.csv”
         </p>
         <input
@@ -58,17 +58,17 @@ export function LoadStep({
         />
       </div>
 
-      <p className="mt-4 text-sm text-[var(--color-muted)]">
+      <p className="mt-4 text-sm text-(--color-muted)">
         Or load tabs one at a time, as CSV. These override anything the workbook filled in.
       </p>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {SHEETS.map((sheet) => (
-          <div key={sheet.key} className="rounded-md border border-[var(--color-line)] p-3">
+          <div key={sheet.key} className="rounded-md border border-(--color-line) p-3">
             <label className="label" htmlFor={sheet.key}>
               {sheet.label}
             </label>
-            <p className="mt-0.5 text-xs text-[var(--color-muted)]">{sheet.hint}</p>
+            <p className="mt-0.5 text-xs text-(--color-muted)">{sheet.hint}</p>
             <input
               id={sheet.key}
               type="file"

@@ -16,7 +16,7 @@ export function LoginForm() {
       className="relative min-h-screen w-full bg-[#000000] text-white flex flex-col md:flex-row items-center justify-between overflow-hidden select-none"
     >
       {/* Deep night ambient stars & ocean mist */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#080e0c_0%,_#000000_80%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,#080e0c_0%,#000000_80%)]" />
 
       {/* Tiny shimmering stars */}
       <div className="pointer-events-none absolute inset-0 opacity-40">
@@ -31,8 +31,8 @@ export function LoginForm() {
       {/* -------------------------------------------------------------
           LEFT SIDE: THE LIGHTHOUSE (LARGER & MAJESTIC)
           ------------------------------------------------------------- */}
-      <div className="relative z-20 w-full md:w-[45%] lg:w-[42%] h-[420px] md:h-screen flex flex-col justify-end items-center md:items-start pl-0 md:pl-6 lg:pl-12 pb-0 pointer-events-none">
-        <div className="relative w-[320px] sm:w-[400px] md:w-[480px] lg:w-[560px] xl:w-[620px] h-[460px] sm:h-[580px] md:h-[700px] lg:h-[800px] xl:h-[860px]">
+      <div className="relative z-20 w-full md:w-[45%] lg:w-[42%] h-105 md:h-screen flex flex-col justify-end items-center md:items-start pl-0 md:pl-6 lg:pl-12 pb-0 pointer-events-none">
+        <div className="relative w-[320px] sm:w-100 md:w-120 lg:w-140 xl:w-155 h-115 sm:h-145 md:h-175 lg:h-200 xl:h-215">
           {/* Lighthouse SVG Illustration */}
           <LighthouseSvg />
           <Beam state={lh.beamState} angle={lh.angle} isDesktop={lh.isDesktop} />
@@ -67,7 +67,7 @@ export function LoginForm() {
           {/* The Login Card inside the Circle of Light: Revealed in place by the passing light */}
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`w-full max-w-[340px] sm:max-w-[370px] p-6 sm:p-7 rounded-2xl bg-[#080b0a]/90 backdrop-blur-2xl border border-amber-200/40 shadow-[0_20px_50px_rgba(0,0,0,0.85)] text-white transition-all duration-1000 ease-out ${
+            className={`w-full max-w-85 sm:max-w-92.5 p-6 sm:p-7 rounded-2xl bg-[#080b0a]/90 backdrop-blur-2xl border border-amber-200/40 shadow-[0_20px_50px_rgba(0,0,0,0.85)] text-white transition-all duration-1000 ease-out ${
               lh.isCardRevealed
                 ? "opacity-100 brightness-100"
                 : "opacity-0 brightness-50 pointer-events-none"

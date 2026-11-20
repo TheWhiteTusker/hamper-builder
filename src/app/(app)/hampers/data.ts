@@ -33,13 +33,13 @@ export async function loadCatalog(supabase: SupabaseClient) {
       .eq("is_active", true)
       .is("deleted_at", null)
       .order("name")
-      .returns<ProductRow[]>(),
+      .overrideTypes<ProductRow[], { merge: false }>(),
     supabase
       .from("categories")
       .select("*")
       .order("sort_order")
       .order("name")
-      .returns<Category[]>(),
+      .overrideTypes<Category[], { merge: false }>(),
     loadSettings(supabase),
   ]);
 

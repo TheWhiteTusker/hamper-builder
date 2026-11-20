@@ -66,7 +66,7 @@ export function PresentationForm({ hampers, products, defaultContact }: PickerDa
             </label>
             <textarea id="note" rows={4} className="input mt-1" value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
-          <p className="text-xs text-[var(--color-muted)]">
+          <p className="text-xs text-(--color-muted)">
             Each slide shows the product photos on the green band with their names, and the price with “+ Tax”.
           </p>
         </section>

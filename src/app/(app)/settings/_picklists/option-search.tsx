@@ -27,7 +27,7 @@ export function OptionSearch({
           Search options
         </label>
         <div className="relative mt-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--color-muted)" />
           <input
             ref={inputRef}
             id="picklist-search"
@@ -50,7 +50,7 @@ export function OptionSearch({
                 onChange("");
                 inputRef.current?.focus();
               }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-[var(--color-muted)] hover:bg-slate-100 hover:text-[var(--color-ink)] transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-(--color-muted) hover:bg-slate-100 hover:text-(--color-ink) transition-colors"
               title="Clear search"
               aria-label="Clear search text"
             >
@@ -61,14 +61,14 @@ export function OptionSearch({
       </div>
 
       {q && !hasExactMatch && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--color-line)] bg-[var(--color-paper)] px-3.5 py-2 text-xs">
-          <span className="text-[var(--color-muted)]">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-(--color-line) bg-paper px-3.5 py-2 text-xs">
+          <span className="text-(--color-muted)">
             Not found in this list: <strong>&ldquo;{q}&rdquo;</strong>
           </span>
           <button
             type="button"
             onClick={() => onAdd(q)}
-            className="inline-flex items-center gap-1 font-semibold text-[var(--color-brand)] hover:underline"
+            className="inline-flex items-center gap-1 font-semibold text-(--color-brand) hover:underline"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Add &ldquo;{q}&rdquo; as new option</span>

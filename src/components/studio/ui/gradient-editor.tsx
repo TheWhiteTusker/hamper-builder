@@ -12,7 +12,7 @@ export function GradientEditor({ fill, first, onChange }: { fill: Fill; first: s
       <div className="h-8 rounded-md border border-black/10" style={{ background: fillCss(g) }} />
       <div className="flex items-center gap-2">
         {(["from", "to"] as const).map((k) => (
-          <label key={k} className="flex flex-1 items-center gap-2 text-[12px] text-[var(--st-muted)]">
+          <label key={k} className="flex flex-1 items-center gap-2 text-[12px] text-(--st-muted)">
             <span
               className="relative h-7 w-7 shrink-0 cursor-pointer rounded-md border border-black/10"
               style={{ background: g[k] }}

@@ -26,25 +26,25 @@ export function LineTable({
 }) {
   if (!lines.length) {
     return (
-      <p className="px-4 py-6 text-center text-sm text-[var(--color-muted)]">
+      <p className="px-4 py-6 text-center text-sm text-(--color-muted)">
         Nothing added yet. Add a hamper or a single product above.
       </p>
     );
   }
   return (
     <div className="overflow-x-auto">
-      <Table className="min-w-[1000px]">
+      <Table className="min-w-250">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[260px]">Item</TableHead>
-            <TableHead className="w-[80px] num">Qty</TableHead>
-            <TableHead className="w-[120px] num">Catalogue price</TableHead>
-            <TableHead className="w-[90px] num">Discount %</TableHead>
-            <TableHead className="w-[120px] num">Final rate</TableHead>
-            <TableHead className="w-[120px] num">Amount</TableHead>
-            <TableHead className="w-[150px]">Contents shown</TableHead>
-            <TableHead className="w-[190px]">Packaging</TableHead>
-            {canEdit && <TableHead className="w-[40px]"></TableHead>}
+            <TableHead className="w-65">Item</TableHead>
+            <TableHead className="w-20 num">Qty</TableHead>
+            <TableHead className="w-30 num">Catalogue price</TableHead>
+            <TableHead className="w-22.5 num">Discount %</TableHead>
+            <TableHead className="w-30 num">Final rate</TableHead>
+            <TableHead className="w-30 num">Amount</TableHead>
+            <TableHead className="w-37.5">Contents shown</TableHead>
+            <TableHead className="w-47.5">Packaging</TableHead>
+            {canEdit && <TableHead className="w-10"></TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>

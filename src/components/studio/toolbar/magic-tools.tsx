@@ -7,7 +7,7 @@ import { looksWeak } from "../stage/use-magic-layers";
 import { Popover, accentBtn, cx } from "../studio-ui";
 
 const icon = "h-4 w-4";
-const note = "text-[11.5px] leading-snug text-[var(--st-muted)]";
+const note = "text-[11.5px] leading-snug text-(--st-muted)";
 
 /** Magic layers: the on/off switch for this computer, and the button that splits the image. */
 export function MagicTools({ ed, l }: { ed: Editor; l: Extract<Layer, { kind: "image" }> }) {
@@ -27,7 +27,7 @@ export function MagicTools({ ed, l }: { ed: Editor; l: Extract<Layer, { kind: "i
               checked={ed.magicEnabled}
               disabled={!!step}
               onChange={(e) => ed.setMagicEnabled(e.target.checked)}
-              className="h-3.5 w-3.5 rounded border-[var(--st-line)] text-[var(--st-accent)] focus:ring-0"
+              className="h-3.5 w-3.5 rounded border-(--st-line) text-(--st-accent) focus:ring-0"
             />
             <span>Enable Magic layers on this computer</span>
           </label>
@@ -46,8 +46,8 @@ export function MagicTools({ ed, l }: { ed: Editor; l: Extract<Layer, { kind: "i
             <div className="space-y-1">
               <p className="text-[12px]">{step.label}…</p>
               {step.progress !== undefined && (
-                <div className="h-1.5 overflow-hidden rounded bg-[var(--st-line)]">
-                  <div className="h-full bg-[var(--st-accent)]" style={{ width: `${Math.round(step.progress * 100)}%` }} />
+                <div className="h-1.5 overflow-hidden rounded bg-(--st-line)">
+                  <div className="h-full bg-(--st-accent)" style={{ width: `${Math.round(step.progress * 100)}%` }} />
                 </div>
               )}
             </div>

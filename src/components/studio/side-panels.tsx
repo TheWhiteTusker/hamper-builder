@@ -21,18 +21,18 @@ const RAIL: { id: SideTab; label: string; Icon: typeof Package }[] = [
 
 export function Rail({ tab, onTab }: { tab: SideTab | null; onTab: (t: SideTab | null) => void }) {
   return (
-    <nav className="flex w-[72px] shrink-0 flex-col items-center gap-1 border-r border-[var(--st-line)] bg-[var(--st-panel)] py-2">
+    <nav className="flex w-18 shrink-0 flex-col items-center gap-1 border-r border-(--st-line) bg-(--st-panel) py-2">
       {RAIL.map(({ id, label, Icon }) => (
         <button
           key={id}
           type="button"
           onClick={() => onTab(tab === id ? null : id)}
           className={cx(
-            "flex w-[62px] flex-col items-center gap-1 rounded-lg py-2 text-[10.5px] transition-colors",
-            tab === id ? "bg-[var(--st-panel-2)] text-[var(--st-text)]" : "text-[var(--st-muted)] hover:text-[var(--st-text)]",
+            "flex w-15.5 flex-col items-center gap-1 rounded-lg py-2 text-[10.5px] transition-colors",
+            tab === id ? "bg-(--st-panel-2) text-(--st-text)" : "text-(--st-muted) hover:text-(--st-text)",
           )}
         >
-          <Icon className={cx("h-5 w-5", tab === id && "text-[var(--st-accent)]")} strokeWidth={1.8} />
+          <Icon className={cx("h-5 w-5", tab === id && "text-(--st-accent)")} strokeWidth={1.8} />
           {label}
         </button>
       ))}
@@ -54,7 +54,7 @@ export function SidePanel({
   hamperProductIds: string[];
 }) {
   return (
-    <aside className="flex w-[300px] shrink-0 flex-col border-r border-[var(--st-line)] bg-[var(--st-panel)]">
+    <aside className="flex w-75 shrink-0 flex-col border-r border-(--st-line) bg-(--st-panel)">
       <div className="flex h-11 items-center justify-between px-4">
         <span className="text-[14px] font-semibold">{RAIL.find((r) => r.id === tab)?.label}</span>
         <button type="button" onClick={onClose} className={toolBtn} aria-label="Close panel" title="Close panel">

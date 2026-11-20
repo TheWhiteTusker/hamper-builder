@@ -34,7 +34,7 @@ export default async function ProductPage({
     loadProductCosting(supabase, decodedCode),
     loadCostStages(supabase),
     loadSettings(supabase),
-    supabase.from("categories").select("*").returns<Category[]>(),
+    supabase.from("categories").select("*").overrideTypes<Category[], { merge: false }>(),
   ]);
   if (!costing) notFound();
 

@@ -34,8 +34,8 @@ export function QuoteDetails({
   return (
     <section className="card p-4">
       {canEdit && (
-        <div className="mb-4 flex flex-wrap items-end gap-2 border-b border-[var(--color-line)] pb-4">
-          <Field label="Saved client" htmlFor="savedClient" className="min-w-[280px]">
+        <div className="mb-4 flex flex-wrap items-end gap-2 border-b border-(--color-line) pb-4">
+          <Field label="Saved client" htmlFor="savedClient" className="min-w-70">
             <select id="savedClient" className="select mt-1" value="" onChange={(e) => onPickClient(e.target.value)}>
               <option value="">{clients.length ? "Fill details from a saved client…" : "No saved clients yet"}</option>
               {clients.map((c) => (
@@ -82,7 +82,7 @@ export function QuoteDetails({
               </option>
             ))}
           </select>
-          {!canChangeStatus && <p className="mt-1 text-xs text-[var(--color-muted)]">Only a manager can change status.</p>}
+          {!canChangeStatus && <p className="mt-1 text-xs text-(--color-muted)">Only a manager can change status.</p>}
         </Field>
 
         {text("clientName", "Client / company", { required: true })}

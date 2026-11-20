@@ -17,7 +17,7 @@ export function HamperTotals({ h }: { h: HamperSummary }) {
   ];
 
   return (
-    <div className="card border-2 border-(--color-brand)/20 bg-gradient-to-br from-white to-slate-50 p-5 shadow-md">
+    <div className="card border-2 border-(--color-brand)/20 bg-linear-to-br from-white to-slate-50 p-5 shadow-md">
       <h3 className="mb-4 text-base font-bold text-(--color-ink)">Hamper pricing</h3>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {boxes.map(([label, value, color]) => (

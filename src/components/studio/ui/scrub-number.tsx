@@ -39,7 +39,7 @@ export function ScrubNumber({
   return (
     <div className={cx("flex min-w-0 items-center gap-1.5", disabled && "opacity-40")}>
       <span
-        className="shrink-0 cursor-ew-resize select-none text-[12px] text-[var(--st-muted)] hover:text-[var(--st-accent)]"
+        className="shrink-0 cursor-ew-resize select-none text-[12px] text-(--st-muted) hover:text-(--st-accent)"
         onPointerDown={(e) => {
           if (disabled) return;
           e.preventDefault();
@@ -63,7 +63,7 @@ export function ScrubNumber({
         disabled={disabled}
         inputMode="decimal"
         aria-label={typeof label === "string" ? label : undefined}
-        className="h-7 w-full min-w-0 rounded border border-transparent bg-transparent px-1 text-[12px] tabular-nums text-[var(--st-value)] outline-none hover:border-[var(--st-line)] focus:border-[var(--st-accent)] focus:bg-[var(--st-panel-2)] focus:text-[var(--st-text)]"
+        className="h-7 w-full min-w-0 rounded border border-transparent bg-transparent px-1 text-[12px] tabular-nums text-(--st-value) outline-none hover:border-(--st-line) focus:border-(--st-accent) focus:bg-(--st-panel-2) focus:text-(--st-text)"
         value={draft ?? String(tidy(value))}
         onFocus={(e) => e.target.select()}
         onChange={(e) => setDraft(e.target.value)}
@@ -81,7 +81,7 @@ export function ScrubNumber({
           }
         }}
       />
-      {suffix && <span className="shrink-0 text-[11px] text-[var(--st-muted)]">{suffix}</span>}
+      {suffix && <span className="shrink-0 text-[11px] text-(--st-muted)">{suffix}</span>}
     </div>
   );
 }

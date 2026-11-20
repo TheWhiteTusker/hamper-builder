@@ -17,7 +17,7 @@ export function ImportReportView({ report }: { report: ImportReport }) {
             {Object.entries(report.counts ?? {}).map(([key, value]) => (
               <div
                 key={key}
-                className="rounded-md border border-[var(--color-line)] px-3 py-2"
+                className="rounded-md border border-(--color-line) px-3 py-2"
               >
                 <div className="label">{labelFor(key)}</div>
                 <div className="text-lg font-semibold tabular-nums">{value}</div>
@@ -41,7 +41,7 @@ export function ImportReportView({ report }: { report: ImportReport }) {
           )}
 
           {report.applied && !!report.added?.length && (
-            <div className="mt-3 rounded-md border border-[var(--color-line)] p-3">
+            <div className="mt-3 rounded-md border border-(--color-line) p-3">
               <div className="label">Newly added ({report.added.length})</div>
               <ul className="mt-1.5 max-h-72 space-y-1 overflow-y-auto text-sm">
                 {report.added.map((a) => (

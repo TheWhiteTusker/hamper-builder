@@ -22,7 +22,7 @@ export function Field({
 export function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <dt className="text-[var(--color-muted)]">{label}</dt>
+      <dt className="text-(--color-muted)">{label}</dt>
       <dd className={`tabular-nums ${strong ? "text-base font-semibold" : "font-medium"}`}>{value || "—"}</dd>
     </div>
   );

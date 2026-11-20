@@ -28,11 +28,11 @@ export function UserRoleForm({ profile, isSelf }: { profile: Profile; isSelf: bo
         {profile.full_name || "—"}
         {isSelf && <span className="badge ml-2">you</span>}
       </TableCell>
-      <TableCell className="text-[var(--color-muted)]">{ROLE_HINT[role]}</TableCell>
+      <TableCell className="text-(--color-muted)">{ROLE_HINT[role]}</TableCell>
       <TableCell>
         <form onSubmit={keepValues(action)} className="flex items-center gap-2">
           <input type="hidden" name="id" value={profile.id} />
-          <select name="role" defaultValue={profile.role} className="select max-w-[140px]">
+          <select name="role" defaultValue={profile.role} className="select max-w-35">
             <option value="sales">Sales</option>
             <option value="manager">Manager</option>
             <option value="admin">Admin</option>

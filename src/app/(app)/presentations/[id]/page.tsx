@@ -21,7 +21,7 @@ export default async function PresentationPage({ params }: { params: Promise<{ i
       .select("id, kind, canvas")
       .eq("presentation_id", id)
       .order("position")
-      .returns<{ id: string; kind: string; canvas: unknown }[]>(),
+      .overrideTypes<{ id: string; kind: string; canvas: unknown }[], { merge: false }>(),
     loadPickerData(supabase),
   ]);
   if (!deck) redirect("/presentations"); // deleted, or a stale link

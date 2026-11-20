@@ -8,14 +8,14 @@ export async function loadPickerData(supabase: SupabaseClient): Promise<PickerDa
       .from("hamper_summary")
       .select("id, code, name, final_catalogue_sp, image_url")
       .order("code")
-      .returns<{ id: string; code: string; name: string; final_catalogue_sp: number | null; image_url: string | null }[]>(),
+      .overrideTypes<{ id: string; code: string; name: string; final_catalogue_sp: number | null; image_url: string | null }[], { merge: false }>(),
     supabase
       .from("products")
       .select("id, code, name, default_sp, image_url")
       .eq("is_active", true)
       .is("deleted_at", null)
       .order("name")
-      .returns<{ id: string; code: string; name: string; default_sp: number | null; image_url: string | null }[]>(),
+      .overrideTypes<{ id: string; code: string; name: string; default_sp: number | null; image_url: string | null }[], { merge: false }>(),
   ]);
 
   return {

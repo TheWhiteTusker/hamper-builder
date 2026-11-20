@@ -22,8 +22,8 @@ export function SyncRatesButton() {
   return (
     <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
       <div>
-        <h3 className="text-base font-semibold text-[var(--color-ink)]">Products on old rates</h3>
-        <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+        <h3 className="text-base font-semibold text-(--color-ink)">Products on old rates</h3>
+        <p className="mt-0.5 text-xs text-(--color-muted)">
           Changing a rate updates products automatically. Use this for products costed before a change.
         </p>
         {result?.message && <p className="mt-1.5 text-xs font-medium text-emerald-700">{result.message}</p>}

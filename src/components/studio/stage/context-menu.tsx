@@ -52,14 +52,14 @@ export function ContextMenu({
   return (
     <div
       role="menu"
-      className="studio fixed z-[70] w-56 rounded-lg border border-[var(--st-line)] bg-[var(--st-panel)] p-1 shadow-xl shadow-[#2c332f]/15"
+      className="studio fixed z-70 w-56 rounded-lg border border-(--st-line) bg-(--st-panel) p-1 shadow-xl shadow-[#2c332f]/15"
       style={{ left, top }}
       onPointerDown={(e) => e.stopPropagation()}
       onContextMenu={(e) => e.preventDefault()}
     >
       {hasShape && onApplyColor && (
-        <div className="border-b border-[var(--st-line)] px-2.5 py-2">
-          <div className="mb-1.5 flex items-center justify-between text-[10.5px] font-semibold uppercase tracking-wider text-[var(--st-muted)]">
+        <div className="border-b border-(--st-line) px-2.5 py-2">
+          <div className="mb-1.5 flex items-center justify-between text-[10.5px] font-semibold uppercase tracking-wider text-(--st-muted)">
             <span>{isOnlyLine ? "Line colour" : "Shape colour"}</span>
             <span className="h-3.5 w-3.5 rounded-full border border-black/20" style={{ background: currentPreview }} />
           </div>
@@ -91,7 +91,7 @@ export function ContextMenu({
       )}
       {items.map((item, i) =>
         item === null ? (
-          <div key={i} className="my-1 h-px bg-[var(--st-line)]" />
+          <div key={i} className="my-1 h-px bg-(--st-line)" />
         ) : (
           <button
             key={item[0]}
@@ -102,7 +102,7 @@ export function ContextMenu({
               item[2]?.();
               onClose();
             }}
-            className="flex w-full items-center justify-between rounded px-2.5 py-1.5 text-left text-[13px] hover:bg-[var(--st-hover)] disabled:opacity-35 disabled:hover:bg-transparent"
+            className="flex w-full items-center justify-between rounded px-2.5 py-1.5 text-left text-[13px] hover:bg-(--st-hover) disabled:opacity-35 disabled:hover:bg-transparent"
           >
             <span className="flex items-center gap-2">
               {item[0].startsWith("Edit fill") && (
@@ -116,7 +116,7 @@ export function ContextMenu({
               )}
               {item[0]}
             </span>
-            <span className="text-[11px] text-[var(--st-muted)]">{item[1]}</span>
+            <span className="text-[11px] text-(--st-muted)">{item[1]}</span>
           </button>
         ),
       )}

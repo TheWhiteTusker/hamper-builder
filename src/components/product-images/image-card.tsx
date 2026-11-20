@@ -28,7 +28,7 @@ export function ImageCard({
     <div
       className={`group relative overflow-hidden rounded-xl border bg-white shadow-xs transition-all ${
         img.is_primary
-          ? "border-[var(--color-brand)] ring-2 ring-[var(--color-brand)]/20"
+          ? "border-(--color-brand) ring-2 ring-(--color-brand)/20"
           : "border-slate-200 hover:border-slate-300"
       }`}
     >
@@ -83,7 +83,7 @@ export function ImageCard({
             <button
               type="button"
               onClick={onPrimary}
-              className="text-[10px] font-medium text-slate-400 hover:text-[var(--color-brand)] transition-colors"
+              className="text-[10px] font-medium text-slate-400 hover:text-(--color-brand) transition-colors"
               title="Set as primary cover photo"
             >
               Make Primary

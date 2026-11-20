@@ -6,14 +6,14 @@ import { cx, panelTitle } from "../studio-ui";
 export function TextPanel({ ed }: { ed: Editor }) {
   return (
     <div className="space-y-4">
-      <p className="text-[12px] text-[var(--st-muted)]">Click text to add it to the page. Double-click it on the page to type.</p>
+      <p className="text-[12px] text-(--st-muted)">Click text to add it to the page. Double-click it on the page to type.</p>
       <div className="space-y-2">
         {TEXT_PRESETS.map((t) => (
           <button
             key={t.label}
             type="button"
             onClick={() => ed.add(makeText(ed.canvas, t.text, t.style))}
-            className="block w-full rounded-md border border-[var(--st-line)] bg-[var(--st-panel-2)] px-3 py-2.5 text-left hover:border-[var(--st-accent)]"
+            className="block w-full rounded-md border border-(--st-line) bg-(--st-panel-2) px-3 py-2.5 text-left hover:border-(--st-accent)"
             style={{ fontFamily: t.style.fontFamily, fontSize: t.preview, fontWeight: t.style.fontStyle.includes("bold") ? 700 : 400 }}
           >
             {t.label}
@@ -28,7 +28,7 @@ export function TextPanel({ ed }: { ed: Editor }) {
               key={t.text}
               type="button"
               onClick={() => ed.add(makeText(ed.canvas, t.text, t.style))}
-              className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md border border-[var(--st-line)] bg-white p-2 text-center leading-tight hover:ring-2 hover:ring-[var(--st-accent)]"
+              className="flex aspect-4/3 items-center justify-center overflow-hidden rounded-md border border-(--st-line) bg-white p-2 text-center leading-tight hover:ring-2 hover:ring-(--st-accent)"
               style={{
                 fontFamily: t.style.fontFamily,
                 color: t.style.color,

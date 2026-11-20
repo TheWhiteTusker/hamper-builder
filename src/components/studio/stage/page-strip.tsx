@@ -20,7 +20,7 @@ export function PageStrip({
   onGo: (href: string) => void;
 }) {
   return (
-    <div className="flex shrink-0 items-center gap-3 overflow-x-auto border-t border-[var(--st-line)] bg-[var(--st-panel)] px-3 py-2">
+    <div className="flex shrink-0 items-center gap-3 overflow-x-auto border-t border-(--st-line) bg-(--st-panel) px-3 py-2">
       {pages.map((p, i) => {
         const current = p.id === pageId;
         return (
@@ -36,10 +36,10 @@ export function PageStrip({
               width={112}
               className={cx(
                 "rounded border-2",
-                current ? "border-[var(--st-accent)]" : "border-transparent group-hover:border-[var(--st-muted)]",
+                current ? "border-(--st-accent)" : "border-transparent group-hover:border-(--st-muted)",
               )}
             />
-            <span className={cx("text-[11px] tabular-nums", current ? "font-semibold" : "text-[var(--st-muted)]")}>{i + 1}</span>
+            <span className={cx("text-[11px] tabular-nums", current ? "font-semibold" : "text-(--st-muted)")}>{i + 1}</span>
           </button>
         );
       })}

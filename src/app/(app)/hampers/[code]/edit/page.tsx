@@ -35,7 +35,7 @@ export default async function EditHamperPage({
       .select("*")
       .eq("hamper_id", hamper.id)
       .order("line_no")
-      .returns<HamperItem[]>(),
+      .overrideTypes<HamperItem[], { merge: false }>(),
     loadCatalog(supabase),
   ]);
 

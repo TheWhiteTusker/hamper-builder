@@ -14,7 +14,7 @@ type Status = "checking" | "ready" | "invalid" | "done";
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-full max-w-[360px] p-6 sm:p-7 rounded-2xl bg-[#080b0a]/90 backdrop-blur-2xl border border-amber-200/40 shadow-[0_20px_50px_rgba(0,0,0,0.85)] text-white">
+    <div className="w-full max-w-90 p-6 sm:p-7 rounded-2xl bg-[#080b0a]/90 backdrop-blur-2xl border border-amber-200/40 shadow-[0_20px_50px_rgba(0,0,0,0.85)] text-white">
       <h1 className="font-display text-xl font-bold tracking-tight text-amber-50 text-center">Reset password</h1>
       {children}
     </div>

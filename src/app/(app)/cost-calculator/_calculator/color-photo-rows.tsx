@@ -40,7 +40,7 @@ export function ColorPhotoRows({
 
   return (
     <>
-    <ul className="mt-2 divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)]">
+    <ul className="mt-2 divide-y divide-(--color-border) rounded-lg border border-(--color-border)">
       {rows.map((col) => {
         const colImages = photos.images.filter(
           (img) => img.color === col.name || img.color_code === col.code,
@@ -49,13 +49,13 @@ export function ColorPhotoRows({
         const status = upload?.color === col.name ? upload : null;
         return (
           <li key={col.name} className="flex flex-wrap items-center gap-3 px-3 py-2">
-            <label className="flex min-w-[190px] cursor-pointer items-center gap-2 text-xs font-medium text-[var(--color-ink)]">
+            <label className="flex min-w-47.5 cursor-pointer items-center gap-2 text-xs font-medium text-(--color-ink)">
               {!editing && (
                 <input
                   type="checkbox"
                   checked={selectedColors.includes(col.name)}
                   onChange={() => details.toggleColor(col.name)}
-                  className="h-4 w-4 rounded text-[var(--color-brand)] focus:ring-[var(--color-brand)]"
+                  className="h-4 w-4 rounded text-(--color-brand) focus:ring-(--color-brand)"
                 />
               )}
               <span
@@ -73,7 +73,7 @@ export function ColorPhotoRows({
 
             <div className="flex flex-1 items-center gap-1.5">
               {colImages.length === 0 && colPending.length === 0 ? (
-                <span className="text-[11px] text-[var(--color-muted)]">No photos</span>
+                <span className="text-[11px] text-(--color-muted)">No photos</span>
               ) : (
                 colImages.slice(0, 5).map((img) => (
                   <ImagePreview
@@ -104,11 +104,11 @@ export function ColorPhotoRows({
                 </span>
               ))}
               {colImages.length > 5 && (
-                <span className="text-[11px] text-[var(--color-muted)]">+{colImages.length - 5}</span>
+                <span className="text-[11px] text-(--color-muted)">+{colImages.length - 5}</span>
               )}
             </div>
 
-            {status?.busy && <span className="text-[11px] text-[var(--color-muted)]">Uploading…</span>}
+            {status?.busy && <span className="text-[11px] text-(--color-muted)">Uploading…</span>}
             {status?.error && <span className="text-[11px] font-medium text-red-600">{status.error}</span>}
             {status?.ok && <span className="text-[11px] font-medium text-emerald-700">{status.ok}</span>}
 
@@ -120,7 +120,7 @@ export function ColorPhotoRows({
               }
               className={`rounded-md border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
                 !upload?.busy
-                  ? "cursor-pointer border-[var(--color-brand)] text-[var(--color-brand)] hover:bg-emerald-50"
+                  ? "cursor-pointer border-(--color-brand) text-(--color-brand) hover:bg-emerald-50"
                   : "cursor-not-allowed border-slate-200 text-slate-400"
               }`}
             >
@@ -149,7 +149,7 @@ export function ColorPhotoRows({
     </ul>
     {editing && addable.length > 0 && (
       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-        <label htmlFor="add-color" className="font-semibold text-[var(--color-ink)]">
+        <label htmlFor="add-color" className="font-semibold text-(--color-ink)">
           + Add another colour
         </label>
         <select
@@ -165,7 +165,7 @@ export function ColorPhotoRows({
             </option>
           ))}
         </select>
-        <span className="text-[var(--color-muted)]">Saved as a new product, starting from this costing.</span>
+        <span className="text-(--color-muted)">Saved as a new product, starting from this costing.</span>
       </div>
     )}
     </>

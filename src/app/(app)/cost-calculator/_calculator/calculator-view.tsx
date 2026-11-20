@@ -128,7 +128,7 @@ export function CostCalculatorView({
           />
         </div>
       ) : (
-        <div className="card p-4 border-dashed bg-slate-50/60 text-center text-xs text-[var(--color-muted)]">
+        <div className="card p-4 border-dashed bg-slate-50/60 text-center text-xs text-(--color-muted)">
           Save this product first to upload and manage photos for each of its color finishes.
         </div>
       )}

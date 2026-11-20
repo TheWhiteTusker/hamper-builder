@@ -119,7 +119,7 @@ export function SheetWizard({
             pick(e.dataTransfer.files[0]);
           }}
           className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed px-4 py-6 text-center text-sm transition-colors ${
-            dragging ? "border-(--color-brand) bg-(--color-brand-soft)" : "border-line hover:bg-paper"
+            dragging ? "border-(--color-brand) bg-brand-soft" : "border-line hover:bg-paper"
           }`}
         >
           <span className="font-medium">{loaded || "Drop your Excel file here"}</span>
@@ -168,7 +168,7 @@ function Step({ n, title, done, children }: { n: number; title: string; done: bo
       <h2 className="flex items-center gap-2 text-sm font-semibold">
         <span
           className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-            done ? "bg-emerald-600 text-white" : "bg-(--color-brand-soft) text-(--color-brand-dark)"
+            done ? "bg-emerald-600 text-white" : "bg-brand-soft text-(--color-brand-dark)"
           }`}
         >
           {done ? "✓" : n}

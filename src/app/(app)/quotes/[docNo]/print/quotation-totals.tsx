@@ -24,7 +24,7 @@ export function QuotationTotals({ quote, totals }: { quote: QuoteSummary; totals
           label={`GST @ ${formatPct(quote.gst_rate, 0)}`}
           value={formatMoney(totals.gstAmount)}
         />
-        <div className="mt-1 border-t border-[var(--color-line)] pt-1">
+        <div className="mt-1 border-t border-(--color-line) pt-1">
           <TotalRow label="Grand total" value={formatMoney(totals.grandTotal)} strong />
         </div>
       </dl>
@@ -43,7 +43,7 @@ export function TotalRow({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <dt className={strong ? "font-semibold" : "text-[var(--color-muted)]"}>{label}</dt>
+      <dt className={strong ? "font-semibold" : "text-(--color-muted)"}>{label}</dt>
       <dd className={`tabular-nums ${strong ? "text-base font-semibold" : ""}`}>{value}</dd>
     </div>
   );

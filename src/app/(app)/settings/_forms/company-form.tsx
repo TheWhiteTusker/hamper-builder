@@ -18,7 +18,7 @@ export function CompanyForm({
   return (
     <form onSubmit={keepValues(action)} className="card p-4">
       <h2 className="text-sm font-semibold">Company details</h2>
-      <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+      <p className="mt-0.5 text-xs text-(--color-muted)">
         Printed at the top of every quotation and proforma invoice.
       </p>
 
@@ -97,9 +97,9 @@ export function CompanyForm({
           />
         </div>
 
-        <div className="sm:col-span-2 border-t border-[var(--color-line)] pt-3">
+        <div className="sm:col-span-2 border-t border-(--color-line) pt-3">
           <h3 className="text-xs font-semibold">Bank details</h3>
-          <p className="mt-0.5 text-xs text-[var(--color-muted)]">Printed on proforma invoices.</p>
+          <p className="mt-0.5 text-xs text-(--color-muted)">Printed on proforma invoices.</p>
         </div>
 
         <div>

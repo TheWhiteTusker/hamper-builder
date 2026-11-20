@@ -25,12 +25,12 @@ export async function pushLinePrices(supabase: SupabaseClient, lines: RepricedLi
       .from("products")
       .select("id, code, name, cost_price")
       .in("id", ids)
-      .returns<{ id: string; code: string; name: string; cost_price: number }[]>(),
+      .overrideTypes<{ id: string; code: string; name: string; cost_price: number }[], { merge: false }>(),
     supabase
       .from("product_cost_sheets")
       .select("id, product_id, product_name")
       .in("product_id", ids)
-      .returns<{ id: string; product_id: string; product_name: string }[]>(),
+      .overrideTypes<{ id: string; product_id: string; product_name: string }[], { merge: false }>(),
   ]);
   const readError = products.error ?? sheets.error;
   if (readError) return describeError(readError);

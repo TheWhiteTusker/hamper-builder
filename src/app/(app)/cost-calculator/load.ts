@@ -15,7 +15,7 @@ import { variantIdsByColor } from "@/lib/product-variants";
 import { buildCostTree, type CostRows } from "@/lib/cost-tree";
 
 const active = <T,>(supabase: SupabaseClient, table: string) =>
-  supabase.from(table).select("*").eq("is_active", true).order("sort_order").returns<T[]>();
+  supabase.from(table).select("*").eq("is_active", true).order("sort_order").overrideTypes<T[], { merge: false }>();
 
 /** The costing hierarchy's four tables, flat (active rows only). */
 export async function loadCostRows(supabase: SupabaseClient): Promise<CostRows> {
@@ -86,7 +86,7 @@ export async function loadProductCosting(supabase: SupabaseClient, code: string)
       .is("deleted_at", null)
       .order("sort_order")
       .order("created_at")
-      .returns<ProductImage[]>(),
+      .overrideTypes<ProductImage[], { merge: false }>(),
   ]);
 
   // Its own sheet only. Borrowing a sibling's made Save overwrite that sibling's costing.
@@ -99,7 +99,7 @@ export async function loadProductCosting(supabase: SupabaseClient, code: string)
       .select("*")
       .eq("sheet_id", sheet.id)
       .order("sort_order")
-      .returns<ProductCostLine[]>();
+      .overrideTypes<ProductCostLine[], { merge: false }>();
     lines = data ?? [];
   }
 

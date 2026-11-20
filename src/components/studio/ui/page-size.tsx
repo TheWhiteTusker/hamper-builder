@@ -19,9 +19,9 @@ export function PageSizeInputs({
   return (
     <div className="flex items-center gap-1" title={`Page size in pixels (${PAGE_MIN}–${PAGE_MAX})`}>
       <SizeBox label="W" name="Page width in pixels" value={width} onCommit={(w) => onChange(w, height)} />
-      <span className="text-[var(--st-muted)]">×</span>
+      <span className="text-(--st-muted)">×</span>
       <SizeBox label="H" name="Page height in pixels" value={height} onCommit={(h) => onChange(width, h)} />
-      <span className="text-[11px] text-[var(--st-muted)]">px</span>
+      <span className="text-[11px] text-(--st-muted)">px</span>
     </div>
   );
 }
@@ -38,11 +38,11 @@ function SizeBox({ label, name, value, onCommit }: { label: string; name: string
 
   return (
     <label className="flex items-center gap-1">
-      <span className="text-[11px] text-[var(--st-muted)]">{label}</span>
+      <span className="text-[11px] text-(--st-muted)">{label}</span>
       <input
         aria-label={name}
         inputMode="numeric"
-        className={cx(fieldCls, "h-7 w-[64px] px-1.5 text-right tabular-nums", invalid && "border-red-600 focus:border-red-600")}
+        className={cx(fieldCls, "h-7 w-16 px-1.5 text-right tabular-nums", invalid && "border-red-600 focus:border-red-600")}
         value={draft ?? String(value)}
         onFocus={(e) => e.target.select()}
         onChange={(e) => setDraft(e.target.value)}

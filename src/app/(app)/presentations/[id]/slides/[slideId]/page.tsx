@@ -16,7 +16,7 @@ export default async function SlideEditorPage({ params }: { params: Promise<{ id
       .select("id, canvas, hamper_id, product_id")
       .eq("presentation_id", id)
       .order("position")
-      .returns<{ id: string; canvas: unknown; hamper_id: string | null; product_id: string | null }[]>(),
+      .overrideTypes<{ id: string; canvas: unknown; hamper_id: string | null; product_id: string | null }[], { merge: false }>(),
     loadCatalog(supabase),
   ]);
 
@@ -36,7 +36,7 @@ export default async function SlideEditorPage({ params }: { params: Promise<{ id
             .from("hamper_items")
             .select("product_id")
             .eq("hamper_id", slide.hamper_id)
-            .returns<{ product_id: string | null }[]>()
+            .overrideTypes<{ product_id: string | null }[], { merge: false }>()
         ).data ?? []
       ).flatMap((i) => (i.product_id ? [i.product_id] : []))
     : slide.product_id

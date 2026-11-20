@@ -15,20 +15,20 @@ export function FontPicker({ value, onChange }: { value: string; onChange: (fami
     <Popover
       title="Font"
       width={240}
-      className="w-44 justify-between border border-[var(--st-line)] bg-[var(--st-panel-2)]"
+      className="w-44 justify-between border border-(--st-line) bg-(--st-panel-2)"
       trigger={
         <>
           <span className="truncate" style={{ fontFamily: value }}>
             {value}
           </span>
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[var(--st-muted)]" />
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-(--st-muted)" />
         </>
       }
     >
       {(close) => (
         <>
           <div className="relative mb-2">
-            <Search className="pointer-events-none absolute left-2 top-2 h-4 w-4 text-[var(--st-muted)]" />
+            <Search className="pointer-events-none absolute left-2 top-2 h-4 w-4 text-(--st-muted)" />
             <input
               autoFocus
               className={cx(fieldCls, "w-full pl-8")}
@@ -47,8 +47,8 @@ export function FontPicker({ value, onChange }: { value: string; onChange: (fami
                   close();
                 }}
                 className={cx(
-                  "flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-[15px] hover:bg-[var(--st-hover)]",
-                  f.family === value && "text-[var(--st-accent)]",
+                  "flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-[15px] hover:bg-(--st-hover)",
+                  f.family === value && "text-(--st-accent)",
                 )}
                 style={{ fontFamily: f.family }}
               >

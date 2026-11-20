@@ -49,7 +49,7 @@ export async function planCostings(supabase: Supabase, result: ImportResult, pro
       .from("products")
       .select("code, deleted_at, product_cost_sheets(id, stage_overheads, product_cost_lines(*))")
       .in("code", costed.slice(i, i + 200).map((p) => p.code))
-      .returns<Row[]>();
+      .overrideTypes<Row[], { merge: false }>();
     if (error) throw error;
     for (const r of data) if (!rows.has(r.code) || r.deleted_at === null) rows.set(r.code, r);
   }

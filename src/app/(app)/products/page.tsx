@@ -36,8 +36,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
   if (!showInactive) query = query.eq("is_active", true);
 
   const [{ data: products, count }, { data: categories }] = await Promise.all([
-    query.range(0, limit - 1).returns<ProductWithCategory[]>(),
-    supabase.from("categories").select("*").order("sort_order").order("name").returns<Category[]>(),
+    query.range(0, limit - 1).overrideTypes<ProductWithCategory[], { merge: false }>(),
+    supabase.from("categories").select("*").order("sort_order").order("name").overrideTypes<Category[], { merge: false }>(),
   ]);
 
   const rows = products ?? [];

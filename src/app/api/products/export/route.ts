@@ -19,7 +19,7 @@ export async function GET() {
     .select("*, categories(name, counts_as_item)")
     .is("deleted_at", null)
     .order("code")
-    .returns<ProductWithCategory[]>();
+    .overrideTypes<ProductWithCategory[], { merge: false }>();
 
   const csv = Papa.unparse({
     fields: [

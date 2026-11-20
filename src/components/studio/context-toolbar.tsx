@@ -17,7 +17,7 @@ export function ContextToolbar({ ed }: { ed: Editor }) {
   const l = ed.selected;
 
   return (
-    <div className="flex min-h-12 flex-wrap items-center gap-1 border-b border-[var(--st-line)] bg-[var(--st-panel)] px-3 py-1.5">
+    <div className="flex min-h-12 flex-wrap items-center gap-1 border-b border-(--st-line) bg-(--st-panel) px-3 py-1.5">
       {ed.selection.length > 1 ? <MultiTools ed={ed} /> : !l ? <PageTools ed={ed} /> : <LayerTools ed={ed} l={l} />}
     </div>
   );
@@ -34,7 +34,7 @@ function LayerTools({ ed, l }: { ed: Editor; l: Layer }) {
       )}
       {!locked && (l.kind === "line" || l.kind === "curve") && <LineTools ed={ed} l={l} />}
       {!locked && l.kind === "image" && <ImageTools ed={ed} l={l} />}
-      {locked && <span className="text-[12px] text-[var(--st-muted)]">This element is locked.</span>}
+      {locked && <span className="text-[12px] text-(--st-muted)">This element is locked.</span>}
 
       <div className="ml-auto flex items-center gap-1">
         {!locked && <PositionMenu ed={ed} ids={[l.id]} />}
@@ -70,9 +70,9 @@ function MultiTools({ ed }: { ed: Editor }) {
 
   return (
     <>
-      <span className="mr-2 rounded-md bg-[var(--st-accent-soft)] px-2 py-1 text-[12px]">{n} elements selected</span>
+      <span className="mr-2 rounded-md bg-(--st-accent-soft) px-2 py-1 text-[12px]">{n} elements selected</span>
       <AlignMenu ed={ed} ids={ids} />
-      <button type="button" className="ml-1 text-[12px] text-[var(--st-muted)] underline hover:text-[var(--st-text)]" onClick={() => ed.select(null)}>
+      <button type="button" className="ml-1 text-[12px] text-(--st-muted) underline hover:text-(--st-text)" onClick={() => ed.select(null)}>
         Clear selection
       </button>
 

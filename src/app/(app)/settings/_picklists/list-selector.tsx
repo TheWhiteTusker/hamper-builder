@@ -52,7 +52,7 @@ export function ListSelector({
           {active.label} ({values(counts[active.key])})
         </span>
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[var(--color-muted)] transition-transform duration-150 ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-(--color-muted) transition-transform duration-150 ${open ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -60,7 +60,7 @@ export function ListSelector({
         <div
           role="listbox"
           aria-labelledby="picklist-label"
-          className="absolute left-0 top-full z-40 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-[var(--color-line)] bg-white py-1 shadow-lg"
+          className="absolute left-0 top-full z-40 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-(--color-line) bg-white py-1 shadow-lg"
         >
           {PICK_LIST_CONFIGS.map((config) => {
             const isSelected = config.key === active.key;
@@ -74,7 +74,7 @@ export function ListSelector({
                   onSelect(config.key);
                   setOpen(false);
                 }}
-                className={`group flex w-full select-none items-center justify-between px-3 py-2 text-left text-sm cursor-pointer text-[var(--color-ink)] hover:bg-[var(--color-brand)] hover:text-white focus:bg-[var(--color-brand)] focus:text-white focus:outline-none ${
+                className={`group flex w-full select-none items-center justify-between px-3 py-2 text-left text-sm cursor-pointer text-(--color-ink) hover:bg-(--color-brand) hover:text-white focus:bg-(--color-brand) focus:text-white focus:outline-none ${
                   isSelected ? "font-semibold" : "font-medium"
                 }`}
               >
@@ -84,7 +84,7 @@ export function ListSelector({
                 {isSelected && (
                   <Check
                     strokeWidth={3.2}
-                    className="h-4.5 w-4.5 shrink-0 text-[var(--color-brand)] group-hover:text-white group-focus:text-white"
+                    className="h-4.5 w-4.5 shrink-0 text-(--color-brand) group-hover:text-white group-focus:text-white"
                   />
                 )}
               </button>

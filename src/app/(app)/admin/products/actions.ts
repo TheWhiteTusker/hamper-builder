@@ -16,7 +16,7 @@ export async function productsForSheet(): Promise<SheetProduct[]> {
       .is("deleted_at", null)
       .order("code")
       .range(from, from + 999)
-      .returns<SheetProduct[]>();
+      .overrideTypes<SheetProduct[], { merge: false }>();
     if (error) throw new Error(error.message);
     all.push(...data);
     if (data.length < 1000) return all;

@@ -99,8 +99,8 @@ export function LineTools({ ed, l }: { ed: Editor; l: Extract<Layer, { kind: "li
                     className={cx(
                       "h-7 rounded border text-[12px] transition-colors",
                       active
-                        ? "border-[var(--st-accent)] bg-[var(--st-accent-soft)] text-[var(--st-accent-strong)] font-medium"
-                        : "border-[var(--st-line)] bg-[var(--st-panel-2)] hover:bg-[var(--st-hover)] text-[var(--st-text)]",
+                        ? "border-(--st-accent) bg-(--st-accent-soft) text-(--st-accent-strong) font-medium"
+                        : "border-(--st-line) bg-(--st-panel-2) hover:bg-(--st-hover) text-(--st-text)",
                     )}
                   >
                     {s.label}
@@ -121,8 +121,8 @@ export function LineTools({ ed, l }: { ed: Editor; l: Extract<Layer, { kind: "li
                   className={cx(
                     "h-7 rounded border text-[12px] capitalize transition-colors",
                     l.lineCap === cap
-                      ? "border-[var(--st-accent)] bg-[var(--st-accent-soft)] text-[var(--st-accent-strong)] font-medium"
-                      : "border-[var(--st-line)] bg-[var(--st-panel-2)] hover:bg-[var(--st-hover)] text-[var(--st-text)]",
+                      ? "border-(--st-accent) bg-(--st-accent-soft) text-(--st-accent-strong) font-medium"
+                      : "border-(--st-line) bg-(--st-panel-2) hover:bg-(--st-hover) text-(--st-text)",
                   )}
                 >
                   {cap === "butt" ? "flat" : cap}
@@ -157,14 +157,14 @@ export function LineTools({ ed, l }: { ed: Editor; l: Extract<Layer, { kind: "li
               <button
                 type="button"
                 onClick={flipCurve}
-                className="flex-1 rounded border border-[var(--st-line)] bg-[var(--st-panel-2)] py-1 text-[12px] hover:bg-[var(--st-hover)]"
+                className="flex-1 rounded border border-(--st-line) bg-(--st-panel-2) py-1 text-[12px] hover:bg-(--st-hover)"
               >
                 Flip curve
               </button>
               <button
                 type="button"
                 onClick={straighten}
-                className="flex-1 rounded border border-[var(--st-line)] bg-[var(--st-panel-2)] py-1 text-[12px] hover:bg-[var(--st-hover)]"
+                className="flex-1 rounded border border-(--st-line) bg-(--st-panel-2) py-1 text-[12px] hover:bg-(--st-hover)"
               >
                 Straighten
               </button>

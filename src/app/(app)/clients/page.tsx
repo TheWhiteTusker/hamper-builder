@@ -21,7 +21,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Sear
   let query = supabase.from("clients").select("*", { count: "exact" }).order("name");
   if (q) query = query.or(`name.ilike.%${q}%,gstin.ilike.%${q}%`);
 
-  const { data, count } = await query.range(0, limit - 1).returns<Client[]>();
+  const { data, count } = await query.range(0, limit - 1).overrideTypes<Client[], { merge: false }>();
   const rows = data ?? [];
   const total = count ?? rows.length;
 
@@ -66,7 +66,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Sear
           </form>
 
           {rows.length === 0 ? (
-            <p className="card px-4 py-8 text-center text-sm text-[var(--color-muted)]">
+            <p className="card px-4 py-8 text-center text-sm text-(--color-muted)">
               {q ? "No clients match that search." : "No clients yet. Add one on the left."}
             </p>
           ) : (
@@ -86,19 +86,19 @@ export default async function ClientsPage({ searchParams }: { searchParams: Sear
                       <TableCell>
                         <div className="font-medium">{c.name}</div>
                         {c.billing_address && (
-                          <div className="whitespace-pre-line text-xs text-[var(--color-muted)]">
+                          <div className="whitespace-pre-line text-xs text-(--color-muted)">
                             {c.billing_address}
                           </div>
                         )}
                       </TableCell>
                       <TableCell className="font-mono whitespace-nowrap">{c.gstin ?? "—"}</TableCell>
-                      <TableCell className="text-[var(--color-muted)]">
+                      <TableCell className="text-(--color-muted)">
                         {[c.contact_person, c.phone, c.email].filter(Boolean).join(" · ") || "—"}
                       </TableCell>
                       <TableCell className="num">
                         <Link
                           href={`/clients?edit=${c.id}`}
-                          className="font-medium text-[var(--color-brand)] hover:underline"
+                          className="font-medium text-(--color-brand) hover:underline"
                         >
                           Edit
                         </Link>

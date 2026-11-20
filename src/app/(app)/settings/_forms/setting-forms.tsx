@@ -19,7 +19,7 @@ export function TermsForm({
     <form onSubmit={keepValues(action)} className="card p-4">
       <input type="hidden" name="key" value={settingKey} />
       <h2 className="text-sm font-semibold">{title}</h2>
-      <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+      <p className="mt-0.5 text-xs text-(--color-muted)">
         Copied into each new document, where it can still be edited.
       </p>
 
@@ -55,7 +55,7 @@ export function DefaultForm({
   const [state, action, pending] = useActionState(saveDefault, {});
 
   return (
-    <form onSubmit={keepValues(action)} className="rounded-md border border-[var(--color-line)] p-3">
+    <form onSubmit={keepValues(action)} className="rounded-md border border-(--color-line) p-3">
       <input type="hidden" name="key" value={settingKey} />
 
       <label className="label" htmlFor={`default-${settingKey}`}>

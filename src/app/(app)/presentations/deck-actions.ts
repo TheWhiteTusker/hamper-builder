@@ -67,7 +67,7 @@ export async function saveDeck(
       .from("presentation_slides")
       .select("id, position")
       .eq("presentation_id", presentationId)
-      .returns<{ id: string; position: number }[]>();
+      .overrideTypes<{ id: string; position: number }[], { merge: false }>();
     if (loadError) return { error: describeError(loadError) };
 
     const current = new Map((existing ?? []).map((r) => [r.id, r.position]));
@@ -98,7 +98,7 @@ export async function saveDeck(
           })),
         )
         .select("id, position")
-        .returns<{ id: string; position: number }[]>();
+        .overrideTypes<{ id: string; position: number }[], { merge: false }>();
       if (error || !inserted) return { error: describeError(error) };
       for (const row of inserted) {
         const match = added.find((a) => a.position === row.position);

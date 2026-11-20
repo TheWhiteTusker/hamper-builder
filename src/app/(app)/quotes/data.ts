@@ -27,13 +27,13 @@ export async function loadQuoteOptions(supabase: SupabaseClient) {
       .from("hamper_summary")
       .select("id, code, name, final_catalogue_sp")
       .order("code")
-      .returns<Omit<HamperOption, "items">[]>(),
+      .overrideTypes<Omit<HamperOption, "items">[], { merge: false }>(),
     supabase
       .from("hamper_items")
       .select("id, hamper_id, product_name, category_name, qty")
       .order("line_no")
-      .returns<HamperItemRow[]>(),
-    supabase.from("categories").select("*").returns<Category[]>(),
+      .overrideTypes<HamperItemRow[], { merge: false }>(),
+    supabase.from("categories").select("*").overrideTypes<Category[], { merge: false }>(),
     loadSettings(supabase),
     // Products can go on a quote on their own, for clients who want just one item.
     supabase
@@ -42,8 +42,8 @@ export async function loadQuoteOptions(supabase: SupabaseClient) {
       .eq("is_active", true)
       .is("deleted_at", null)
       .order("code")
-      .returns<ProductOption[]>(),
-    supabase.from("clients").select("*").order("name").returns<Client[]>(),
+      .overrideTypes<ProductOption[], { merge: false }>(),
+    supabase.from("clients").select("*").order("name").overrideTypes<Client[], { merge: false }>(),
   ]);
 
   const byHamper = new Map<string, ContentItem[]>();

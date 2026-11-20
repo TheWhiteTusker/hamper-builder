@@ -53,12 +53,12 @@ export function QuoteTotals({
 
         {!isCombined ? (
           <>
-            <p className="mt-1 text-xs text-[var(--color-muted)]">
+            <p className="mt-1 text-xs text-(--color-muted)">
               Each option is totalled on its own; the client picks one. Order discount and charges apply to combined
               orders only.
             </p>
-            <div className="mt-3">{amount("gstRate", "GST %", "max-w-[120px]")}</div>
-            <dl className="mt-4 space-y-1.5 border-t border-[var(--color-line)] pt-3 text-sm">
+            <div className="mt-3">{amount("gstRate", "GST %", "max-w-30")}</div>
+            <dl className="mt-4 space-y-1.5 border-t border-(--color-line) pt-3 text-sm">
               {options.map((o) => (
                 <Row key={o.label} label={`${o.label} (incl. GST)`} value={formatMoney(o.totals.grandTotal)} strong />
               ))}
@@ -80,9 +80,9 @@ export function QuoteTotals({
               <Row label="Taxable value" value={formatMoney(totals.taxableValue)} />
             </dl>
 
-            <div className="mt-3">{amount("gstRate", "GST %", "max-w-[120px]")}</div>
+            <div className="mt-3">{amount("gstRate", "GST %", "max-w-30")}</div>
 
-            <dl className="mt-4 space-y-1.5 border-t border-[var(--color-line)] pt-3 text-sm">
+            <dl className="mt-4 space-y-1.5 border-t border-(--color-line) pt-3 text-sm">
               <Row label="GST" value={formatMoney(totals.gstAmount)} />
               <Row label="Grand total" value={formatMoney(totals.grandTotal)} strong />
             </dl>

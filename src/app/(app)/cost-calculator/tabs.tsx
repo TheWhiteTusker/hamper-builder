@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 const tabClass = (active: boolean) =>
   `rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
     active
-      ? "bg-white text-[var(--color-brand-dark)] shadow-sm"
-      : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+      ? "bg-white text-(--color-brand-dark) shadow-sm"
+      : "text-(--color-muted) hover:text-(--color-ink)"
   }`;
 
 export function CostTabs() {

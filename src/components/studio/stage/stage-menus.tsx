@@ -67,7 +67,7 @@ export function StageMenus({
         <div
           role="dialog"
           aria-label="Edit colours"
-          className="studio fixed z-[75] w-72 rounded-lg border border-[var(--st-line)] bg-[var(--st-panel)] p-3 shadow-2xl shadow-[#2c332f]/25"
+          className="studio fixed z-75 w-72 rounded-lg border border-(--st-line) bg-(--st-panel) p-3 shadow-2xl shadow-[#2c332f]/25"
           style={{
             left: Math.min(colorEdit.x, window.innerWidth - 300),
             top: Math.min(colorEdit.y, Math.max(10, window.innerHeight - 440)),
@@ -75,14 +75,14 @@ export function StageMenus({
           onPointerDown={(e) => e.stopPropagation()}
           onContextMenu={(e) => e.preventDefault()}
         >
-          <div className="mb-3 flex items-center justify-between border-b border-[var(--st-line)] pb-2">
+          <div className="mb-3 flex items-center justify-between border-b border-(--st-line) pb-2">
             <span className="text-[12px] font-semibold">
               {colorEdit.mode === "fill" ? "Fill colour" : "Line / Border colour"}
             </span>
             <button
               type="button"
               onClick={() => setColorEdit(null)}
-              className="rounded p-1 text-[var(--st-muted)] hover:bg-[var(--st-hover)] hover:text-[var(--st-text)]"
+              className="rounded p-1 text-(--st-muted) hover:bg-(--st-hover) hover:text-(--st-text)"
             >
               <X className="h-4 w-4" />
             </button>

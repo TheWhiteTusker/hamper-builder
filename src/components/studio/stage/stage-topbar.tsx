@@ -38,10 +38,10 @@ export function StageTopbar({
       >
         <ArrowLeft className="h-4 w-4" /> Back
       </Link>
-      <span className="mx-2 h-5 w-px bg-[var(--st-line)]" />
+      <span className="mx-2 h-5 w-px bg-(--st-line)" />
       <div className="mr-3 min-w-0">
         <div className="truncate text-[13px] font-semibold leading-tight">{title}</div>
-        {subtitle && <div className="text-[11px] leading-tight text-[var(--st-muted)]">{subtitle}</div>}
+        {subtitle && <div className="text-[11px] leading-tight text-(--st-muted)">{subtitle}</div>}
       </div>
       <ToolButton title="Undo (Ctrl+Z)" disabled={!hist.past.length} onClick={() => setHist(undo)}>
         <Undo2 className="h-4 w-4" />
@@ -62,7 +62,7 @@ export function StageTopbar({
         )}
       </Popover>
 
-      <span className="ml-auto mr-2 flex items-center gap-1.5 text-[12px] text-[var(--st-muted)]">
+      <span className="ml-auto mr-2 flex items-center gap-1.5 text-[12px] text-(--st-muted)">
         {saving ? (
           <>
             <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…

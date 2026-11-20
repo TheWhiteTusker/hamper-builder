@@ -65,7 +65,7 @@ export async function renameCostSubcategory(id: string, name: string): Promise<C
     .from("cost_varieties")
     .select("id, name")
     .eq("subcategory_id", id)
-    .returns<{ id: string; name: string }[]>();
+    .overrideTypes<{ id: string; name: string }[], { merge: false }>();
 
   if (vars && vars.length > 0) {
     for (const v of vars) {

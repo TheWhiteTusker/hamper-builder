@@ -24,7 +24,7 @@ export function PageTools({ ed }: { ed: Editor }) {
   const bg = ed.canvas.background;
   return (
     <>
-      <span className="mr-1 text-[12px] text-[var(--st-muted)]">Page size</span>
+      <span className="mr-1 text-[12px] text-(--st-muted)">Page size</span>
       <PageSizeInputs
         width={ed.canvas.width}
         height={ed.canvas.height}
@@ -37,7 +37,7 @@ export function PageTools({ ed }: { ed: Editor }) {
         documentColors={ed.documentColors}
         onChange={(fill) => ed.change((c) => ({ ...c, background: { ...c.background, fill } }), "bg-fill")}
       />
-      <label className={cx("inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-2 hover:bg-[var(--st-hover)]")}>
+      <label className={cx("inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-2 hover:bg-(--st-hover)")}>
         <ImagePlus className={icon} />
         {bg.image_url ? "Replace background image" : "Background image"}
         <input
@@ -77,7 +77,7 @@ export function PageTools({ ed }: { ed: Editor }) {
         <span>Curve</span>
       </ToolButton>
       <SnapToggle ed={ed} />
-      <span className="ml-auto text-[12px] text-[var(--st-muted)]">
+      <span className="ml-auto text-[12px] text-(--st-muted)">
         Click to select · Shift+click or drag a box to select several · right-click for more
       </span>
     </>

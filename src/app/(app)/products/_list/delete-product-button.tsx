@@ -26,7 +26,7 @@ export function DeleteProductButton({ id, label }: { id: string; label: string }
         {pending ? "Moving to Bin…" : "Delete"}
       </button>
       {state.error && (
-        <span role="alert" className="mt-1 block max-w-[240px] whitespace-normal text-left text-xs text-red-700">
+        <span role="alert" className="mt-1 block max-w-60 whitespace-normal text-left text-xs text-red-700">
           {state.error}
         </span>
       )}

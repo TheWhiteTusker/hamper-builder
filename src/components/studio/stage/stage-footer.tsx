@@ -39,20 +39,20 @@ export function StageFooter({
 }) {
   const { zoom, zoomTo } = view;
   return (
-    <footer className="flex h-10 shrink-0 items-center gap-2 border-t border-[var(--st-line)] bg-[var(--st-panel)] px-3">
+    <footer className="flex h-10 shrink-0 items-center gap-2 border-t border-(--st-line) bg-(--st-panel) px-3">
       <Popover title="Keyboard shortcuts" width={330} trigger={<Keyboard className="h-4 w-4" />}>
         <div className={cx(panelTitle, "mb-2")}>Keyboard shortcuts</div>
         <dl className="space-y-1.5">
           {SHORTCUTS.map(([what, keys]) => (
             <div key={what} className="flex justify-between gap-3 text-[12px]">
-              <dt className="text-[var(--st-muted)]">{what}</dt>
+              <dt className="text-(--st-muted)">{what}</dt>
               <dd className="text-right font-mono text-[11px]">{keys}</dd>
             </div>
           ))}
         </dl>
       </Popover>
       <PageSizeInputs width={width} height={height} onChange={onResize} />
-      <span className="text-[12px] text-[var(--st-muted)]">
+      <span className="text-[12px] text-(--st-muted)">
         · {layerCount} layer{layerCount === 1 ? "" : "s"}
       </span>
       <div className="ml-auto flex items-center gap-1">

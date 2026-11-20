@@ -54,7 +54,7 @@ export function CategoryRow({
               defaultValue={category.code ?? ""}
               placeholder="Code"
               aria-label="Category code"
-              className="input max-w-[70px] uppercase font-mono font-bold text-center text-xs"
+              className="input max-w-17.5 uppercase font-mono font-bold text-center text-xs"
               title="2-letter category code used in product codes (e.g. LC, ED)"
             />
 
@@ -62,7 +62,7 @@ export function CategoryRow({
               name="name"
               defaultValue={category.name}
               aria-label="Category name"
-              className="input max-w-[220px]"
+              className="input max-w-55"
             />
 
             <label className="flex items-center gap-1.5 text-sm whitespace-nowrap">
@@ -117,7 +117,7 @@ export function AddCategoryForm({
         name="code"
         placeholder="Code (e.g. LC)"
         aria-label="Category code"
-        className="input max-w-[90px] uppercase font-mono font-bold text-center text-xs"
+        className="input max-w-22.5 uppercase font-mono font-bold text-center text-xs"
         title="2-letter category code used in product codes (e.g. LC, ED)"
       />
 
@@ -125,7 +125,7 @@ export function AddCategoryForm({
         name="name"
         placeholder="New category name"
         aria-label="New category name"
-        className="input max-w-[220px]"
+        className="input max-w-55"
         required
       />
 

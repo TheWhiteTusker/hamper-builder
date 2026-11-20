@@ -16,7 +16,7 @@ export default async function PresentationsPage() {
     .from("presentations")
     .select("id, title, updated_at, presentation_slides(count)")
     .order("updated_at", { ascending: false })
-    .returns<Row[]>();
+    .overrideTypes<Row[], { merge: false }>();
   const rows = data ?? [];
 
   return (
@@ -39,7 +39,7 @@ export default async function PresentationsPage() {
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="py-10 text-center text-sm text-[var(--color-muted)]">
+                <TableCell colSpan={3} className="py-10 text-center text-sm text-(--color-muted)">
                   No presentations yet.
                   <Link href="/presentations/new" className="ml-2 underline">
                     Make the first one
@@ -55,7 +55,7 @@ export default async function PresentationsPage() {
                     </Link>
                   </TableCell>
                   <TableCell className="num">{p.presentation_slides[0]?.count ?? 0}</TableCell>
-                  <TableCell className="text-[var(--color-muted)]">
+                  <TableCell className="text-(--color-muted)">
                     {new Date(p.updated_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
                   </TableCell>
                 </TableRow>

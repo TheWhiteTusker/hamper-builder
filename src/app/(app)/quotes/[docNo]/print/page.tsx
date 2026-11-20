@@ -30,9 +30,9 @@ export default async function PrintQuotePage({
       .select("*")
       .eq("quote_id", quote.id)
       .order("line_no")
-      .returns<QuoteItem[]>(),
+      .overrideTypes<QuoteItem[], { merge: false }>(),
     loadSettings(supabase),
-    supabase.from("categories").select("*").returns<Category[]>(),
+    supabase.from("categories").select("*").overrideTypes<Category[], { merge: false }>(),
   ]);
 
   const hamperIds = (lines ?? [])
@@ -45,7 +45,7 @@ export default async function PrintQuotePage({
         .select("*")
         .in("hamper_id", hamperIds)
         .order("line_no")
-        .returns<HamperItem[]>()
+        .overrideTypes<HamperItem[], { merge: false }>()
     : { data: [] as HamperItem[] };
 
   const byHamper = new Map<string, HamperItem[]>();
@@ -84,7 +84,7 @@ export default async function PrintQuotePage({
         Back to quote
       </Link>
       <PrintButton />
-      <p className="text-sm text-[var(--color-muted)]">
+      <p className="text-sm text-(--color-muted)">
         Print, then choose “Save as PDF” to send this to a client.
       </p>
     </div>

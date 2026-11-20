@@ -143,7 +143,7 @@ export function ClientForm({ client, canDelete }: { client?: Client; canDelete: 
       </form>
 
       {client && canDelete && (
-        <form action={delAction} className="mt-4 border-t border-[var(--color-line)] pt-3">
+        <form action={delAction} className="mt-4 border-t border-(--color-line) pt-3">
           <input type="hidden" name="id" value={client.id} />
           {delState.error && (
             <p role="alert" className="mb-2 text-sm text-red-700">

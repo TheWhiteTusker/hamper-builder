@@ -24,27 +24,27 @@ export function SlideCard({
   onRemove: () => void;
 }) {
   return (
-    <div className={`card overflow-hidden ${s.unsaved ? "ring-2 ring-[var(--color-gold)]" : ""}`}>
+    <div className={`card overflow-hidden ${s.unsaved ? "ring-2 ring-gold" : ""}`}>
       {s.unsaved ? (
-        <div className="relative bg-[var(--color-paper)] p-2" title="Save changes to edit this slide">
+        <div className="relative bg-paper p-2" title="Save changes to edit this slide">
           <SlideThumb canvas={s.canvas} width={240} className="mx-auto rounded shadow-sm" />
-          <span className="absolute right-3 top-3 rounded bg-[var(--color-ink)] px-1.5 py-0.5 text-[11px] text-white">New · save to edit</span>
+          <span className="absolute right-3 top-3 rounded bg-(--color-ink) px-1.5 py-0.5 text-[11px] text-white">New · save to edit</span>
         </div>
       ) : (
         <Link
           href={`/presentations/${deckId}/slides/${s.id}`}
           prefetch={false}
           onClick={guard}
-          className="block bg-[var(--color-paper)] p-2 hover:opacity-90"
+          className="block bg-paper p-2 hover:opacity-90"
         >
           <SlideThumb canvas={s.canvas} width={240} className="mx-auto rounded shadow-sm" />
         </Link>
       )}
       <div className="flex items-center gap-2 px-3 py-2">
-        <span className="w-6 text-sm tabular-nums text-[var(--color-muted)]">{i + 1}</span>
+        <span className="w-6 text-sm tabular-nums text-(--color-muted)">{i + 1}</span>
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-medium">{slideName(s)}</div>
-          <div className="text-xs text-[var(--color-muted)]">{KIND_LABEL[s.kind] ?? s.kind}</div>
+          <div className="text-xs text-(--color-muted)">{KIND_LABEL[s.kind] ?? s.kind}</div>
         </div>
         <button type="button" aria-label="Move earlier" className="px-1 disabled:opacity-30" disabled={i === 0} onClick={() => onMove(-1)}>
           ←

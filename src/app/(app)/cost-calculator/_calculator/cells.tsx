@@ -145,17 +145,17 @@ export function SectionHeader({
   extra?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)] bg-[var(--color-sheet)] px-4 py-3">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-(--color-border) bg-(--color-sheet) px-4 py-3">
       <div className="flex items-center gap-3">
         {lead}
         {badge}
-        <h3 className="text-base font-semibold text-[var(--color-ink)]">{title}</h3>
-        <span className="text-xs text-[var(--color-muted)]">{hint}</span>
+        <h3 className="text-base font-semibold text-(--color-ink)">{title}</h3>
+        <span className="text-xs text-(--color-muted)">{hint}</span>
       </div>
       <div className="flex items-center gap-3">
         {extra}
-        <span className="text-xs text-[var(--color-muted)]">{totalLabel}</span>
-        <span className="rounded-lg bg-white px-2.5 py-1 font-mono text-sm font-bold text-[var(--color-brand-dark)] shadow-sm">
+        <span className="text-xs text-(--color-muted)">{totalLabel}</span>
+        <span className="rounded-lg bg-white px-2.5 py-1 font-mono text-sm font-bold text-(--color-brand-dark) shadow-sm">
           {total}
         </span>
       </div>
@@ -177,9 +177,9 @@ export function OverheadInput({
   onChange: (pct: string) => void;
 }) {
   return (
-    <label className="flex items-center gap-1.5 text-xs text-[var(--color-muted)]" title={`Overhead added to the ${stageName} subtotal`}>
+    <label className="flex items-center gap-1.5 text-xs text-(--color-muted)" title={`Overhead added to the ${stageName} subtotal`}>
       Overhead
-      <span className="flex items-center rounded-lg border border-[var(--color-border)] bg-white pr-1.5 shadow-xs">
+      <span className="flex items-center rounded-lg border border-(--color-border) bg-white pr-1.5 shadow-xs">
         <input
           type="number"
           min="0"
@@ -188,11 +188,11 @@ export function OverheadInput({
           onChange={(e) => onChange(e.target.value)}
           placeholder="0"
           aria-label={`${stageName} overhead percent`}
-          className="w-14 rounded-lg bg-transparent px-1.5 py-1 text-right font-mono text-xs text-[var(--color-ink)] outline-none"
+          className="w-14 rounded-lg bg-transparent px-1.5 py-1 text-right font-mono text-xs text-(--color-ink) outline-none"
         />
         %
       </span>
-      {added && <span className="font-mono text-[var(--color-brand-dark)]">+{added}</span>}
+      {added && <span className="font-mono text-(--color-brand-dark)">+{added}</span>}
     </label>
   );
 }

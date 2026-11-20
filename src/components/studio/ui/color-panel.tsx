@@ -40,7 +40,7 @@ function Swatch({ fill, selected, onClick, title }: { fill: Fill; selected?: boo
       onClick={onClick}
       className={cx(
         "relative aspect-square w-full rounded-md border border-black/10 transition-transform hover:scale-110",
-        selected && "ring-2 ring-[var(--st-accent)] ring-offset-2 ring-offset-[var(--st-panel)]",
+        selected && "ring-2 ring-(--st-accent) ring-offset-2 ring-offset-(--st-panel)",
       )}
       style={{ background: fillCss(fill) }}
     >
@@ -80,13 +80,13 @@ export function ColorPanel({
   return (
     <div className="space-y-3">
       {allowGradient && (
-        <div className="grid grid-cols-2 gap-1 rounded-md bg-[var(--st-panel-2)] p-1">
+        <div className="grid grid-cols-2 gap-1 rounded-md bg-(--st-panel-2) p-1">
           {(["solid", "linear"] as const).map((t) => (
             <button
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={cx("h-7 rounded text-[12px]", tab === t ? "bg-[var(--st-panel)] text-[var(--st-text)] shadow-sm" : "text-[var(--st-muted)]")}
+              className={cx("h-7 rounded text-[12px]", tab === t ? "bg-(--st-panel) text-(--st-text) shadow-sm" : "text-(--st-muted)")}
             >
               {t === "solid" ? "Solid colour" : "Gradient"}
             </button>

@@ -36,7 +36,7 @@ export function UploadBar({
           <select
             value={uploadColor}
             onChange={(e) => onUploadColor(e.target.value)}
-            className="select text-xs py-1 px-2.5 bg-white min-w-[130px]"
+            className="select text-xs py-1 px-2.5 bg-white min-w-32.5"
           >
             {colors.map((c) => (
               <option key={c.name} value={c.name}>
@@ -52,7 +52,7 @@ export function UploadBar({
             type="checkbox"
             checked={isPrimary}
             onChange={(e) => onPrimary(e.target.checked)}
-            className="rounded text-[var(--color-brand)] focus:ring-[var(--color-brand)]"
+            className="rounded text-(--color-brand) focus:ring-(--color-brand)"
           />
           Set as Primary Cover
         </label>

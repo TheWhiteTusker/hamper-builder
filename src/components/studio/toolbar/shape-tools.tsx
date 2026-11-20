@@ -23,7 +23,7 @@ export function ShapeTools({ ed, l }: { ed: Editor; l: Extract<Layer, { kind: "r
       >
         <div className="space-y-3">
           <Slider label="Border weight" value={l.strokeWidth} min={0} max={60} onChange={(strokeWidth) => ed.tweak(l.id, { strokeWidth })} />
-          <label className="flex items-center justify-between text-[12px] text-[var(--st-muted)]">
+          <label className="flex items-center justify-between text-[12px] text-(--st-muted)">
             Border colour
             <span className="relative h-7 w-10 cursor-pointer rounded-md border border-black/15" style={{ background: l.stroke }}>
               <input

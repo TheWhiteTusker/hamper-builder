@@ -17,7 +17,7 @@ export function AlignMenu({ ed, ids }: { ed: Editor; ids: string[] }) {
     ["right", "Right", AlignEndVertical],
     ["bottom", "Bottom", AlignEndHorizontal],
   ];
-  const item = "flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-[var(--st-hover)] disabled:opacity-35 disabled:hover:bg-transparent";
+  const item = "flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-(--st-hover) disabled:opacity-35 disabled:hover:bg-transparent";
   return (
     <Popover title="Align elements" width={260} trigger={<><AlignCenterVertical className={icon} /> Align</>}>
       <div className={cx(panelTitle, "mb-1.5")}>Align elements</div>
@@ -37,7 +37,7 @@ export function AlignMenu({ ed, ids }: { ed: Editor; ids: string[] }) {
           <Rows3 className={icon} /> Vertically
         </button>
       </div>
-      {ids.length < 3 && <p className="mt-2 text-[11px] text-[var(--st-muted)]">Select 3 or more to space evenly.</p>}
+      {ids.length < 3 && <p className="mt-2 text-[11px] text-(--st-muted)">Select 3 or more to space evenly.</p>}
     </Popover>
   );
 }
@@ -57,7 +57,7 @@ export function PositionMenu({ ed, ids }: { ed: Editor; ids: string[] }) {
     ["bottom", "Bottom", AlignEndHorizontal],
     ["right", "Right", AlignEndVertical],
   ];
-  const item = "flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-[var(--st-hover)]";
+  const item = "flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-(--st-hover)";
 
   return (
     <Popover title="Position" align="right" width={290} trigger={<span className="text-[12.5px]">Position</span>}>
@@ -81,7 +81,7 @@ export function PositionMenu({ ed, ids }: { ed: Editor; ids: string[] }) {
           </div>
         </>
       )}
-      <p className="mt-3 text-[11px] text-[var(--st-muted)]">
+      <p className="mt-3 text-[11px] text-(--st-muted)">
         Tip: drag layers in the Layers panel to reorder.
       </p>
     </Popover>

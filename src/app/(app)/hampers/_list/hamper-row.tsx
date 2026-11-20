@@ -19,10 +19,10 @@ export function HamperRow({ h }: { h: HamperSummary }) {
               src={h.image_url}
               alt=""
               loading="lazy"
-              className="h-10 w-10 rounded-md border border-[var(--color-line)] object-cover"
+              className="h-10 w-10 rounded-md border border-(--color-line) object-cover"
             />
           ) : (
-            <span className="block h-10 w-10 rounded-md border border-dashed border-[var(--color-line)] bg-[var(--color-paper)]" />
+            <span className="block h-10 w-10 rounded-md border border-dashed border-(--color-line) bg-paper" />
           )}
         </Link>
       </TableCell>
@@ -36,7 +36,7 @@ export function HamperRow({ h }: { h: HamperSummary }) {
           {h.name}
         </Link>
       </TableCell>
-      <TableCell className="text-[var(--color-muted)]">{h.collection ?? "—"}</TableCell>
+      <TableCell className="text-(--color-muted)">{h.collection ?? "—"}</TableCell>
       <TableCell>
         <span className="badge">{h.status}</span>
       </TableCell>
@@ -44,7 +44,7 @@ export function HamperRow({ h }: { h: HamperSummary }) {
       <TableCell className="num">{formatMoney(h.total_cp)}</TableCell>
       <TableCell className="num">
         {h.final_catalogue_sp == null ? (
-          <span className="text-[var(--color-muted)]">not priced</span>
+          <span className="text-(--color-muted)">not priced</span>
         ) : (
           formatMoney(h.final_catalogue_sp)
         )}

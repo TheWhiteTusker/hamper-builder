@@ -36,7 +36,7 @@ export async function repriceVarieties(
       .from("cost_varieties")
       .select("id, name, default_rate, unit, default_wastage_pct, cost_subcategories(name, cost_categories(name))")
       .in("id", varietyIds)
-      .returns<VarietyRow[]>(),
+      .overrideTypes<VarietyRow[], { merge: false }>(),
     supabase.from("product_cost_lines").select("sheet_id").in("cost_variety_id", varietyIds),
   ]);
   if (vError || uError) return { ...none, error: describeError(vError ?? uError) };
@@ -44,9 +44,9 @@ export async function repriceVarieties(
   if (!sheetIds.length) return none;
 
   const [lines, sheets, products, costed, settings] = await Promise.all([
-    supabase.from("product_cost_lines").select("*").in("sheet_id", sheetIds).returns<ProductCostLine[]>(),
-    supabase.from("product_cost_sheets").select("*").in("id", sheetIds).returns<ProductCostSheet[]>(),
-    supabase.from("products").select("id, code, name, cost_price, default_sp").returns<PricedProduct[]>(),
+    supabase.from("product_cost_lines").select("*").in("sheet_id", sheetIds).overrideTypes<ProductCostLine[], { merge: false }>(),
+    supabase.from("product_cost_sheets").select("*").in("id", sheetIds).overrideTypes<ProductCostSheet[], { merge: false }>(),
+    supabase.from("products").select("id, code, name, cost_price, default_sp").overrideTypes<PricedProduct[], { merge: false }>(),
     supabase.from("product_cost_sheets").select("product_id").not("product_id", "is", null),
     loadSettings(supabase),
   ]);

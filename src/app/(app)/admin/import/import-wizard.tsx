@@ -116,7 +116,7 @@ export function ImportWizard() {
 
       <section className="card p-4">
         <h2 className="text-sm font-semibold">2. Check what will be imported</h2>
-        <p className="mt-1 text-sm text-[var(--color-muted)]">
+        <p className="mt-1 text-sm text-(--color-muted)">
           A dry run reads the files and reports what it found. Nothing is written yet.
         </p>
 
@@ -136,7 +136,7 @@ export function ImportWizard() {
 
       <section className="card p-4">
         <h2 className="text-sm font-semibold">3. Import</h2>
-        <p className="mt-1 text-sm text-[var(--color-muted)]">
+        <p className="mt-1 text-sm text-(--color-muted)">
           Records are matched on product code, hamper code and document number, so running
           this twice updates rather than duplicates. Existing hamper and quotation lines are
           replaced by what is in the files.

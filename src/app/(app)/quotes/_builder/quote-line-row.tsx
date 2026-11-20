@@ -61,7 +61,7 @@ export function QuoteLineRow({
     <TableRow className="[&>td]:align-top">
       <TableCell>
         <div className="font-medium">{line.hamper_name}</div>
-        <div className="font-mono text-xs text-[var(--color-muted)]">{line.hamper_code}</div>
+        <div className="font-mono text-xs text-(--color-muted)">{line.hamper_code}</div>
         {/* Read-only preview of what the printed document will list for this line. */}
         <HamperContents
           className="text-xs"
@@ -74,7 +74,7 @@ export function QuoteLineRow({
       {num("qty", "Quantity")}
       {num("catalogue_price", "Catalogue price")}
       {num("discount_pct", "Discount percent")}
-      <TableCell className="num text-[var(--color-muted)]">{formatMoney(finalRate)}</TableCell>
+      <TableCell className="num text-(--color-muted)">{formatMoney(finalRate)}</TableCell>
       <TableCell className="num font-medium">{formatMoney(amount)}</TableCell>
       {/* Product lines have no hamper, so no contents or packaging to set. */}
       {line.hamper_id ? (
@@ -83,7 +83,7 @@ export function QuoteLineRow({
           {pick("packaging_treatment", "Packaging treatment", settings.packaging_treatments)}
         </>
       ) : (
-        <TableCell colSpan={2} className="text-xs text-[var(--color-muted)]">
+        <TableCell colSpan={2} className="text-xs text-(--color-muted)">
           Single product
         </TableCell>
       )}
@@ -93,7 +93,7 @@ export function QuoteLineRow({
             type="button"
             aria-label={`Remove ${line.hamper_code}`}
             onClick={onRemove}
-            className="rounded px-1.5 py-0.5 text-[var(--color-muted)] hover:bg-red-50 hover:text-red-700"
+            className="rounded px-1.5 py-0.5 text-(--color-muted) hover:bg-red-50 hover:text-red-700"
           >
             ×
           </button>

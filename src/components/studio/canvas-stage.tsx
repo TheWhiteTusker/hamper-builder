@@ -109,7 +109,7 @@ export default function CanvasStage({
   };
 
   return (
-    <div className="studio fixed inset-0 z-[60] flex flex-col bg-[var(--st-bg)]">
+    <div className="studio fixed inset-0 z-60 flex flex-col bg-(--st-bg)">
       <StageTopbar
         title={title}
         subtitle={subtitle}
@@ -183,7 +183,7 @@ export default function CanvasStage({
           />
         </div>
 
-        <aside className="hidden w-[280px] shrink-0 flex-col border-l border-[var(--st-line)] bg-[var(--st-panel)] lg:flex">
+        <aside className="hidden w-70 shrink-0 flex-col border-l border-(--st-line) bg-(--st-panel) lg:flex">
           <LayersPanel ed={ed} />
           <TransformPanel ed={ed} />
         </aside>

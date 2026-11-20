@@ -21,7 +21,7 @@ export function ItemPicker({
       <label className="label" htmlFor={id}>
         {label}
       </label>
-      <select id={id} className="select mt-1 min-w-[220px]" value="" onChange={(e) => e.target.value && onPick(e.target.value)}>
+      <select id={id} className="select mt-1 min-w-55" value="" onChange={(e) => e.target.value && onPick(e.target.value)}>
         <option value="">{placeholder}</option>
         {items.map((h) => (
           <option key={h.id} value={h.id}>

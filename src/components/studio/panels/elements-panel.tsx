@@ -14,7 +14,7 @@ export function ElementsPanel({ ed }: { ed: Editor }) {
           type="button"
           title="Add the Lattice Lane logo"
           onClick={ed.addLogo}
-          className="flex w-full items-center justify-center rounded-md border border-[var(--st-line)] bg-white p-3 hover:border-[var(--st-accent)]"
+          className="flex w-full items-center justify-center rounded-md border border-(--st-line) bg-white p-3 hover:border-(--st-accent)"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/deck-logo.png" alt="Lattice Lane logo" className="h-16 w-auto" />
@@ -30,8 +30,8 @@ export function ElementsPanel({ ed }: { ed: Editor }) {
             className={cx(
               "flex items-center gap-2 rounded-md border p-2.5 text-[12px] font-medium transition-colors",
               ed.activeTool === "line"
-                ? "border-[var(--st-accent)] bg-[var(--st-accent-soft)] text-[var(--st-accent-strong)]"
-                : "border-[var(--st-line)] bg-[var(--st-panel-2)] hover:bg-[var(--st-hover)]",
+                ? "border-(--st-accent) bg-(--st-accent-soft) text-(--st-accent-strong)"
+                : "border-(--st-line) bg-(--st-panel-2) hover:bg-(--st-hover)",
             )}
           >
             <Slash className="h-4 w-4 shrink-0 rotate-45" />
@@ -44,20 +44,20 @@ export function ElementsPanel({ ed }: { ed: Editor }) {
             className={cx(
               "flex items-center gap-2 rounded-md border p-2.5 text-[12px] font-medium transition-colors",
               ed.activeTool === "curve"
-                ? "border-[var(--st-accent)] bg-[var(--st-accent-soft)] text-[var(--st-accent-strong)]"
-                : "border-[var(--st-line)] bg-[var(--st-panel-2)] hover:bg-[var(--st-hover)]",
+                ? "border-(--st-accent) bg-(--st-accent-soft) text-(--st-accent-strong)"
+                : "border-(--st-line) bg-(--st-panel-2) hover:bg-(--st-hover)",
             )}
           >
             <Spline className="h-4 w-4 shrink-0" />
             <span>Draw Curve</span>
           </button>
         </div>
-        <label className="mt-2.5 flex cursor-pointer items-center gap-2 px-1 text-[11.5px] text-[var(--st-muted)] hover:text-[var(--st-text)] select-none">
+        <label className="mt-2.5 flex cursor-pointer items-center gap-2 px-1 text-[11.5px] text-(--st-muted) hover:text-(--st-text) select-none">
           <input
             type="checkbox"
             checked={ed.snapRightAngles}
             onChange={(e) => ed.setSnapRightAngles(e.target.checked)}
-            className="h-3.5 w-3.5 rounded border-[var(--st-line)] text-[var(--st-accent)] focus:ring-0"
+            className="h-3.5 w-3.5 rounded border-(--st-line) text-(--st-accent) focus:ring-0"
           />
           <span>Snap to right angles (0° / 90°)</span>
         </label>
@@ -71,7 +71,7 @@ export function ElementsPanel({ ed }: { ed: Editor }) {
               type="button"
               title={s.label}
               onClick={() => ed.add(s.make(ed.canvas))}
-              className="flex aspect-square items-center justify-center rounded-md bg-[var(--st-panel-2)] p-3 hover:bg-[var(--st-hover)]"
+              className="flex aspect-square items-center justify-center rounded-md bg-(--st-panel-2) p-3 hover:bg-(--st-hover)"
             >
               <svg viewBox="0 0 48 48" className="h-full w-full fill-[#c8a97e] stroke-[#c8a97e]" dangerouslySetInnerHTML={{ __html: s.svg }} />
             </button>

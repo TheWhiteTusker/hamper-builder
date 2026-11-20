@@ -5,7 +5,7 @@ import { cx } from "../studio-ui";
 
 /** A small preview of a layer in the Layers panel. */
 export function Thumb({ l }: { l: Layer }) {
-  const box = "flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded border border-[var(--st-line)]";
+  const box = "flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded border border-(--st-line)";
   if (l.kind === "image") {
     return (
       <span className={cx(box, "checkerboard")}>
@@ -16,14 +16,14 @@ export function Thumb({ l }: { l: Layer }) {
   }
   if (l.kind === "text") {
     return (
-      <span className={cx(box, "bg-[var(--st-panel-2)] text-[15px] font-semibold")} style={{ fontFamily: l.fontFamily }}>
+      <span className={cx(box, "bg-(--st-panel-2) text-[15px] font-semibold")} style={{ fontFamily: l.fontFamily }}>
         T
       </span>
     );
   }
   if (l.kind === "line" || l.kind === "curve") {
     return (
-      <span className={cx(box, "bg-[var(--st-panel-2)]")}>
+      <span className={cx(box, "bg-(--st-panel-2)")}>
         <svg viewBox="0 0 24 24" className="h-5 w-5" stroke={l.stroke} strokeWidth="2.5" fill="none" strokeLinecap="round">
           {l.kind === "line" ? (
             <line x1="4" y1="20" x2="20" y2="4" strokeDasharray={l.dash?.length ? "4 3" : undefined} />
@@ -35,7 +35,7 @@ export function Thumb({ l }: { l: Layer }) {
     );
   }
   return (
-    <span className={cx(box, "bg-[var(--st-panel-2)]")}>
+    <span className={cx(box, "bg-(--st-panel-2)")}>
       <span
         className={cx("h-5 w-5", l.kind === "ellipse" && "rounded-full", l.kind === "rect" && l.cornerRadius > 0 && "rounded")}
         style={{

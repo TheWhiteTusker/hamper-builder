@@ -23,21 +23,21 @@ export function PriceSummary({
   const sp = num(sellingPrice);
   const cp = num(costPrice);
   const boxes: [string, string, string][] = [
-    ["Total Cost Price (CP)", formatMoney(cp), "text-[var(--color-ink)]"],
-    ["Markup %", markupPct != null ? `${num(markupPct)}%` : "—", "text-[var(--color-ink)]"],
-    ["Selling Price (SP)", formatMoney(sp), "text-[var(--color-brand-dark)]"],
+    ["Total Cost Price (CP)", formatMoney(cp), "text-(--color-ink)"],
+    ["Markup %", markupPct != null ? `${num(markupPct)}%` : "—", "text-(--color-ink)"],
+    ["Selling Price (SP)", formatMoney(sp), "text-(--color-brand-dark)"],
     ["Margin", sp > 0 ? formatPct((sp - cp) / sp, 1) : "—", "text-emerald-700"],
   ];
 
   return (
-    <div className="card p-5 bg-gradient-to-br from-white to-slate-50 border-2 border-[var(--color-brand)]/20 shadow-md">
-      <h3 className="text-base font-bold text-[var(--color-ink)] mb-4">Cost Breakdown & Selling Price</h3>
+    <div className="card p-5 bg-linear-to-br from-white to-slate-50 border-2 border-(--color-brand)/20 shadow-md">
+      <h3 className="text-base font-bold text-(--color-ink) mb-4">Cost Breakdown & Selling Price</h3>
       {totals && <CostBreakdown totals={totals} />}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {boxes.map(([label, value, tone]) => (
           <div key={label} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <span className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wider">{label}</span>
+            <span className="text-xs font-semibold text-(--color-muted) uppercase tracking-wider">{label}</span>
             <div className={`mt-1 font-mono text-2xl font-black ${tone}`}>{value}</div>
           </div>
         ))}
@@ -51,7 +51,7 @@ export function PriceSummary({
       {notes && (
         <div className="mt-4">
           <div className="label">Costing notes / specifications</div>
-          <p className="mt-1 whitespace-pre-line text-sm text-[var(--color-ink)]">{notes}</p>
+          <p className="mt-1 whitespace-pre-line text-sm text-(--color-ink)">{notes}</p>
         </div>
       )}
     </div>

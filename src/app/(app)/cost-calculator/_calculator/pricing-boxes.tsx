@@ -4,8 +4,8 @@ import { formatMoney, formatPct, num } from "@/lib/pricing";
 import type { Pricing } from "./use-pricing";
 
 const box = "rounded-xl border border-slate-200 bg-white p-4 shadow-sm";
-const caption = "text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wider";
-const note = "mt-1 text-[11px] text-[var(--color-muted)]";
+const caption = "text-xs font-semibold text-(--color-muted) uppercase tracking-wider";
+const note = "mt-1 text-[11px] text-(--color-muted)";
 
 /** Cost price, markup %, selling price and margin. */
 export function PricingBoxes({ pricing }: { pricing: Pricing; source?: string }) {

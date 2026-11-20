@@ -147,7 +147,7 @@ async function CategoriesTab({ supabase }: { supabase: Supabase }) {
     .select("*")
     .order("sort_order")
     .order("name")
-    .returns<Category[]>();
+    .overrideTypes<Category[], { merge: false }>();
   return (
     <section className="card overflow-hidden">
       <p className="border-b border-line px-4 py-3 text-xs text-(--color-muted)">
@@ -169,7 +169,7 @@ async function PickListsTab({ supabase }: { supabase: Supabase }) {
 }
 
 async function UsersTab({ supabase, selfId }: { supabase: Supabase; selfId: string }) {
-  const { data: profiles } = await supabase.from("profiles").select("*").order("created_at").returns<Profile[]>();
+  const { data: profiles } = await supabase.from("profiles").select("*").order("created_at").overrideTypes<Profile[], { merge: false }>();
   return (
     <section className="card overflow-hidden">
       <p className="border-b border-line px-4 py-3 text-xs text-(--color-muted)">

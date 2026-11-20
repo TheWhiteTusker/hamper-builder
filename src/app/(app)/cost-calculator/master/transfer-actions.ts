@@ -17,7 +17,7 @@ async function nextSortOrder(supabase: Supabase, categoryId: string) {
     .eq("category_id", categoryId)
     .order("sort_order", { ascending: false })
     .limit(1)
-    .returns<{ sort_order: number }[]>();
+    .overrideTypes<{ sort_order: number }[], { merge: false }>();
   return (data?.[0]?.sort_order ?? 0) + 1;
 }
 
@@ -78,7 +78,7 @@ export async function moveCostSubcategory(subcategoryId: string, targetCategoryI
     .from("cost_varieties")
     .select("id")
     .eq("subcategory_id", subcategoryId)
-    .returns<{ id: string }[]>();
+    .overrideTypes<{ id: string }[], { merge: false }>();
 
   const varIds = (vars ?? []).map((v) => v.id);
   if (varIds.length > 0) {
@@ -118,7 +118,7 @@ export async function duplicateCostSubcategory(
       .from("cost_varieties")
       .select("*")
       .eq("subcategory_id", subcategoryId)
-      .returns<CostVariety[]>(),
+      .overrideTypes<CostVariety[], { merge: false }>(),
   ]);
 
   if (!sub) return { error: "Subcategory not found." };
@@ -172,7 +172,7 @@ export async function duplicateCostSubcategory(
       .from("cost_varieties")
       .insert(varietyPayloads)
       .select()
-      .returns<CostVariety[]>();
+      .overrideTypes<CostVariety[], { merge: false }>();
     if (varErr) {
       await supabase.from("cost_subcategories").delete().eq("id", newSub.id);
       return { error: describeError(varErr) };

@@ -39,7 +39,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
   if (maxPrice) query = query.lte("final_catalogue_sp", Number(maxPrice));
 
   const [{ data: hampers, count }, settings] = await Promise.all([
-    query.range(0, limit - 1).returns<HamperSummary[]>(),
+    query.range(0, limit - 1).overrideTypes<HamperSummary[], { merge: false }>(),
     loadSettings(supabase),
   ]);
 
@@ -72,12 +72,12 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
       </PageHeader>
 
       {one(params.deleted) === "1" && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-[var(--color-line)] bg-[#faf8ee] px-4 py-3 text-sm text-[var(--color-ink)] shadow-xs">
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-(--color-line) bg-paper px-4 py-3 text-sm text-(--color-ink) shadow-xs">
           <div className="flex items-center gap-2">
             <span className="inline-block h-2 w-2 rounded-full bg-emerald-600" />
             <span>Hamper moved to Bin. It will remain in the Bin for 30 days and can be restored anytime.</span>
           </div>
-          <Link href="/bin?tab=hampers" className="font-semibold text-[var(--color-brand)] underline hover:text-[var(--color-brand-dark)]">
+          <Link href="/bin?tab=hampers" className="font-semibold text-(--color-brand) underline hover:text-(--color-brand-dark)">
             Open Bin →
           </Link>
         </div>
@@ -89,7 +89,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
       {/* The form wraps the whole table so every filter can sit in the header
           cell of the column it filters. */}
       <form key={[q, collection, minItems, minCost, maxCost, minPrice, maxPrice].join("|")} className="card list-scroll">
-        <Table className="min-w-[1200px]">
+        <Table className="min-w-300">
           <TableHeader>
             <TableRow>
               <TableHead className="w-8" aria-label="Selected"></TableHead>
@@ -166,7 +166,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} className="py-10 text-center text-sm text-[var(--color-muted)]">
+                <TableCell colSpan={11} className="py-10 text-center text-sm text-(--color-muted)">
                   {filtered ? "No hampers match that search." : "No hampers yet."}
                   {manage && !filtered && (
                     <Link href="/hampers/new" className="ml-2 underline">

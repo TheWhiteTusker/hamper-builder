@@ -40,8 +40,8 @@ export function OptionGroup({
   };
 
   return (
-    <div className="border-t border-[var(--color-line)] first:border-t-0">
-      <div className="flex flex-wrap items-end justify-between gap-3 bg-[var(--color-brand-soft)] px-4 py-2.5">
+    <div className="border-t border-(--color-line) first:border-t-0">
+      <div className="flex flex-wrap items-end justify-between gap-3 bg-brand-soft px-4 py-2.5">
         <div className="flex items-end gap-2">
           <div>
             <label className="label" htmlFor={`opt-${label}`}>
@@ -49,7 +49,7 @@ export function OptionGroup({
             </label>
             <input
               id={`opt-${label}`}
-              className="input mt-1 max-w-[180px] font-semibold"
+              className="input mt-1 max-w-45 font-semibold"
               value={draft}
               disabled={!canEdit}
               onChange={(e) => setDraft(e.target.value)}
@@ -68,7 +68,7 @@ export function OptionGroup({
 
       {children}
 
-      <dl className="ml-auto flex max-w-[520px] flex-wrap justify-end gap-x-6 gap-y-1 px-4 py-2.5 text-sm">
+      <dl className="ml-auto flex max-w-130 flex-wrap justify-end gap-x-6 gap-y-1 px-4 py-2.5 text-sm">
         <Total label="Subtotal" value={formatMoney(totals.subtotal)} />
         <Total label={`GST ${gstPct || 0}%`} value={formatMoney(totals.gstAmount)} />
         <Total label={`${label} total`} value={formatMoney(totals.grandTotal)} strong />
@@ -80,7 +80,7 @@ export function OptionGroup({
 function Total({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <div className="flex items-baseline gap-2">
-      <dt className="text-[var(--color-muted)]">{label}</dt>
+      <dt className="text-(--color-muted)">{label}</dt>
       <dd className={`tabular-nums ${strong ? "text-base font-semibold" : "font-medium"}`}>{value}</dd>
     </div>
   );

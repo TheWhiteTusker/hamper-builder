@@ -52,9 +52,9 @@ export function HamperContents({
       {showsContents(detailMode) &&
         visible.length > 0 &&
         (summaryOnly(detailMode) ? (
-          <div className="mt-0.5 text-[var(--color-muted)]">{visible.length} items</div>
+          <div className="mt-0.5 text-(--color-muted)">{visible.length} items</div>
         ) : (
-          <ul className="mt-1 space-y-0.5 text-[var(--color-muted)]">
+          <ul className="mt-1 space-y-0.5 text-(--color-muted)">
             {visible.map((item) => (
               <li key={item.id}>
                 {item.product_name}
@@ -65,7 +65,7 @@ export function HamperContents({
         ))}
 
       {!absorb && packagingTreatment && (
-        <div className="mt-1 text-xs text-[var(--color-muted)]">
+        <div className="mt-1 text-xs text-(--color-muted)">
           Packaging: {packagingTreatment}
         </div>
       )}

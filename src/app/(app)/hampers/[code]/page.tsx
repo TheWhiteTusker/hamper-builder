@@ -27,7 +27,7 @@ export default async function HamperPage({ params }: { params: Promise<{ code: s
     .select("*, products(image_url)")
     .eq("hamper_id", hamper.id)
     .order("line_no")
-    .returns<PreviewItem[]>();
+    .overrideTypes<PreviewItem[], { merge: false }>();
 
   const fields: [string, string][] = [
     ["Hamper code", hamper.code],

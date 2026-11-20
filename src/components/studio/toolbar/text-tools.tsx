@@ -20,7 +20,7 @@ export function TextTools({ ed, l }: { ed: Editor; l: Extract<Layer, { kind: "te
   return (
     <>
       <FontPicker value={l.fontFamily} onChange={(fontFamily) => ed.patch(l.id, { fontFamily })} />
-      <div className="flex items-center rounded-md border border-[var(--st-line)]">
+      <div className="flex items-center rounded-md border border-(--st-line)">
         <ToolButton title="Decrease font size" className="h-7 w-7 px-0" onClick={() => setSize(size - 1)}>
           <Minus className="h-3.5 w-3.5" />
         </ToolButton>

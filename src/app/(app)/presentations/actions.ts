@@ -50,7 +50,7 @@ export async function loadDeckData(items: DeckItem[]): Promise<DeckData> {
           .from("hamper_summary")
           .select("id, code, name, final_catalogue_sp, image_url")
           .in("id", hamperIds)
-          .returns<HamperRow[]>()
+          .overrideTypes<HamperRow[], { merge: false }>()
           .then((r) => r.data ?? [])
       : Promise.resolve([] as HamperRow[]),
     hamperIds.length
@@ -59,7 +59,7 @@ export async function loadDeckData(items: DeckItem[]): Promise<DeckData> {
           .select("hamper_id, product_id, product_name, category_name, products(image_url)")
           .in("hamper_id", hamperIds)
           .order("line_no")
-          .returns<LineRow[]>()
+          .overrideTypes<LineRow[], { merge: false }>()
           .then((r) => r.data ?? [])
       : Promise.resolve([] as LineRow[]),
     productIds.length
@@ -67,13 +67,13 @@ export async function loadDeckData(items: DeckItem[]): Promise<DeckData> {
           .from("products")
           .select("id, code, name, default_sp, image_url, categories(name)")
           .in("id", productIds)
-          .returns<ProductRow[]>()
+          .overrideTypes<ProductRow[], { merge: false }>()
           .then((r) => r.data ?? [])
       : Promise.resolve([] as ProductRow[]),
     supabase
       .from("categories")
       .select("name, counts_as_item")
-      .returns<{ name: string; counts_as_item: boolean }[]>()
+      .overrideTypes<{ name: string; counts_as_item: boolean }[], { merge: false }>()
       .then((r) => r.data ?? []),
     getBrandLogo(),
   ]);
