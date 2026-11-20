@@ -102,7 +102,7 @@ export const productPatch = (p: CatalogProduct | undefined): Partial<Line> =>
 /**
  * Margin and unit price follow each other: a margin prices the line from its
  * cost, a typed price works out the margin. A new cost keeps the price and
- * moves the margin, as a cost change does in the calculator.
+ * moves the margin: repricing would also push a new price to Product Master.
  */
 export function priceEdit(line: Line, key: "unit_cp" | "unit_sp" | "target_margin", value: string): Partial<Line> {
   const cp = num(key === "unit_cp" ? value : line.unit_cp);

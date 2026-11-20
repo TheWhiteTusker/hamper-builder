@@ -49,7 +49,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
         </Link>
       </PageHeader>
 
-      <form className="card mb-4 flex flex-wrap items-end gap-3 p-3">
+      <form key={[q, type, status].join("|")} className="card mb-4 flex flex-wrap items-end gap-3 p-3">
         <div className="min-w-[220px] flex-1">
           <label className="label" htmlFor="q">
             Search

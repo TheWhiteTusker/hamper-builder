@@ -6,6 +6,7 @@ import { createClient, requireRole } from "@/lib/supabase/server";
 import { loadSettings } from "@/lib/settings";
 import { resolveColors } from "@/lib/product-code";
 import { productHref } from "./href";
+import { listReturn } from "@/lib/list-return";
 import { type ActionState, describeError } from "@/lib/forms";
 
 export async function deleteProduct(
@@ -27,7 +28,7 @@ export async function deleteProduct(
 
   revalidatePath("/products");
   revalidatePath("/bin");
-  redirect("/products?deleted=1");
+  redirect(listReturn("products", formData.get("return_to"), true));
 }
 
 export async function toggleProductActive(formData: FormData) {

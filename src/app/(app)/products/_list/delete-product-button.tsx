@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { deleteProduct } from "../actions";
+import { ListReturnField } from "@/components/list-select/list-position";
 
 /** Deletes a product after a confirm. Saved hampers keep their own copy of its line. */
 export function DeleteProductButton({ id, label }: { id: string; label: string }) {
@@ -16,6 +17,7 @@ export function DeleteProductButton({ id, label }: { id: string; label: string }
       className="inline"
     >
       <input type="hidden" name="id" value={id} />
+      <ListReturnField kind="products" />
       <button
         type="submit"
         disabled={pending}

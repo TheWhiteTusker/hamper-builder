@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { createClient, requireUser } from "@/lib/supabase/server";
 import { type ActionState, describeError } from "@/lib/forms";
 import { pushLinePrices } from "./push-prices";
+import { listReturn } from "@/lib/list-return";
 
 const nullableText = z.string().trim().nullable().optional();
 
@@ -81,10 +82,8 @@ export async function saveHamper(
   revalidatePath(`/hampers/${encodeURIComponent(String(code))}`, "layout");
   // Saving is the end of the job, so it lands back on the list rather than
   // leaving you parked on the hamper you just finished: the list as it was
-  // left, filters included. Only ever a /hampers URL, never another site.
-  const back = new URL(String(formData.get("return_to") ?? ""), "http://x");
-  back.searchParams.delete("deleted"); // that banner was for an earlier visit
-  redirect(back.origin === "http://x" && back.pathname === "/hampers" ? back.pathname + back.search : "/hampers");
+  // left, filters included.
+  redirect(listReturn("hampers", formData.get("return_to")));
 }
 
 export async function duplicateHamper(
@@ -123,5 +122,5 @@ export async function deleteHamper(
 
   revalidatePath("/hampers");
   revalidatePath("/bin");
-  redirect("/hampers?deleted=1");
+  redirect(listReturn("hampers", formData.get("return_to"), true));
 }

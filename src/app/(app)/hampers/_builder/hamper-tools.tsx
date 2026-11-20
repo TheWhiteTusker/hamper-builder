@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "@/components/link";
 import { duplicateHamper, deleteHamper } from "../actions";
 import type { Hamper } from "@/lib/types";
+import { ListReturnField } from "@/components/list-select/list-position";
 
 /** Image, quote, duplicate and bin: kept outside the builder form so these never submit the hamper. */
 export function HamperTools({ hamper }: { hamper: Hamper }) {
@@ -52,6 +53,7 @@ export function HamperTools({ hamper }: { hamper: Hamper }) {
           }}
         >
           <input type="hidden" name="id" value={hamper.id} />
+          <ListReturnField kind="hampers" />
           <button type="submit" className="btn-danger" disabled={deleting}>
             {deleting ? "Moving to Bin…" : "Move to Bin"}
           </button>

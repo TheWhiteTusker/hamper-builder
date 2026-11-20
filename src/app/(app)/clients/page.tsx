@@ -47,7 +47,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Sear
         />
 
         <div>
-          <form className="card mb-4 flex items-end gap-3 p-3">
+          <form key={q} className="card mb-4 flex items-end gap-3 p-3">
             <div className="flex-1">
               <label className="label" htmlFor="q">
                 Search
