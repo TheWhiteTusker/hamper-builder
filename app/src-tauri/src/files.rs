@@ -11,12 +11,12 @@ use std::path::PathBuf;
 use tauri::AppHandle;
 use tauri_plugin_dialog::DialogExt;
 
-fn err(e: impl std::fmt::Display) -> ApiError {
+pub(crate) fn err(e: impl std::fmt::Display) -> ApiError {
     ApiError::Server(format!("Couldn't write the file: {e}"))
 }
 
 /// Where to save, chosen in the system dialog; None if cancelled.
-async fn ask_where(app: &AppHandle, file_name: &str, label: &str, ext: &'static str) -> Result<Option<PathBuf>, ApiError> {
+pub(crate) async fn ask_where(app: &AppHandle, file_name: &str, label: &str, ext: &'static str) -> Result<Option<PathBuf>, ApiError> {
     let dialog = app.dialog().file().set_file_name(file_name).add_filter(label, &[ext]);
     let picked = tauri::async_runtime::spawn_blocking(move || dialog.blocking_save_file()).await.map_err(err)?;
     picked.map(|p| p.into_path().map_err(err)).transpose()

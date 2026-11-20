@@ -411,7 +411,7 @@ pub fn blank_slide() -> Canvas {
 pub const PX_PER_INCH: f64 = 144.0;
 
 /// A text layer as a native PowerPoint text box, in inches and points.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PptTextBox {
     pub x: f64,
     pub y: f64,

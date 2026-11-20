@@ -5,6 +5,7 @@ mod cache;
 mod commands;
 mod db;
 mod files;
+mod pptx;
 mod session;
 mod supabase;
 mod worker;
@@ -124,6 +125,7 @@ pub fn run() {
             files::save_text,
             files::read_xlsx,
             files::save_bytes,
+            pptx::save_pptx,
         ])
         .run(tauri::generate_context!());
 
