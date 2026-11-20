@@ -3,6 +3,7 @@
 //! `lattice_core::canvas`; drawing is Canvas 2D from Rust (`render`).
 
 mod editor;
+mod magic;
 mod panels;
 pub mod render;
 

@@ -5,6 +5,7 @@ mod cache;
 mod commands;
 mod db;
 mod files;
+mod magic;
 mod pptx;
 mod session;
 mod supabase;
@@ -128,6 +129,7 @@ pub fn run() {
             pptx::pptx_begin,
             pptx::pptx_add,
             pptx::pptx_save,
+            magic::magic_analyze,
         ])
         .run(tauri::generate_context!());
 

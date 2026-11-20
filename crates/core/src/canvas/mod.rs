@@ -11,6 +11,7 @@ pub mod arrange;
 pub mod cutout;
 pub mod deck;
 pub mod history;
+pub mod magic;
 
 use serde::{Deserialize, Serialize};
 

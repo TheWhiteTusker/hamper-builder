@@ -474,6 +474,7 @@ fn layer_tools(ed: Ed, id: String) -> impl IntoView {
                     <ToolButton title="Flip horizontally" on_click=move || ed.flip(&idv.get_value(), true)>"⇋"</ToolButton>
                     <ToolButton title="Flip vertically" on_click=move || ed.flip(&idv.get_value(), false)>"⇵"</ToolButton>
                     <ToolButton title="Fit to page" on_click=move || ed.fit_to_page(&idv.get_value())>"Fit to page"</ToolButton>
+                    <super::magic::MagicTools ed=ed id=idv.get_value() />
                     {product.then(|| view! {
                         <span class="ml-2 text-[11px] text-(--st-muted)">"Tolerance"</span>
                         <input type="range" min="5" max="120" class="w-20" prop:value=move || tol.get().to_string() on:input=move |e| tol.set(event_target_value(&e).parse().unwrap_or(40.0)) />

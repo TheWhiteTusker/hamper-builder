@@ -165,6 +165,8 @@ pub struct Ed {
     pub removing: RwSignal<bool>,
     pub space: RwSignal<bool>,
     pub tab: RwSignal<Option<Tab>>,
+    /// What Magic layers is doing right now, or None when idle.
+    pub magic: RwSignal<Option<super::magic::Step>>,
     pub config: StoredValue<StudioConfig, LocalStorage>,
     board_el: NodeRef<html::Div>,
 }
@@ -1069,10 +1071,18 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
         removing: RwSignal::new(false),
         space: RwSignal::new(false),
         tab: RwSignal::new(Some(Tab::Products)),
+        magic: RwSignal::new(None),
         config: StoredValue::new_local(config),
         board_el: NodeRef::new(),
     };
     let canvas_el = NodeRef::<html::Canvas>::new();
+    // Progress from the native models, while a split is running.
+    let magic = ed.magic;
+    crate::tauri::listen::<super::magic::Step>("magic-progress", move |s| {
+        if magic.try_get_untracked().flatten().is_some() {
+            let _ = magic.try_set(Some(s));
+        }
+    });
     super::ensure_font_stylesheet();
 
     // Web fonts load on demand; redraw once each face in use has arrived.
