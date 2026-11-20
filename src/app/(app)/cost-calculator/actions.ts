@@ -12,7 +12,7 @@ import { getNextSerialForCategory } from "@/lib/product-code";
 import type { ProductCostLine } from "@/lib/types";
 import { linkBoughtOutLines } from "@/lib/bought-out-master";
 import { repriceVarieties } from "./reprice";
-import { applyPriceToColors, prepareLines, saveColorVariants, saveRow } from "./save-sheet";
+import { applyPriceToColors, prepareLines, saveColorVariants, saveLineWastage, saveRow } from "./save-sheet";
 
 export type SaveCostSheetPayload = {
   sheetId?: string | null;
@@ -57,6 +57,8 @@ export async function saveCostSheetAndProduct(payload: SaveCostSheetPayload) {
         ? await linkBoughtOutLines(supabase, payload.lines)
         : { lines: payload.lines, repriced: [] };
     if (master.error !== undefined) return { error: master.error };
+    const wastage = await saveLineWastage(supabase, master.lines);
+    if (wastage.error) return { error: wastage.error };
 
     const preparedLines = prepareLines(master.lines);
     // Only real, non-zero percentages are kept.
@@ -152,8 +154,8 @@ export async function saveCostSheetAndProduct(payload: SaveCostSheetPayload) {
     const applied = await applyPriceToColors(supabase, code, payload.applyToIds ?? [], priceValues, sheetValues, preparedLines);
     if (applied.error) return { error: applied.error };
 
-    // A bought-out rate changed in the master: reprice the other products using it.
-    const repriced = await repriceVarieties(supabase, master.repriced);
+    // A rate or wastage changed in the master: reprice the other products using it.
+    const repriced = await repriceVarieties(supabase, [...master.repriced, ...wastage.ids]);
     if (repriced.error) return { error: `Saved, but repricing other products failed: ${repriced.error}` };
 
     // No revalidatePath here: it makes Next re-render the whole calculator into

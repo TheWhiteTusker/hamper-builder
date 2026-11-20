@@ -1,6 +1,6 @@
 "use client";
 
-import { formatMoney, num } from "@/lib/pricing";
+import { formatMoney } from "@/lib/pricing";
 import { isSizedUnit, isTimeUnit, type DimensionUnit } from "@/lib/costing";
 import type { CostStageWithHierarchy } from "@/lib/types";
 import { MrpCell, NumCell, RemoveButton, UnitCell } from "./cells";
@@ -119,11 +119,11 @@ export function StageLineRow({
       {stage.code === "bought_out" ? (
         // Bought-out items carry no wastage; this slot holds their MRP instead.
         <MrpCell line={line} gstRate={gstRate} onChange={(mrp) => set({ mrp })} />
-      ) : fromMaster ? (
-        // Like the rate, wastage comes from the Rates page.
-        <td className="p-2 text-center font-mono text-xs font-semibold" title="Set on the Rates page">
-          {line.variety_name ? `${num(line.wastage_pct)}%` : "—"}
-        </td>
+      ) : fromMaster && !line.cost_variety_id ? (
+        <td className="p-2 text-center font-mono text-xs font-semibold">—</td>
+      ) : line.cost_variety_id ? (
+        // Wastage belongs to the rate: editing it here changes it on the Rates page when saved.
+        <NumCell value={line.wastage_pct} min="0" title="Saving also changes this on the Rates page" onChange={(w) => api.setWastage(line, w ?? 0)} />
       ) : (
         <NumCell value={line.wastage_pct} min="0" onChange={(w) => set({ wastage_pct: w ?? 0 })} />
       )}

@@ -15,6 +15,7 @@ export function NumCell({
   placeholder,
   min,
   mono,
+  title,
 }: {
   value: number | null | undefined;
   onChange: (value: number | null) => void;
@@ -22,10 +23,12 @@ export function NumCell({
   placeholder?: string;
   min?: string;
   mono?: boolean;
+  title?: string;
 }) {
   return (
     <td className="p-2">
       <input
+        title={title}
         type="number"
         min={min}
         step="any"

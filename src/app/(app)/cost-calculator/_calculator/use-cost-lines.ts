@@ -16,15 +16,20 @@ export function useCostLines(stages: CostStageWithHierarchy[], initialLines?: Pr
   );
   const stageMap = useMemo(() => new Map(stages.map((s) => [s.code, s])), [stages]);
 
+  const recalc = (l: LineState) => {
+    const calc = calculateLineCost(l);
+    return { ...l, calculated_area: calc.calculated_area, line_total: calc.line_total };
+  };
+
   function update(key: string, patch: Partial<LineState>) {
-    setLines((prev) =>
-      prev.map((l) => {
-        if (l.tempKey !== key) return l;
-        const updated = { ...l, ...patch };
-        const calc = calculateLineCost(updated);
-        return { ...updated, calculated_area: calc.calculated_area, line_total: calc.line_total };
-      }),
-    );
+    setLines((prev) => prev.map((l) => (l.tempKey === key ? recalc({ ...l, ...patch }) : l)));
+  }
+
+  // A rate's wastage is the rate's, not the line's: it changes on every line of
+  // that rate, and on the Rates page when the costing is saved.
+  function setWastage(line: LineState, wastage_pct: number) {
+    const id = line.cost_variety_id;
+    setLines((prev) => prev.map((l) => (l.tempKey === line.tempKey || (id && l.cost_variety_id === id) ? recalc({ ...l, wastage_pct }) : l)));
   }
 
   // Category changed: clear subcategory and variety so each is picked in turn.
@@ -96,5 +101,5 @@ export function useCostLines(stages: CostStageWithHierarchy[], initialLines?: Pr
   // the sheet-level markup applies.
   const addBoughtOut = () => addToStage(BOUGHT_OUT);
 
-  return { lines, update, setCategory, setSubcategory, setVariety, duplicate, remove, addToStage, addBoughtOut };
+  return { lines, update, setWastage, setCategory, setSubcategory, setVariety, duplicate, remove, addToStage, addBoughtOut };
 }

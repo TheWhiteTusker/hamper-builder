@@ -2,7 +2,30 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { calculateLineCost } from "@/lib/costing.ts";
 import { describeError } from "@/lib/forms";
 import { codesForColors, parseProductCode } from "@/lib/product-code";
+import { isAdmin, requireUser } from "@/lib/supabase/server";
 import type { ProductCostLine } from "@/lib/types";
+
+/**
+ * A wastage % edited on a line linked to a rate is saved to that rate on the
+ * Rates page. Returns the rates changed, to reprice the products using them.
+ */
+export async function saveLineWastage(supabase: SupabaseClient, lines: ProductCostLine[]): Promise<{ ids: string[]; error?: string }> {
+  const typed = new Map<string, number>();
+  for (const l of lines) if (l.cost_variety_id && l.stage_code !== "bought_out") typed.set(l.cost_variety_id, Number(l.wastage_pct) || 0);
+  if (!typed.size) return { ids: [] };
+  const { data, error } = await supabase.from("cost_varieties").select("id, default_wastage_pct").in("id", [...typed.keys()]);
+  if (error) return { ids: [], error: describeError(error) };
+  const changed = (data as { id: string; default_wastage_pct: number }[]).filter((v) => Number(v.default_wastage_pct) !== typed.get(v.id));
+  if (!changed.length) return { ids: [] };
+  if (!isAdmin((await requireUser()).profile.role)) {
+    return { ids: [], error: "Only an admin can change a rate's wastage, because it updates the products that use it." };
+  }
+  for (const { id } of changed) {
+    const { error } = await supabase.from("cost_varieties").update({ default_wastage_pct: typed.get(id) }).eq("id", id);
+    if (error) return { ids: [], error: describeError(error) };
+  }
+  return { ids: changed.map((v) => v.id) };
+}
 
 /** Cost lines as stored: recomputed totals, coerced numbers, 1-based order. */
 export function prepareLines(lines: ProductCostLine[]): ProductCostLine[] {
