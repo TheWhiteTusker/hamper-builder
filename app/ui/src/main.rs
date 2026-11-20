@@ -15,7 +15,7 @@ use lattice_core::api::{ApiError, SessionInfo};
 use leptos::prelude::*;
 use leptos_router::components::{Redirect, Route, Router, Routes};
 use leptos_router::path;
-use pages::{Coming, NotFound, admin, bin, clients, hampers, quotes, settings};
+use pages::{NotFound, admin, bin, clients, hampers, presentations, quotes, settings};
 use state::{Freshness, Phase};
 
 #[component]
@@ -75,7 +75,11 @@ fn Shell(info: SessionInfo) -> impl IntoView {
                 <Route path=path!("/cost-calculator/master") view=|| view! { <pages::rates::RatesMaster /> } />
                 <Route path=path!("/cost-calculator/master/excel/:mode") view=admin::RateSheetPage />
                 <Route path=path!("/cost-calculator/*code") view=pages::calculator::ProductCostingPage />
-                <Route path=path!("/presentations/*any") view=|| view! { <Coming title="Presentations" phase="Phase 5" /> } />
+                <Route path=path!("/presentations") view=presentations::Presentations />
+                <Route path=path!("/presentations/new") view=presentations::NewPresentation />
+                <Route path=path!("/presentations/:id/print") view=presentations::PrintDeck />
+                <Route path=path!("/presentations/:id/slides/:slide") view=presentations::SlideEditor />
+                <Route path=path!("/presentations/:id") view=presentations::DeckOverview />
                 <Route path=path!("/settings") view=settings::SettingsPage />
                 <Route path=path!("/admin/import") view=admin::ImportWorkbook />
                 <Route path=path!("/admin/refresh-prices") view=admin::RefreshPrices />

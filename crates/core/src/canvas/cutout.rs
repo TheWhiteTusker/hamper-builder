@@ -9,6 +9,8 @@
 //! backdrops; busy photographic backgrounds need a matting model.
 
 /// `rgba` is width×height×4 bytes, as `getImageData` gives it.
+// Pixel indices stay within `0..width * height`, checked against the buffer above.
+#[allow(clippy::indexing_slicing)]
 pub fn remove_background(rgba: &mut [u8], width: usize, height: usize, tolerance: f64) {
     let n = width * height;
     if n == 0 || rgba.len() < n * 4 {
@@ -100,6 +102,6 @@ mod tests {
         remove_background(&mut px, 5, 5, 30.0);
         assert_eq!(px[3], 0, "corner is transparent");
         assert_eq!(px[(2 * 5 + 2) * 4 + 3], 255, "the enclosed white centre is kept");
-        assert_eq!(px[(1 * 5 + 1) * 4 + 3], 255, "the ring is kept");
+        assert_eq!(px[(5 + 1) * 4 + 3], 255, "the ring is kept");
     }
 }

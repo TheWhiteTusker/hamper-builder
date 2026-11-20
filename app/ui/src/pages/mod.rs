@@ -6,6 +6,7 @@ pub mod dashboard;
 pub mod hampers;
 pub mod login;
 pub mod product;
+pub mod presentations;
 pub mod products;
 pub mod quotes;
 pub mod rates;
@@ -13,17 +14,6 @@ pub mod reset;
 pub mod settings;
 
 use leptos::prelude::*;
-
-/// A section still being ported, named with the phase that brings it.
-#[component]
-pub fn Coming(title: &'static str, phase: &'static str) -> impl IntoView {
-    view! {
-        <div class="card flex flex-col items-center gap-2 p-10 text-center">
-            <p class="font-medium">{title}</p>
-            <p class="max-w-md text-sm text-(--color-muted)">{format!("This screen arrives in {phase} of the Rust rebuild.")}</p>
-        </div>
-    }
-}
 
 #[component]
 pub fn NotFound() -> impl IntoView {

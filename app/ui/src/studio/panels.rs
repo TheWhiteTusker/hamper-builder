@@ -332,7 +332,7 @@ pub fn ContextToolbar(ed: Ed) -> impl IntoView {
                 let sel = ed.selection();
                 match sel.len() {
                     0 => page_tools(ed).into_any(),
-                    1 => layer_tools(ed, sel[0].base.id.clone()).into_any(),
+                    1 => layer_tools(ed, sel.first().map(|l| l.base.id.clone()).unwrap_or_default()).into_any(),
                     _ => multi_tools(ed, sel.iter().map(|l| l.base.id.clone()).collect()).into_any(),
                 }
             }}
@@ -560,10 +560,10 @@ pub fn LayersPanel(ed: Ed) -> impl IntoView {
                                 on:dragover={ let id = id.clone(); move |e: web_sys::DragEvent| if drag_id.get_untracked().is_some() { e.prevent_default(); over_id.set(Some(id.clone())); } }
                                 on:drop={ let id = id.clone(); move |e: web_sys::DragEvent| {
                                     e.prevent_default();
-                                    if let Some(d) = drag_id.get_untracked() {
-                                        if let Some(to) = order.with_value(|o| o.iter().position(|x| *x == id)) {
-                                            ed.reorder(&d, to);
-                                        }
+                                    if let Some(d) = drag_id.get_untracked()
+                                        && let Some(to) = order.with_value(|o| o.iter().position(|x| *x == id))
+                                    {
+                                        ed.reorder(&d, to);
                                     }
                                     drag_id.set(None);
                                     over_id.set(None);

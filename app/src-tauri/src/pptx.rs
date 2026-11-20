@@ -49,7 +49,7 @@ pub fn pptx_add(request: tauri::ipc::Request<'_>) -> Result<(), ApiError> {
     let tauri::ipc::InvokeBody::Raw(bytes) = request.body() else {
         return Err(ApiError::Invalid("The slide must be sent as raw bytes.".into()));
     };
-    let len = bytes.get(..4).map(|b| u32::from_be_bytes([b[0], b[1], b[2], b[3]]) as usize).ok_or_else(|| ApiError::Invalid("Empty slide.".into()))?;
+    let len = bytes.get(..4).and_then(|b| <[u8; 4]>::try_from(b).ok()).map(|b| u32::from_be_bytes(b) as usize).ok_or_else(|| ApiError::Invalid("Empty slide.".into()))?;
     let json = bytes.get(4..4 + len).ok_or_else(|| ApiError::Invalid("Bad slide.".into()))?;
     let texts: Vec<(String, PptTextBox)> = serde_json::from_slice(json).map_err(|e| ApiError::Invalid(format!("Bad slide text: {e}")))?;
     let png = bytes.get(4 + len..).unwrap_or_default().to_vec();

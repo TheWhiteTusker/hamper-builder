@@ -163,6 +163,8 @@ pub fn align_boxes(boxes: &[Box], at: PageAlign) -> Vec<(f64, f64)> {
 
 /// Offsets that space boxes evenly between the outermost two, which stay
 /// put. Order follows position on that axis, not selection order.
+// Every index comes from `0..boxes.len()`.
+#[allow(clippy::indexing_slicing)]
 pub fn distribute_boxes(boxes: &[Box], horizontal: bool) -> Vec<(f64, f64)> {
     let mut out = vec![(0.0, 0.0); boxes.len()];
     if boxes.len() < 3 {

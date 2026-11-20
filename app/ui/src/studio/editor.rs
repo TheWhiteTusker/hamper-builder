@@ -116,13 +116,19 @@ const ALL_ANCHORS: [Anchor; 8] =
     [Anchor::TopLeft, Anchor::TopRight, Anchor::BottomRight, Anchor::BottomLeft, Anchor::TopMid, Anchor::RightMid, Anchor::BottomMid, Anchor::LeftMid];
 
 /// What the transformer wraps: one layer (its own rotated box) or several (their combined box).
+/// Short-lived and one at a time, so the size gap between variants costs nothing.
 #[derive(Clone, Debug)]
+#[allow(clippy::large_enum_variant)]
 enum Frame {
     Single { layer: Layer, m: Mat, r: Rect },
     Multi { ids: Vec<String>, b: Rect },
 }
 
+/// A line or curve being drawn: start, current point, tool.
+type Drawing = ((f64, f64), (f64, f64), Tool);
+
 #[derive(Clone, Debug)]
+#[allow(clippy::large_enum_variant)]
 enum Gesture {
     Pan { last: (f64, f64) },
     Drag { ids: Vec<String>, start: (f64, f64), origin: Vec<Layer>, rects: Vec<Rect>, others: Vec<Rect>, group: String },
@@ -149,7 +155,7 @@ pub struct Ed {
     guides: RwSignal<(Vec<f64>, Vec<f64>)>,
     hover: RwSignal<Option<Rect>>,
     marquee: RwSignal<Option<Rect>>,
-    drawing: RwSignal<Option<((f64, f64), (f64, f64), Tool)>>,
+    drawing: RwSignal<Option<Drawing>>,
     gesture: StoredValue<Option<Gesture>>,
     pub toast: RwSignal<Option<(bool, String)>>,
     pub saving: RwSignal<bool>,
@@ -161,10 +167,6 @@ pub struct Ed {
     pub tab: RwSignal<Option<Tab>>,
     pub config: StoredValue<StudioConfig, LocalStorage>,
     board_el: NodeRef<html::Div>,
-}
-
-fn same_ids(a: &[String], b: &[String]) -> bool {
-    a.len() == b.len() && a.iter().all(|x| b.contains(x))
 }
 
 impl Ed {
@@ -231,7 +233,7 @@ impl Ed {
     }
     pub fn select_many(&self, ids: Vec<String>) {
         if let Some(e) = self.editing.get_untracked()
-            && !(ids.len() == 1 && ids[0] == e)
+            && !(ids.len() == 1 && ids.first() == Some(&e))
         {
             self.editing.set(None);
         }
@@ -325,7 +327,7 @@ impl Ed {
         }
         let (w, h) = self.with_canvas_untracked(|c| (c.width, c.height));
         let offs: Vec<(f64, f64)> = if items.len() == 1 {
-            vec![arrange::align_to_page(items[0].1, w, h, at)]
+            items.iter().take(1).map(|i| arrange::align_to_page(i.1, w, h, at)).collect()
         } else {
             arrange::align_boxes(&items.iter().map(|i| i.1).collect::<Vec<_>>(), at)
         };
@@ -967,7 +969,7 @@ fn draw(ed: Ed, el: &web_sys::HtmlCanvasElement) {
             ctx.stroke();
         }
         // Line and curve handles.
-        let one = if selected.len() == 1 { c.layers.iter().find(|l| l.base.id == selected[0]) } else { None };
+        let one = if selected.len() == 1 { selected.first().and_then(|s| c.layers.iter().find(|l| l.base.id == *s)) } else { None };
         if let Some(l) = one.filter(|l| !l.base.locked && l.line().is_some()) {
             let p = line_points(l);
             let at = |i: usize| (l.base.x + p.get(i * 2).copied().unwrap_or(0.0), l.base.y + p.get(i * 2 + 1).copied().unwrap_or(0.0));
@@ -1157,12 +1159,12 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
         // Line and curve handles.
         let sel = ed.selected.get_untracked();
         if sel.len() == 1
-            && let Some(l) = ed.with_canvas_untracked(|c| c.layers.iter().find(|l| l.base.id == sel[0] && !l.base.locked && l.line().is_some()).cloned())
+            && let Some(l) = ed.with_canvas_untracked(|c| c.layers.iter().find(|l| sel.first() == Some(&l.base.id) && !l.base.locked && l.line().is_some()).cloned())
         {
             let pts = line_points(&l);
             let n = pts.len() / 2;
             for i in 0..n {
-                let at = (l.base.x + pts[i * 2], l.base.y + pts[i * 2 + 1]);
+                let at = (l.base.x + pts.get(i * 2).copied().unwrap_or(0.0), l.base.y + pts.get(i * 2 + 1).copied().unwrap_or(0.0));
                 if near(at, 12.0) {
                     ed.gesture.set_value(Some(Gesture::Handle { id: l.base.id.clone(), which: i, group }));
                     return;
@@ -1286,9 +1288,11 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
                         ed.guides.set(guide_for(s, end));
                         let (ddx, ddy) = (x - l.base.x, y - l.base.y);
                         let mut np = vec![0.0, 0.0];
-                        for i in 1..pts.len() / 2 {
-                            np.push(pts[i * 2] - ddx);
-                            np.push(pts[i * 2 + 1] - ddy);
+                        for pair in pts.chunks(2).skip(1) {
+                            if let [px, py] = pair {
+                                np.push(px - ddx);
+                                np.push(py - ddy);
+                            }
                         }
                         Some((x, y, np, None))
                     }
@@ -1308,10 +1312,9 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
                         ed.guides.set(guide_for(s, start));
                         let (rx, ry) = ((sx - start.0).round(), (sy - start.1).round());
                         let mut np = pts.clone();
-                        let n = np.len();
-                        if n >= 2 {
-                            np[n - 2] = rx;
-                            np[n - 1] = ry;
+                        if let [.., ex, ey] = np.as_mut_slice() {
+                            *ex = rx;
+                            *ey = ry;
                         }
                         Some((l.base.x, l.base.y, np, None))
                     }
@@ -1679,10 +1682,8 @@ fn TextEditor(ed: Ed) -> impl IntoView {
                         ed.tweak(&id, "text", |l| if let Shape::Text(t) = &mut l.shape { t.text = v });
                     }
                     on:blur=move |_| ed.editing.set(None)
-                    on:keydown={move |e| if e.key() == "Escape" {
-                        if let Some(el) = area.get_untracked() {
-                            let _ = el.blur();
-                        }
+                    on:keydown={move |e| if e.key() == "Escape" && let Some(el) = area.get_untracked() {
+                        let _ = el.blur();
                     }}></textarea>
             }
         })}

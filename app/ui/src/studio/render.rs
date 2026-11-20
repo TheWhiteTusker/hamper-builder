@@ -249,7 +249,7 @@ pub fn bbox(pts: &[(f64, f64)]) -> Rect {
 }
 
 fn pairs(p: &[f64]) -> Vec<(f64, f64)> {
-    p.chunks_exact(2).map(|c| (c[0], c[1])).collect()
+    p.chunks(2).filter_map(|c| match c { [x, y] => Some((*x, *y)), _ => None }).collect()
 }
 
 /// Konva `RegularPolygon`: vertex n at (r·sin(2πn/s), −r·cos(2πn/s)).
@@ -295,8 +295,8 @@ fn dist_to_segment(p: (f64, f64), a: (f64, f64), b: (f64, f64)) -> f64 {
 fn inside_polygon(p: (f64, f64), poly: &[(f64, f64)]) -> bool {
     let mut inside = false;
     let n = poly.len();
-    for i in 0..n {
-        let (a, b) = (poly[i], poly[(i + n - 1) % n]);
+    for (i, &a) in poly.iter().enumerate() {
+        let Some(&b) = poly.get((i + n - 1) % n) else { continue };
         if (a.1 > p.1) != (b.1 > p.1) && p.0 < (b.0 - a.0) * (p.1 - a.1) / (b.1 - a.1) + a.0 {
             inside = !inside;
         }
@@ -328,7 +328,7 @@ pub fn hit(l: &Layer, px: f64, py: f64, zoom: f64) -> bool {
             };
             let sw = l.line().map_or(4.0, |x| x.stroke_width);
             let half = 32f64.max(sw + 24.0).max(24.0 / zoom) / 2.0;
-            pts.windows(2).any(|w| dist_to_segment(p, w[0], w[1]) <= half)
+            pts.iter().zip(pts.iter().skip(1)).any(|(a, b)| dist_to_segment(p, *a, *b) <= half)
         }
     }
 }
@@ -606,6 +606,6 @@ mod tests {
         let c = curve_samples(&[0.0, 0.0, 100.0, -100.0, 200.0, 0.0]);
         assert_eq!(c.first(), Some(&(0.0, 0.0)));
         assert_eq!(c.last(), Some(&(200.0, 0.0)));
-        assert!((c[12].1 + 50.0).abs() < 1e-9, "a quadratic peaks halfway to its control point");
+        assert!(c.get(12).is_some_and(|p| (p.1 + 50.0).abs() < 1e-9), "a quadratic peaks halfway to its control point");
     }
 }

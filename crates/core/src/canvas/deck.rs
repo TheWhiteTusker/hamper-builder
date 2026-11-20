@@ -131,6 +131,7 @@ fn rect(ids: Ids, x: f64, y: f64, width: f64, height: f64, color: &str, name: &s
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn photo(ids: Ids, url: &str, x: f64, y: f64, width: f64, height: f64, product_id: Option<String>, name: &str) -> Layer {
     Layer {
         base: named(ids, x, y, name),
@@ -214,6 +215,8 @@ pub fn fit_photo(size: Size, target_height: f64, max_width: f64) -> (f64, f64) {
 
 /// Lays photos out in a row standing on the band: the gift box in the middle
 /// and larger, overlapping its neighbours; everything else to either side.
+// `windows(2)` always yields two items.
+#[allow(clippy::indexing_slicing, clippy::type_complexity)]
 pub fn arrange_row(items: &[(DeckItemInfo, String, Size)]) -> Vec<Placed> {
     if items.is_empty() {
         return Vec::new();

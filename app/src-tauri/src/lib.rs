@@ -125,7 +125,9 @@ pub fn run() {
             files::save_text,
             files::read_xlsx,
             files::save_bytes,
-            pptx::save_pptx,
+            pptx::pptx_begin,
+            pptx::pptx_add,
+            pptx::pptx_save,
         ])
         .run(tauri::generate_context!());
 
