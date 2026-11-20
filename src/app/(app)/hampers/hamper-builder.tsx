@@ -3,7 +3,9 @@
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useActionState, useMemo, useState } from "react";
 import Link from "@/components/link";
-import { saveHamper, duplicateHamper, deleteHamper } from "./actions";
+import { saveHamper } from "./actions";
+import { HamperTools } from "./_builder/hamper-tools";
+import { ListReturnField, markRestore, useListHref } from "@/components/list-select/list-position";
 import { priceHamper, num } from "@/lib/pricing";
 import type { Category, Hamper, HamperItem, Settings } from "@/lib/types";
 import { HamperInfo } from "./_builder/hamper-info";
@@ -39,8 +41,6 @@ export function HamperBuilder({
   canEdit: boolean;
 }) {
   const [state, action, saving] = useActionState(saveHamper, {});
-  const [dupState, dupAction, duplicating] = useActionState(duplicateHamper, {});
-  const [delState, delAction, deleting] = useActionState(deleteHamper, {});
 
   const [f, setFields] = useState<HamperFields>(() => initialFields(hamper));
   const set = (key: keyof HamperFields, value: string) => setFields((prev) => ({ ...prev, [key]: value }));
@@ -78,12 +78,14 @@ export function HamperBuilder({
     });
   }
 
+  const listHref = useListHref("hampers");
   const filled = lines.filter((l) => l.product_name).length;
 
   return (
     <>
-      <form action={action} className="space-y-4">
+      <form action={action} onSubmit={() => markRestore("hampers")} className="space-y-4">
         <input type="hidden" name="payload" value={hamperPayload(f, lines, hamper)} />
+        <ListReturnField kind="hampers" />
 
         <HamperInfo f={f} set={set} settings={settings} canEdit={canEdit} />
         <HamperPricingStrip f={f} set={set} totals={totals} canEdit={canEdit} />
@@ -142,9 +144,9 @@ export function HamperBuilder({
           </div>
         </section>
 
-        {(state.error || dupState.error || delState.error) && (
+        {state.error && (
           <p role="alert" className="text-sm text-red-700">
-            {state.error || dupState.error || delState.error}
+            {state.error}
           </p>
         )}
 
@@ -153,55 +155,14 @@ export function HamperBuilder({
             <button type="submit" className="btn-primary" disabled={saving}>
               {saving ? "Saving…" : hamper ? "Save changes" : "Create hamper"}
             </button>
-            <Link href={hamper ? `/hampers/${encodeURIComponent(hamper.code)}` : "/hampers"} className="btn-secondary">
+            <Link href={hamper ? `/hampers/${encodeURIComponent(hamper.code)}` : listHref} className="btn-secondary">
               Cancel
             </Link>
           </div>
         )}
       </form>
 
-      {/* Kept outside the builder form so these never submit the hamper. */}
-      {hamper && canEdit && (
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          {hamper.image_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={hamper.image_url}
-              alt={`${hamper.name} image`}
-              className="h-16 w-16 rounded-md border border-[var(--color-line)] object-cover"
-            />
-          )}
-          {/* No prefetch: the image editor (and its canvas library) loads only when opened. */}
-          <Link href={`/hampers/${encodeURIComponent(hamper.code)}/image`} prefetch={false} className="btn-secondary">
-            {hamper.image_url ? "Edit image" : "Design image"}
-          </Link>
-          <Link href={`/quotes/new?hamper=${encodeURIComponent(hamper.code)}`} className="btn-secondary">
-            Add to a quote
-          </Link>
-
-          <form action={dupAction}>
-            <input type="hidden" name="code" value={hamper.code} />
-            <button type="submit" className="btn-secondary" disabled={duplicating}>
-              {duplicating ? "Duplicating…" : "Duplicate"}
-            </button>
-          </form>
-
-          <form
-            action={delAction}
-            className="ml-auto"
-            onSubmit={(e) => {
-              if (!confirm(`Move ${hamper.name} to the Bin? It will stay in the Bin for 30 days and can be restored anytime.`)) {
-                e.preventDefault();
-              }
-            }}
-          >
-            <input type="hidden" name="id" value={hamper.id} />
-            <button type="submit" className="btn-danger" disabled={deleting}>
-              {deleting ? "Moving to Bin…" : "Move to Bin"}
-            </button>
-          </form>
-        </div>
-      )}
+      {hamper && canEdit && <HamperTools hamper={hamper} />}
     </>
   );
 }

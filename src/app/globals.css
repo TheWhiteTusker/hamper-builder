@@ -80,6 +80,34 @@ body {
   }
 }
 
+/* List screens (Products, Hampers) fit the window: title and filters stay put,
+   the rows scroll in their own box, and the column headings stick to its top.
+   The page grows to fit when the window is too short to leave the box room. */
+body:has(.list-scroll) {
+  height: 100dvh;
+}
+
+main:has(> .list-scroll) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.list-scroll {
+  flex: 0 1 auto;
+  min-height: 16rem;
+  overflow: auto;
+}
+
+.list-scroll thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #fff;
+  /* Collapsed table borders scroll away from a sticky header; draw its own. */
+  box-shadow: inset 0 -1px var(--color-line);
+}
+
 /* Costing work is dense and numeric: tabular figures everywhere so columns
    of money line up, and compact controls so a 20-line hamper fits on screen. */
 @layer components {

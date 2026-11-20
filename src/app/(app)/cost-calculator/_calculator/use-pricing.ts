@@ -55,6 +55,16 @@ export function usePricing(
     return savedSp > 0 ? String(savedSp) : "";
   });
 
+  // Markup is the anchor: when the cost moves (an overhead, a line, a rate),
+  // the price follows at the same markup instead of waiting for a markup edit.
+  // Only on a change, so a hand-typed SP stays put until the cost does.
+  const [pricedCost, setPricedCost] = useState(totals.total_cost);
+  if (pricedCost !== totals.total_cost) {
+    setPricedCost(totals.total_cost);
+    const sp = spAt(markupPct);
+    if (sp != null && totals.total_cost > 0) setManualSp(String(sp));
+  }
+
   const effectiveSp = manualSp ? roundSp(num(manualSp), mrpMax) : (spAt(markupPct) ?? totals.calculated_sp);
   const effectiveMargin = effectiveSp > 0 ? (effectiveSp - totals.total_cost) / effectiveSp : 0;
   const overMrp = mrpMax != null && effectiveSp > mrpMax;

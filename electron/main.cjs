@@ -14,10 +14,15 @@ let appUrl = null;
 const page = require("./page.cjs");
 const checkForUpdate = require("./updater.cjs")(() => mainWindow);
 
-function freePort() {
+// Browser storage (ticked rows, list spots) is kept per origin, port included,
+// so the server has to come back on the same port every launch or it all
+// looks wiped. A random port is only the fallback when this one is taken.
+const APP_PORT = 47815;
+
+function freePort(want = 0) {
   return new Promise((resolve, reject) => {
     const s = net.createServer();
-    s.listen(0, "127.0.0.1", () => {
+    s.listen(want, "127.0.0.1", () => {
       const { port } = s.address();
       s.close(() => resolve(port));
     });
@@ -49,7 +54,7 @@ function serverScript() {
 }
 
 async function startServer() {
-  const port = await freePort();
+  const port = await freePort(APP_PORT).catch(() => freePort());
   const script = serverScript();
   server = utilityProcess.fork(script, [], {
     cwd: path.dirname(script),
@@ -109,6 +114,9 @@ function createWindow() {
       mainWindow.webContents.reload();
     }
   });
+
+  // Opens filling the screen (maximised, so the title bar and taskbar stay).
+  mainWindow.maximize();
 
   mainWindow.on("closed", () => {
     mainWindow = null;

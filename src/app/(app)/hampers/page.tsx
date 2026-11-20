@@ -88,7 +88,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
 
       {/* The form wraps the whole table so every filter can sit in the header
           cell of the column it filters. */}
-      <form className="card overflow-x-auto">
+      <form key={[q, collection, minItems, minCost, maxCost, minPrice, maxPrice].join("|")} className="card list-scroll">
         <Table className="min-w-[1200px]">
           <TableHeader>
             <TableRow>
@@ -180,9 +180,9 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
             )}
           </TableBody>
         </Table>
+        {/* Inside the scroll box, so it only shows once the rows are scrolled to the end. */}
+        <LoadMore shown={rows.length} total={total} />
       </form>
-
-      <LoadMore shown={rows.length} total={total} />
     </>
   );
 }

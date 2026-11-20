@@ -132,7 +132,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
           actionLabel={admin ? "Bulk add from Excel" : undefined}
         />
       ) : (
-        <div className="card overflow-x-auto">
+        <div className="card list-scroll">
           <Table>
             <TableHeader>
               <TableRow>
@@ -154,10 +154,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
               ))}
             </TableBody>
           </Table>
+          {/* Inside the scroll box, so it only shows once the rows are scrolled to the end. */}
+          <LoadMore shown={rows.length} total={total} />
         </div>
       )}
-
-      <LoadMore shown={rows.length} total={total} />
     </>
   );
 }

@@ -80,8 +80,11 @@ export async function saveHamper(
   // "layout" covers both the preview and its /edit page.
   revalidatePath(`/hampers/${encodeURIComponent(String(code))}`, "layout");
   // Saving is the end of the job, so it lands back on the list rather than
-  // leaving you parked on the hamper you just finished.
-  redirect("/hampers");
+  // leaving you parked on the hamper you just finished: the list as it was
+  // left, filters included. Only ever a /hampers URL, never another site.
+  const back = new URL(String(formData.get("return_to") ?? ""), "http://x");
+  back.searchParams.delete("deleted"); // that banner was for an earlier visit
+  redirect(back.origin === "http://x" && back.pathname === "/hampers" ? back.pathname + back.search : "/hampers");
 }
 
 export async function duplicateHamper(
