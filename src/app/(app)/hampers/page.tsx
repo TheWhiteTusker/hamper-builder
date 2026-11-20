@@ -103,7 +103,6 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
               <TableHead className="num">Catalogue price</TableHead>
               <TableHead className="num">Profit</TableHead>
               <TableHead className="num">Margin</TableHead>
-              <TableHead className="w-10"></TableHead>
             </TableRow>
 
             <TableRow>
@@ -149,7 +148,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
               <TableHead className="pb-2">
                 <Range name="price" label="catalogue price" min={minPrice} max={maxPrice} />
               </TableHead>
-              <TableHead colSpan={3} className="pb-2">
+              <TableHead colSpan={2} className="pb-2">
                 <div className="flex items-center justify-end gap-2">
                   {filtered && (
                     <Link href="/hampers" className="btn-secondary">
@@ -167,7 +166,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={12} className="py-10 text-center text-sm text-[var(--color-muted)]">
+                <TableCell colSpan={11} className="py-10 text-center text-sm text-[var(--color-muted)]">
                   {filtered ? "No hampers match that search." : "No hampers yet."}
                   {manage && !filtered && (
                     <Link href="/hampers/new" className="ml-2 underline">

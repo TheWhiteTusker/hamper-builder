@@ -8,16 +8,15 @@ const one = (kind: ListKind) => kind.slice(0, -1);
 
 type Row = { kind: ListKind; id: string; label: string };
 
-/** Tick box at the start of a row; shown only while the row is selected. */
+/** Tick box at the start of a row: ticks or unticks it. */
 export function SelectBox({ kind, id, label }: Row) {
   const on = useSelected(kind).includes(id);
-  if (!on) return null;
   return (
     <input
       type="checkbox"
-      checked
-      onChange={() => setSelected(kind, id, false)}
-      aria-label={`Unselect ${label}`}
+      checked={on}
+      onChange={() => setSelected(kind, id, !on)}
+      aria-label={`Select ${label}`}
       className="h-4 w-4 cursor-pointer accent-(--color-brand)"
     />
   );
@@ -75,18 +74,6 @@ function DotsMenu({ label, items, className }: { label: string; items: DotsItem[
         ))}
       </div>
     </>
-  );
-}
-
-/** ⋮ menu at the end of a row. */
-export function RowMenu({ kind, id, label }: Row) {
-  const on = useSelected(kind).includes(id);
-  return (
-    <DotsMenu
-      label={`More actions for ${label}`}
-      items={[{ label: on ? "Unselect" : "Select", onClick: () => setSelected(kind, id, !on) }]}
-      className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-lg leading-none text-(--color-muted) hover:bg-paper hover:text-(--color-ink)"
-    />
   );
 }
 

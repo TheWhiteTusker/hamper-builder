@@ -6,7 +6,7 @@ import type { ProductWithCategory } from "@/lib/types";
 import { costingHref } from "../../cost-calculator/href";
 import { productHref } from "../href";
 import { DeleteProductButton } from "./delete-product-button";
-import { RowMenu, SelectBox } from "@/components/list-select/row-select";
+import { SelectBox } from "@/components/list-select/row-select";
 
 /** One product in the Product Master table. */
 export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolean }) {
@@ -73,7 +73,6 @@ export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolea
               Costing
             </Link>
           )}
-          <RowMenu kind="products" id={p.id} label={p.code} />
         </div>
       </TableCell>
     </TableRow>
