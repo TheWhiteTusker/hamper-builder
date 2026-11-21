@@ -49,8 +49,7 @@ export function planReprice(input: {
     const v = l.cost_variety_id ? rates.get(l.cost_variety_id) : undefined;
     if (!v) return { line: l, changed: false };
     const rate = Number(v.default_rate);
-    // Bought-out items never carry wastage.
-    const wastage_pct = l.stage_code === "bought_out" ? 0 : Number(v.default_wastage_pct);
+    const wastage_pct = Number(v.default_wastage_pct);
     const calc = calculateLineCost({ ...l, rate, unit: v.unit, wastage_pct });
     // Lines also take the master's current names, so renames show everywhere.
     const line: ProductCostLine = {

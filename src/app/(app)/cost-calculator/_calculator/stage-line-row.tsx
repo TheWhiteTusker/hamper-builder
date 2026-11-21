@@ -116,10 +116,8 @@ export function StageLineRow({
         </>
       )}
       <NumCell value={line.qty} min="0" onChange={(qty) => set({ qty: qty ?? 0 })} />
-      {stage.code === "bought_out" ? (
-        // Bought-out items carry no wastage; this slot holds their MRP instead.
-        <MrpCell line={line} gstRate={gstRate} onChange={(mrp) => set({ mrp })} />
-      ) : fromMaster && !line.cost_variety_id ? (
+      {stage.code === "bought_out" && <MrpCell line={line} gstRate={gstRate} onChange={(mrp) => set({ mrp })} />}
+      {fromMaster && !line.cost_variety_id ? (
         <td className="p-2 text-center font-mono text-xs font-semibold">—</td>
       ) : line.cost_variety_id ? (
         // Wastage belongs to the rate: editing it here changes it on the Rates page when saved.

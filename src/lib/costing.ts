@@ -30,8 +30,7 @@ export function calculateLineCost(line: Partial<ProductCostLine>): {
   const rate = num(line.rate);
   // Blank qty means 1; an explicit 0 means the line costs nothing.
   const qty = line.qty == null ? 1 : num(line.qty);
-  // Bought-out items take only the sheet-level markup, never a per-line one.
-  const wastage = stage === "bought_out" ? 0 : num(line.wastage_pct);
+  const wastage = num(line.wastage_pct);
 
   // Machine time: minutes x the rate per minute (or per hour / 60). A machine
   // rate quoted by size (e.g. engraving per sq inch) is priced on dimensions below.

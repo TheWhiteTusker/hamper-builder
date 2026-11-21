@@ -74,7 +74,7 @@ export async function linkBoughtOutLines(
       const v = await findOrCreate(supabase, "cost_varieties", "subcategory_id", sub.id, l.variety_name!, {
         default_rate: rate,
         unit: l.unit,
-        default_wastage_pct: 0,
+        default_wastage_pct: Number(l.wastage_pct) || 0,
       });
       if (Number(v.default_rate) !== rate || v.unit !== l.unit) {
         fail((await supabase.from("cost_varieties").update({ default_rate: rate, unit: l.unit }).eq("id", v.id)).error);

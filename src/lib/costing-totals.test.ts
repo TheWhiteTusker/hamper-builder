@@ -69,9 +69,9 @@ test("miscellaneous and bought-out lines roll into total cost", () => {
 
   assert.equal(totals.material_total, 100);
   assert.equal(totals.hardware_total, 0);
-  assert.equal(totals.other_total, 300);
-  assert.equal(totals.total_cost, 400);
-  assert.equal(totals.calculated_sp, 800);
+  assert.equal(totals.other_total, 350); // bought-out 200 + 25% wastage
+  assert.equal(totals.total_cost, 450);
+  assert.equal(totals.calculated_sp, 900);
 });
 
 test("SP = CP / (1 - markup%), and 100%+ markup falls back to cost price", () => {

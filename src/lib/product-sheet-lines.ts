@@ -118,7 +118,7 @@ export function linesSheet(products: { code: string; name: string; lines: Produc
     for (const saved of [...lines].sort((a, b) => Number(a.sort_order) - Number(b.sort_order))) {
       const m = saved.cost_variety_id ? byId.get(saved.cost_variety_id) : undefined;
       const l: ProductCostLine = m
-        ? { ...saved, category_name: m.category, subcategory_name: m.subcategory, variety_name: m.v.name, rate: Number(m.v.default_rate), unit: m.v.unit, wastage_pct: saved.stage_code === "bought_out" ? 0 : Number(m.v.default_wastage_pct) }
+        ? { ...saved, category_name: m.category, subcategory_name: m.subcategory, variety_name: m.v.name, rate: Number(m.v.default_rate), unit: m.v.unit, wastage_pct: Number(m.v.default_wastage_pct) }
         : saved;
       const total = calculateLineCost(l).line_total;
       sum[l.stage_code] = (sum[l.stage_code] ?? 0) + total;

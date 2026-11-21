@@ -84,7 +84,6 @@ export function readCostLines(
     const v = sub?.varieties.find((x) => norm(x.name) === norm(get("Variety")));
     const subName = sub?.name ?? get("Subcategory");
     const varName = v?.name ?? get("Variety");
-    const bought = stage.code === "bought_out";
     const size = norm(get("Size In"));
     const line: ProductCostLine = {
       stage_code: stage.code,
@@ -100,7 +99,7 @@ export function readCostLines(
       rate: v ? Number(v.default_rate) : num(get("Rate")),
       duration_minutes: numOrNull(get("Minutes")),
       qty: get("Qty") === "" ? 1 : num(get("Qty")),
-      wastage_pct: bought ? 0 : v ? Number(v.default_wastage_pct) : num(get("Wastage %")),
+      wastage_pct: v ? Number(v.default_wastage_pct) : num(get("Wastage %")),
       mrp: num(get("MRP")) > 0 ? num(get("MRP")) : null,
       line_total: 0,
     };
@@ -108,7 +107,7 @@ export function readCostLines(
     if (!v) warnings.push(`${code}: ${path} isn't on the Rates page, so its typed rate ₹${line.rate} is used.`);
     // Untouched rows still show the Rates value, so only a different one is an edit.
     const typed = get("Wastage %");
-    if (v && !bought && typed !== "" && round2(num(typed)) !== Number(v.default_wastage_pct)) {
+    if (v && typed !== "" && round2(num(typed)) !== Number(v.default_wastage_pct)) {
       const w = round2(num(typed));
       const seen = wastage.get(v.id);
       if (seen != null && seen !== w) errors.push(`Cost Lines row ${n}: ${path} has wastage ${w}% here but ${seen}% on another row; use one.`);
@@ -126,7 +125,7 @@ export function readCostLines(
   for (const list of lines.values()) {
     list.forEach((l, i) => {
       const w = l.cost_variety_id ? wastage.get(l.cost_variety_id) : undefined;
-      const line = w == null || l.stage_code === "bought_out" ? l : { ...l, wastage_pct: w };
+      const line = w == null ? l : { ...l, wastage_pct: w };
       list[i] = { ...line, ...calculateLineCost(line) };
     });
   }

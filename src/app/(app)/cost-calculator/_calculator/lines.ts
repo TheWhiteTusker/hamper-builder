@@ -96,7 +96,7 @@ export function withMaster(line: LineState, stages: CostStageWithHierarchy[]): L
           item_name: `${sub.name} ${v.name}`,
           rate: Number(v.default_rate),
           unit: v.unit,
-          wastage_pct: line.stage_code === BOUGHT_OUT ? 0 : Number(v.default_wastage_pct),
+          wastage_pct: Number(v.default_wastage_pct),
         };
         const calc = calculateLineCost(next);
         return { ...next, calculated_area: calc.calculated_area, line_total: calc.line_total };

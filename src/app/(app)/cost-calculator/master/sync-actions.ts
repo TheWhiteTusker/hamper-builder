@@ -53,7 +53,7 @@ export async function syncAllRates(): Promise<{ error?: string; message?: string
       !!v &&
       (Number(l.rate) !== Number(v.default_rate) ||
         l.unit !== v.unit ||
-        Number(l.wastage_pct) !== (l.stage_code === "bought_out" ? 0 : Number(v.default_wastage_pct)) ||
+        Number(l.wastage_pct) !== Number(v.default_wastage_pct) ||
         l.variety_name !== v.name ||
         l.subcategory_name !== (v.cost_subcategories?.name ?? l.subcategory_name))
     );

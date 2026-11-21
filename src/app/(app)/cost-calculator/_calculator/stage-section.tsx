@@ -39,8 +39,8 @@ export function StageSection({
   const hasCats = stage.categories.length > 0;
   const named = hasCats || freeEntry; // Category, Subcategory and Variety columns
   const masterRate = hasCats && !freeEntry;
-  // Hierarchy, size, (duration), rate / unit, qty, wastage, total, actions.
-  const colCount = (named ? 3 : 1) + 3 + (isMachine ? 1 : 0) + (masterRate ? 1 : 2) + 4;
+  // Hierarchy, size, (duration), rate / unit, qty, (MRP), wastage, total, actions.
+  const colCount = (named ? 3 : 1) + 3 + (isMachine ? 1 : 0) + (masterRate ? 1 : 2) + (isBoughtOut ? 1 : 0) + 4;
 
   return (
     <div className="card overflow-hidden shadow-sm">
@@ -71,8 +71,8 @@ export function StageSection({
                 ? freeEntry
                   ? "(Type Category → Subcategory → Variety, rate & unit — new items are added to the Rates page on save; + MRP for items with a printed MRP)"
                   : hasCats
-                  ? "(Category → Subcategory → Variety — Cost Price = Rate × Qty; + MRP for items with a printed MRP)"
-                  : "(Free-text description, rate & quantity — Cost Price = Rate × Qty; + MRP for items with a printed MRP)"
+                  ? "(Category → Subcategory → Variety — Cost Price = Rate × Qty + wastage; + MRP for items with a printed MRP)"
+                  : "(Free-text description, rate & quantity — Cost Price = Rate × Qty + wastage; + MRP for items with a printed MRP)"
                 : hasCats
                   ? "(Category → Subcategory → Variety, dimensions & wastage)"
                   : "(Free-text description, rate & quantity)"
@@ -117,9 +117,12 @@ export function StageSection({
                     </>
                   )}
                   <th className="p-2 min-w-16.25">Qty</th>
-                  <th className="p-2 min-w-18.75" title={isBoughtOut ? "Printed MRP per piece, GST included" : undefined}>
-                    {isBoughtOut ? "MRP" : "Wastage %"}
-                  </th>
+                  {isBoughtOut && (
+                    <th className="p-2 min-w-18.75" title="Printed MRP per piece, GST included">
+                      MRP
+                    </th>
+                  )}
+                  <th className="p-2 min-w-18.75">Wastage %</th>
                   <th className="p-2 text-right min-w-23.75">Total Cost</th>
                   <th className="p-2 text-center min-w-25">Actions</th>
                 </tr>

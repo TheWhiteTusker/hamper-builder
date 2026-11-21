@@ -11,7 +11,7 @@ import type { ProductCostLine } from "@/lib/types";
  */
 export async function saveLineWastage(supabase: SupabaseClient, lines: ProductCostLine[]): Promise<{ ids: string[]; error?: string }> {
   const typed = new Map<string, number>();
-  for (const l of lines) if (l.cost_variety_id && l.stage_code !== "bought_out") typed.set(l.cost_variety_id, Number(l.wastage_pct) || 0);
+  for (const l of lines) if (l.cost_variety_id) typed.set(l.cost_variety_id, Number(l.wastage_pct) || 0);
   if (!typed.size) return { ids: [] };
   const { data, error } = await supabase.from("cost_varieties").select("id, default_wastage_pct").in("id", [...typed.keys()]);
   if (error) return { ids: [], error: describeError(error) };
