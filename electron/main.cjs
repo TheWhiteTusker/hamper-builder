@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, shell, utilityProcess, ipcMain } = require("electron");
+const { app, BrowserWindow, dialog, shell, utilityProcess, ipcMain, session } = require("electron");
 const path = require("path");
 const http = require("http");
 const net = require("net");
@@ -148,6 +148,7 @@ if (!app.requestSingleInstanceLock()) {
 
   app.on("before-quit", () => {
     app.isQuitting = true;
+    session.defaultSession.flushStorageData(); // ticked rows hit disk before exit
     server?.kill();
   });
 
