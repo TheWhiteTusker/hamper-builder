@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { publishDesktopApp, desktopReleaseStatus, type ReleaseStatus } from "../release-actions";
 
 const STEP_LABELS: Record<string, string> = {
@@ -41,6 +42,7 @@ function CheckForUpdatesButton() {
 }
 
 function PublishReleaseButton() {
+  const router = useRouter();
   const [status, setStatus] = useState<ReleaseStatus | null>(null);
   // When this page started a release. Runs created before it are an earlier
   // release, not this click's result (30s allows for clock skew with GitHub).
@@ -65,13 +67,15 @@ function PublishReleaseButton() {
       setStatus(s);
       const waiting = since !== null && !(s?.createdAt && Date.parse(s.createdAt) >= since);
       if (s?.state === "running" || waiting) timer = setTimeout(poll, 5000);
+      // This click's release is out: re-read the page so "Latest release" moves.
+      else if (since !== null && s?.state === "success") router.refresh();
     }
     poll();
     return () => {
       stop = true;
       clearTimeout(timer);
     };
-  }, [since]);
+  }, [since, router]);
 
   const running = status?.state === "running";
   const fresh = isFresh(status);

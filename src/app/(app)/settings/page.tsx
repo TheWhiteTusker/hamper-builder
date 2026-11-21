@@ -13,7 +13,7 @@ import { resolveColors } from "@/lib/product-code";
 import { loadCostRows } from "../cost-calculator/load";
 import { CostMasterView } from "../cost-calculator/master/master-view";
 import type { Category, Profile } from "@/lib/types";
-import { APP_VERSION } from "@/lib/version";
+import { APP_VERSION, latestDesktopVersion } from "@/lib/version";
 
 // Most-used first; the first tab is what /settings opens on. The tab lives in
 // the URL (?tab=users), so it survives a refresh and can be linked to.
@@ -43,6 +43,7 @@ export default async function SettingsPage({
   const current = TABS.find((t) => t.key === requested) ?? TABS[0];
   const tab: Tab = current.key;
   const desktop = process.env.LATTICE_DESKTOP === "1"; // set by electron/main.cjs
+  const version = tab !== "tools" ? null : desktop ? APP_VERSION : await latestDesktopVersion();
 
   return (
     <>
@@ -87,13 +88,13 @@ export default async function SettingsPage({
           <div className="flex flex-wrap items-center justify-between gap-3 p-4">
             <div>
               <h2 className="text-sm font-semibold">App</h2>
-              {/* Only the desktop app has a real version: CI bumps package.json for
-                  the desktop build alone, so the website would always read 0.2.4. */}
+              {/* The app shows its own version; the website, the newest release. */}
               <p className="mt-0.5 text-xs text-(--color-muted)">
                 Lattice Lane Hamper Builder
-                {desktop && (
+                {version && (
                   <>
-                    {" "}· Version <span className="font-mono font-medium text-(--color-brand)">v{APP_VERSION}</span>
+                    {" "}· {desktop ? "Version" : "Latest release"}{" "}
+                    <span className="font-mono font-medium text-(--color-brand)">v{version}</span>
                   </>
                 )}
               </p>
