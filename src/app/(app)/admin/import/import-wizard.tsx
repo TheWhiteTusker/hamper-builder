@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { runImport, type ImportReport } from "./actions";
+import { runImport } from "./actions";
 import type { Grid, ImportInput } from "@/lib/import";
-import { ImportReportView } from "./import-report";
+import { ImportReportView, type ImportReport } from "./import-report";
 import { LoadStep } from "./load-step";
 import { SHEETS, parseCsv, type SheetKey } from "./sheets";
 

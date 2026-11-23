@@ -1,7 +1,7 @@
 import { useRef, useState, useTransition } from "react";
 import { colorCode, deriveCategoryCode, formatProductCode, parseProductCode } from "@/lib/product-code";
 import type { Category } from "@/lib/types";
-import { getNextSerialAction } from "../../cost-calculator/actions";
+import { getNextSerialAction } from "../../cost-calculator/serial-actions";
 
 /**
  * The product code, built from the choices rather than typed:

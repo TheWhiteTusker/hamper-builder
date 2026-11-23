@@ -3,8 +3,7 @@
 import { useState, useTransition, type ReactNode } from "react";
 import Link from "@/components/link";
 import type { Grid } from "@/lib/import";
-import type { ImportReport } from "./actions";
-import { ImportReportView } from "./import-report";
+import { ImportReportView, type ImportReport } from "./import-report";
 
 /**
  * Download → fill in Excel → upload → save. The upload is checked first; nothing

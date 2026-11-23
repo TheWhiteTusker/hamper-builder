@@ -5,7 +5,8 @@ import { useMemo } from "react";
 import Image from "next/image";
 import { formatMoney, num } from "@/lib/pricing";
 import type { Category } from "@/lib/types";
-import { Combo, RowButton } from "./controls";
+import { Combo } from "./combo";
+import { RowButton } from "./controls";
 import { priceEdit, productLabel, type CatalogProduct, type Line } from "./hamper-state";
 import { thumbProps } from "@/lib/product-image-props";
 

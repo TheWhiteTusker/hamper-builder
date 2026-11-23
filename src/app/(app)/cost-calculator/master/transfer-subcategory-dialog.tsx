@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import type { CostStageWithHierarchy, CostSubcategoryWithVarieties } from "@/lib/types";
+import { CategorySelect, ModeTabs } from "./transfer-fields";
 
 export function TransferSubcategoryDialog({
   sub,
@@ -93,31 +94,7 @@ export function TransferSubcategoryDialog({
             </p>
           </div>
 
-          {/* Mode Switcher Tabs */}
-          <div className="inline-flex rounded-lg bg-slate-100 p-1 text-xs font-medium">
-            <button
-              type="button"
-              onClick={() => handleModeChange("move")}
-              className={`rounded-md px-2.5 py-1 transition-colors ${
-                mode === "move"
-                  ? "bg-white font-bold text-sky-700 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              Move
-            </button>
-            <button
-              type="button"
-              onClick={() => handleModeChange("duplicate")}
-              className={`rounded-md px-2.5 py-1 transition-colors ${
-                mode === "duplicate"
-                  ? "bg-white font-bold text-indigo-700 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              Duplicate
-            </button>
-          </div>
+          <ModeTabs mode={mode} onChange={handleModeChange} />
         </div>
 
         {/* Destination Category Picker */}
@@ -125,27 +102,14 @@ export function TransferSubcategoryDialog({
           <label className="label" htmlFor={destId}>
             Destination Category *
           </label>
-          <select
+          <CategorySelect
             id={destId}
             value={targetCatId}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-            required
-            className="select mt-1 w-full text-sm"
-          >
-            {stages.map((stage) => (
-              <optgroup key={stage.id} label={`${stage.name} (${stage.categories.length})`}>
-                {stage.categories.map((c) => (
-                  <option
-                    key={c.id}
-                    value={c.id}
-                    disabled={mode === "move" && c.id === currentCategoryId}
-                  >
-                    {c.name} {c.id === currentCategoryId ? "(Current Category)" : ""}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+            onChange={handleCategoryChange}
+            stages={stages}
+            currentCategoryId={currentCategoryId}
+            mode={mode}
+          />
           {isMoveInvalid && (
             <p className="mt-1 text-xs text-amber-600">
               Please choose a different category to move this subcategory to.

@@ -8,7 +8,6 @@ import { calculateCostSheetTotals } from "@/lib/costing.ts";
 import { mrpLimit, roundSp } from "@/lib/mrp.ts";
 import { loadSettings } from "@/lib/settings";
 import { describeError } from "@/lib/forms";
-import { getNextSerialForCategory } from "@/lib/product-code";
 import type { ProductCostLine } from "@/lib/types";
 import { linkBoughtOutLines } from "@/lib/bought-out-master";
 import { repriceVarieties } from "./reprice";
@@ -185,18 +184,4 @@ export async function costingSaved(openCode?: string) {
   revalidatePath("/products", "layout");
   revalidatePath("/hampers");
   if (openCode) redirect(productHref(openCode));
-}
-
-export async function getNextSerialAction(
-  categoryCode: string,
-): Promise<{ serial: string; error?: string }> {
-  try {
-    const supabase = await createClient();
-    const { data: products, error } = await supabase.from("products").select("code");
-    if (error) return { serial: "0001", error: describeError(error) };
-    const codes = (products ?? []).map((p: { code: string }) => p.code);
-    return { serial: getNextSerialForCategory(categoryCode, codes) };
-  } catch (err: unknown) {
-    return { serial: "0001", error: describeError(err) };
-  }
 }

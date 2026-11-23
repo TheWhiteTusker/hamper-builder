@@ -9,26 +9,13 @@ import { productHref } from "../../products/href";
 import type { CostingPlan } from "@/lib/product-sheet-costing";
 import { CHUNK, inChunks, prepareSheetProducts, saveByCode } from "./save";
 import { planCostings, saveSheetCosting, saveSheetWastage } from "./save-costing";
-
-export type ImportReport = {
-  ok: boolean;
-  applied: boolean;
-  counts?: Record<string, number>;
-  warnings?: string[];
-  error?: string;
-  /** Shown once applied, in place of the full import's wording. */
-  message?: string;
-  /** What was newly created, listed under the confirmation. */
-  added?: { label: string; href?: string }[];
-};
+import type { ImportReport } from "./import-report";
 
 /**
  * Dry run by default. Nothing is written unless `apply` is true, so the page
- * can show exactly what will land before anyone commits to it.
- *
- * Everything is upserted on the natural key (product code, hamper code,
- * document number), which makes re-running the import safe: a second pass
- * updates rather than duplicates.
+ * can show exactly what will land before anyone commits to it. Everything is
+ * upserted on the natural key (product code, hamper code, document number),
+ * which makes re-running the import safe: a second pass updates, not duplicates.
  */
 export async function runImport(
   input: ImportInput,

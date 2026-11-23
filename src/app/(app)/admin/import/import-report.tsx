@@ -1,7 +1,18 @@
 "use client";
 
 import Link from "@/components/link";
-import type { ImportReport } from "./actions";
+
+export type ImportReport = {
+  ok: boolean;
+  applied: boolean;
+  counts?: Record<string, number>;
+  warnings?: string[];
+  error?: string;
+  /** Shown once applied, in place of the full import's wording. */
+  message?: string;
+  /** What was newly created, listed under the confirmation. */
+  added?: { label: string; href?: string }[];
+};
 
 /** What a dry run (or the real import) found: counts, warnings, and "done". */
 export function ImportReportView({ report }: { report: ImportReport }) {

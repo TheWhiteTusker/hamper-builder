@@ -7,7 +7,7 @@ import { describeError } from "@/lib/forms";
 import type { CostRows } from "@/lib/cost-tree";
 import type { Grid } from "@/lib/import-cells";
 import { planRateImport } from "@/lib/rate-import";
-import type { ImportReport } from "../../../admin/import/actions";
+import type { ImportReport } from "../../../admin/import/import-report";
 import { loadCostRows } from "../../load";
 import { repriceVarieties } from "../../reprice";
 
