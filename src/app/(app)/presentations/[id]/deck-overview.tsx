@@ -34,6 +34,16 @@ export function DeckOverview({
   const [deleting, startDelete] = useTransition();
 
   const dirty = title.trim() !== saved.title || slides.map((s) => s.id).join() !== saved.ids;
+  // Someone else saved this deck: take it unless there are unsaved changes here.
+  const [shown, setShown] = useState(initialSlides);
+  if (initialSlides !== shown) {
+    setShown(initialSlides);
+    if (!dirty) {
+      setSlides(initialSlides);
+      setTitle(deck.title);
+      setSaved({ title: deck.title, ids: initialSlides.map((s) => s.id).join() });
+    }
+  }
 
   useUnsavedWarning(dirty);
 

@@ -13,6 +13,12 @@ import { saveProductColors } from "./variety-actions";
 export function ColorsCard({ productColors }: { productColors: ProductColor[] }) {
   const [isPending, startTransition] = useTransition();
   const [colors, setColors] = useState<ProductColor[]>(productColors);
+  // Someone else's change arrives as a refresh: take it.
+  const [prevColors, setPrevColors] = useState(productColors);
+  if (productColors !== prevColors) {
+    setPrevColors(productColors);
+    setColors(productColors);
+  }
   const [newColor, setNewColor] = useState("");
   const [newHex, setNewHex] = useState(FALLBACK_COLOR_HEX);
   const hexSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);

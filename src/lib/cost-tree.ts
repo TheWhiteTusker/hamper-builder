@@ -5,6 +5,7 @@ import type {
   CostSubcategory,
   CostVariety,
 } from "./types";
+import { patchById as patch } from "./live-refresh.ts";
 
 /** The costing hierarchy as the four flat tables it is stored in. */
 export type CostRows = {
@@ -50,13 +51,6 @@ export function buildCostTree(rows: CostRows): CostStageWithHierarchy[] {
     (cat) => cat.stage_id,
   );
   return sorted(rows.stages).map((stage) => ({ ...stage, categories: catsByStage.get(stage.id) ?? [] }));
-}
-
-function patch<T extends { id: string }>(list: T[], upsert: T[] = [], remove: string[] = []) {
-  const byId = new Map(upsert.map((r) => [r.id, r]));
-  const next = list.filter((r) => !remove.includes(r.id)).map((r) => byId.get(r.id) ?? r);
-  const known = new Set(list.map((r) => r.id));
-  return [...next, ...upsert.filter((r) => !known.has(r.id))];
 }
 
 /** The rows after a save, touching only what the save changed. */
