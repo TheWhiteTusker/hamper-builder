@@ -108,6 +108,17 @@ main:has(> .list-scroll) {
   box-shadow: inset 0 -1px var(--color-line);
 }
 
+/* The heading cells' own borders scroll away too, leaving a 1px see-through
+   seam that rows show through (the Hampers list's label and filter rows).
+   No borders inside the sticky header; lines between its rows are shadows. */
+.list-scroll thead th {
+  border-bottom-width: 0;
+}
+
+.list-scroll thead tr:not(:last-child) th {
+  box-shadow: inset 0 -1px var(--color-line);
+}
+
 /* A 3rem gutter left of a list's table for each row's tick box and bookmark
    (products/_list/product-row.tsx). The table, title and filters stay aligned:
    the page moves in by the gutter, except on wide screens, where the gutter
