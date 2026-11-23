@@ -2,3 +2,7 @@
 export const costingHref = (code: string): string =>
   `/cost-calculator/${code.split("/").map(encodeURIComponent).join("/")}`;
 
+/** The History tab beside Costing: that product's changes. */
+export const historyHref = (code: string): string =>
+  `/cost-calculator/history/${code.split("/").map(encodeURIComponent).join("/")}`;
+
