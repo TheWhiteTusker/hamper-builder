@@ -63,3 +63,11 @@ next-env.d.ts
 # Auto-generated agent rules by Next.js
 AGENTS.md
 CLAUDE.md
+
+# graphify's knowledge graph of the code is shared, so other machines get it
+# pre-built (graph.json, report, html, labels; manifest + cache for --update).
+# Kept local: this machine's Python and folder paths, the token cost log, and
+# working files a run leaves behind if interrupted.
+graphify-out/.graphify_*
+!graphify-out/.graphify_labels.json
+graphify-out/cost.json
