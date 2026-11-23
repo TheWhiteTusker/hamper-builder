@@ -10,7 +10,8 @@ import type { ActionState } from "@/lib/forms";
  * Needs the Worker secret GITHUB_TOKEN: a fine-grained token for this repo
  * with Actions: Read and write.
  */
-const WORKFLOW = "https://api.github.com/repos/TheWhiteTusker/hamper-builder/actions/workflows/desktop.yml";
+const REPO = "https://api.github.com/repos/TheWhiteTusker/hamper-builder";
+const WORKFLOW = `${REPO}/actions/workflows/desktop.yml`;
 
 async function githubToken() {
   let token = process.env.GITHUB_TOKEN;
@@ -33,6 +34,20 @@ export async function publishDesktopApp(): Promise<ActionState> {
   await requireRole("admin");
   const token = await githubToken();
   if (!token) return { error: "GITHUB_TOKEN is not set on the website." };
+
+  // Skip the build when main hasn't moved since the last successful release.
+  const headers = githubHeaders(token);
+  const [head, last] = await Promise.all([
+    fetch(`${REPO}/commits/main`, { headers, cache: "no-store" }),
+    fetch(`${WORKFLOW}/runs?status=success&per_page=1`, { headers, cache: "no-store" }),
+  ]);
+  if (head.ok && last.ok) {
+    const { sha } = (await head.json()) as { sha: string };
+    const { workflow_runs } = (await last.json()) as { workflow_runs: { head_sha: string }[] };
+    if (workflow_runs[0]?.head_sha === sha) {
+      return { error: "Nothing new to package: the app already has the latest changes." };
+    }
+  }
 
   const res = await fetch(`${WORKFLOW}/dispatches`, {
     method: "POST",
@@ -96,7 +111,7 @@ export async function desktopReleaseStatus(): Promise<ReleaseStatus> {
   const percent = Math.min(99, Math.max(1, Math.round((elapsedMs / expectedMs) * 100)));
 
   let step: string | undefined;
-  const jobs = await fetch(`https://api.github.com/repos/TheWhiteTusker/hamper-builder/actions/runs/${run.id}/jobs`, {
+  const jobs = await fetch(`${REPO}/actions/runs/${run.id}/jobs`, {
     headers,
     cache: "no-store",
   });

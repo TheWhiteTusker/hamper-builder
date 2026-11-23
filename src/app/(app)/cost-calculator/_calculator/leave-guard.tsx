@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { typingIn, undoKey } from "@/components/undo-redo";
 
 /**
  * Leaving the calculator: straight away when nothing has changed since it
@@ -28,11 +29,21 @@ export function useLeaveGuard(snapshot: string, fallback: string) {
       setAsking({ to: url.pathname + url.search + url.hash });
     };
     const onUnload = (e: BeforeUnloadEvent) => e.preventDefault();
+    // Undo/redo outside a text box would change screen (UndoRedo): undo asks
+    // first, like ← Back; redo (forward) is held until the changes are saved.
+    const onKey = (e: KeyboardEvent) => {
+      const kind = undoKey(e);
+      if (!kind || typingIn(e.target)) return;
+      e.preventDefault();
+      if (kind === "undo") setAsking({ to: null });
+    };
     document.addEventListener("click", onClick, true);
     window.addEventListener("beforeunload", onUnload);
+    window.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("click", onClick, true);
       window.removeEventListener("beforeunload", onUnload);
+      window.removeEventListener("keydown", onKey);
     };
   }, [dirty]);
 

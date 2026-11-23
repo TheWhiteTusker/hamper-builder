@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef } from "react";
+import { Bookmark } from "lucide-react";
 import { clearSelected, setSelected, useSelected, type ListKind } from "./selection";
 
 // "products" -> "product", "hampers" -> "hamper"
@@ -9,7 +10,7 @@ const one = (kind: ListKind) => kind.slice(0, -1);
 type Row = { kind: ListKind; id: string; label: string };
 
 /** Tick box at the start of a row: ticks or unticks it. */
-export function SelectBox({ kind, id, label }: Row) {
+export function SelectBox({ kind, id, label, className = "" }: Row & { className?: string }) {
   const on = useSelected(kind).includes(id);
   return (
     <input
@@ -17,8 +18,27 @@ export function SelectBox({ kind, id, label }: Row) {
       checked={on}
       onChange={() => setSelected(kind, id, !on)}
       aria-label={`Select ${label}`}
-      className="h-4 w-4 cursor-pointer accent-(--color-brand)"
+      className={`h-4 w-4 cursor-pointer accent-(--color-brand) ${className}`}
     />
+  );
+}
+
+/** Bookmark beside a product's tick box: marks it for review. Shown on row hover; the row's red shows it's marked. */
+export function ReviewMark({ id, label }: { id: string; label: string }) {
+  const on = useSelected("review-products").includes(id);
+  return (
+    <button
+      type="button"
+      onClick={() => setSelected("review-products", id, !on)}
+      aria-pressed={on}
+      aria-label={`Mark ${label} for review`}
+      title={on ? "Marked for review (click to unmark)" : "Mark for review"}
+      className={`cursor-pointer rounded p-0.5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 ${
+        on ? "text-red-600" : "text-(--color-muted) hover:text-red-600"
+      }`}
+    >
+      <Bookmark className="h-4 w-4" fill={on ? "currentColor" : "none"} />
+    </button>
   );
 }
 

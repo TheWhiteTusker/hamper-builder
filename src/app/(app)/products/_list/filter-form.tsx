@@ -29,7 +29,7 @@ export function FilterForm({ className, children }: { className?: string; childr
       className={className}
       onInput={(e) => {
         const form = e.currentTarget;
-        const typing = (e.target as HTMLInputElement).type === "text";
+        const typing = ["text", "search"].includes((e.target as HTMLInputElement).type);
         clearTimeout(timer.current);
         timer.current = setTimeout(() => form.requestSubmit(), typing ? 350 : 0);
       }}

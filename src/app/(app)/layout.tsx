@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/supabase/server";
 import { Nav } from "@/components/nav";
 import { RefreshStalePages } from "@/components/stale-pages";
+import { UndoRedo } from "@/components/undo-redo";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { profile } = await requireUser();
@@ -10,6 +11,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* LATTICE_DESKTOP is set by electron/main.cjs: no download button inside the app itself. */}
       <Nav profile={profile} desktop={process.env.LATTICE_DESKTOP === "1"} />
       <RefreshStalePages />
+      <UndoRedo />
       <main id="top" className="mx-auto w-full max-w-350 flex-1 px-4 py-6">
         {children}
       </main>

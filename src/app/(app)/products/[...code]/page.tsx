@@ -15,6 +15,7 @@ import { PriceSummary } from "./_view/price-summary";
 import { ProductCard } from "./_view/product-card";
 import { ChangeColor } from "./_view/change-color";
 import { BackToList } from "@/components/list-select/list-position";
+import { ProductHistory } from "../_history/product-history";
 
 /** A product's saved costing in the calculator's layout, read-only; Edit opens the calculator. */
 export default async function ProductPage({
@@ -98,6 +99,8 @@ export default async function ProductPage({
           mrpMax={totals && mrpLimit(lines, overheads, totals.total_cost, settings.gst_rate)}
           notes={sheet?.notes}
         />
+
+        <ProductHistory productId={product.id} categories={categories ?? []} />
       </div>
     </>
   );

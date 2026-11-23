@@ -59,6 +59,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                 { href: "/api/products/export", title: "Download list", hint: "All products as a CSV file", download: true },
               ]}
             />
+            <Link href="/products/history" className="btn-secondary">
+              History
+            </Link>
             <Link href="/products/new" className="btn-primary">
               New product
             </Link>
@@ -132,11 +135,13 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
           actionLabel={admin ? "Bulk add from Excel" : undefined}
         />
       ) : (
-        <div className="card list-scroll">
+        // row-gutter (globals.css): room left of the table for each row's tick box and bookmark.
+        <div className="list-scroll row-gutter">
+          {/* No outline: just the rows' own lines, with the gutter's buttons outside them. */}
+          <div className="rounded-lg bg-white">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-8" aria-label="Selected"></TableHead>
                 <TableHead className="w-12 text-center">Photo</TableHead>
                 <TableHead>Code</TableHead>
                 <TableHead>Product</TableHead>
@@ -154,6 +159,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
               ))}
             </TableBody>
           </Table>
+          </div>
           {/* Inside the scroll box, so it only shows once the rows are scrolled to the end. */}
           <LoadMore shown={rows.length} total={total} />
         </div>
