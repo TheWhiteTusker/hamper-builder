@@ -1,11 +1,14 @@
+"use client";
+
+import { memo } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import Link from "@/components/link";
 import { formatMoney, formatPct } from "@/lib/pricing";
 import type { HamperSummary } from "@/lib/types";
 import { SelectBox } from "@/components/list-select/row-select";
 
-/** One hamper in the list: picture, figures, and red where it loses money. */
-export function HamperRow({ h }: { h: HamperSummary }) {
+/** One hamper in the list: picture, figures, and red where it loses money. Memo: a live change re-renders only its own row. */
+export const HamperRow = memo(function HamperRow({ h }: { h: HamperSummary }) {
   return (
     <TableRow className="has-checked:bg-(--color-brand)/5">
       <TableCell className="w-8 px-2 text-center">
@@ -61,4 +64,4 @@ export function HamperRow({ h }: { h: HamperSummary }) {
       </TableCell>
     </TableRow>
   );
-}
+});

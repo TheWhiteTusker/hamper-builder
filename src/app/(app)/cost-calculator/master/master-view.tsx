@@ -14,6 +14,7 @@ import type { MasterCtx } from "./master-ui";
 import { StageCard } from "./stage-card";
 import { SyncRatesButton } from "./sync-rates-button";
 import { TransferSubcategoryDialog } from "./transfer-subcategory-dialog";
+import { useLiveCostRows } from "./use-live-cost-rows";
 import { VarietyDialog } from "./variety-dialog";
 
 export function CostMasterView({
@@ -25,14 +26,7 @@ export function CostMasterView({
   admin: boolean;
   productColors: ProductColor[];
 }) {
-  // Edits patch these rows in place; a server re-render (repricing, a refresh)
-  // replaces them wholesale.
-  const [rows, setRows] = useState(serverRows);
-  const [prevServerRows, setPrevServerRows] = useState(serverRows);
-  if (serverRows !== prevServerRows) {
-    setPrevServerRows(serverRows);
-    setRows(serverRows);
-  }
+  const [rows, setRows] = useLiveCostRows(serverRows);
   const stages = buildCostTree(rows);
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ error?: string; success?: string }>({});

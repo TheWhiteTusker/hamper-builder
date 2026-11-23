@@ -1,4 +1,4 @@
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "@/components/link";
 import { requireUser, isAdmin } from "@/lib/supabase/server";
 import { PageHeader, EmptyState } from "@/components/ui";
@@ -6,7 +6,7 @@ import { Menu } from "@/components/ui/menu";
 import { LoadMore } from "@/components/load-more";
 import { pageLimit } from "@/lib/paging";
 import type { Category, ProductWithCategory } from "@/lib/types";
-import { ProductRow } from "./_list/product-row";
+import { ProductRows } from "./_list/product-rows";
 import { FilterForm } from "./_list/filter-form";
 import { ListMenu, SelectionCount } from "@/components/list-select/row-select";
 import { RememberListPosition } from "@/components/list-select/list-position";
@@ -153,11 +153,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {rows.map((p) => (
-                <ProductRow key={p.id} p={p} admin={admin} />
-              ))}
-            </TableBody>
+            <ProductRows rows={rows} categories={categories ?? []} admin={admin} />
           </Table>
           </div>
           {/* Inside the scroll box, so it only shows once the rows are scrolled to the end. */}

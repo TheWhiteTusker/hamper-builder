@@ -1,17 +1,15 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "@/components/link";
 import { requireUser } from "@/lib/supabase/server";
 import { loadSettings } from "@/lib/settings";
 import { PageHeader, EmptyState } from "@/components/ui";
 import { LoadMore } from "@/components/load-more";
 import { pageLimit } from "@/lib/paging";
-import { formatMoney } from "@/lib/pricing";
 import type { QuoteSummary } from "@/lib/types";
+import { QuoteRows } from "./_list/quote-rows";
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
-
-const DOC_LABEL = { quotation: "Quotation", proforma_invoice: "Proforma Invoice" } as const;
 
 export default async function QuotesPage({ searchParams }: { searchParams: Search }) {
   const params = await searchParams;
@@ -117,48 +115,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Searc
                 <TableHead>Follow up</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {rows.map((quote) => (
-                <TableRow key={quote.id}>
-                  <TableCell className="font-mono whitespace-nowrap">
-                    <Link
-                      href={`/quotes/${encodeURIComponent(quote.doc_no)}`}
-                      className="hover:underline"
-                    >
-                      {quote.doc_no}
-                    </Link>
-                    {quote.linked_doc_no && (
-                      <div className="text-xs text-(--color-muted)">
-                        from {quote.linked_doc_no}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-(--color-muted)">
-                    {DOC_LABEL[quote.doc_type]}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">{quote.doc_date}</TableCell>
-                  <TableCell>{quote.client_name}</TableCell>
-                  <TableCell className="text-(--color-muted)">{quote.occasion ?? "—"}</TableCell>
-                  <TableCell className="num">{quote.line_count}</TableCell>
-                  <TableCell className="num">{quote.total_qty}</TableCell>
-                  <TableCell className="num">
-                    {quote.grand_total == null ? (
-                      <span className="text-(--color-muted)" title="Option based quotation">
-                        by option
-                      </span>
-                    ) : (
-                      formatMoney(quote.grand_total)
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <span className="badge">{quote.status}</span>
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-(--color-muted)">
-                    {quote.follow_up_date ?? "—"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
+            <QuoteRows rows={rows} />
           </Table>
         </div>
       )}

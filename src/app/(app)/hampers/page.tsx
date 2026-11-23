@@ -5,7 +5,7 @@ import { loadSettings } from "@/lib/settings";
 import { PageHeader } from "@/components/ui";
 import { LoadMore } from "@/components/load-more";
 import { pageLimit } from "@/lib/paging";
-import { HamperRow } from "./_list/hamper-row";
+import { HamperRows } from "./_list/hamper-rows";
 import { Range } from "./_list/range";
 import type { HamperSummary } from "@/lib/types";
 import { ListMenu, SelectionCount } from "@/components/list-select/row-select";
@@ -176,7 +176,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
                 </TableCell>
               </TableRow>
             ) : (
-              rows.map((h) => <HamperRow key={h.id} h={h} />)
+              <HamperRows rows={rows} />
             )}
           </TableBody>
         </Table>

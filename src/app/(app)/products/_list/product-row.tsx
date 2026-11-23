@@ -1,3 +1,6 @@
+"use client";
+
+import { memo } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import Link from "@/components/link";
 import { formatMoney } from "@/lib/pricing";
@@ -8,8 +11,8 @@ import { productHref } from "../href";
 import { DeleteProductButton } from "./delete-product-button";
 import { ReviewMark, SelectBox } from "@/components/list-select/row-select";
 
-/** One product in the Product Master table. */
-export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolean }) {
+/** One product in the Product Master table. Memo: a live change re-renders only its own row. */
+export const ProductRow = memo(function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolean }) {
   return (
     <TableRow
       // Ticked: the brand tint. Marked for review: red. Never both (selection.ts);
@@ -90,4 +93,4 @@ export function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolea
       </TableCell>
     </TableRow>
   );
-}
+});

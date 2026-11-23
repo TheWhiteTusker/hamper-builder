@@ -13,6 +13,7 @@ import type { SlideSummary } from "./page";
 import { AddSlides } from "./add-slides";
 import { draftOf, insertBeforeClosing, type DraftSlide } from "./draft";
 import { SlideCard } from "./slide-card";
+import { idsOf, useDeckDraft } from "./use-deck-draft";
 
 export function DeckOverview({
   deck,
@@ -23,27 +24,12 @@ export function DeckOverview({
   slides: SlideSummary[];
   picker: PickerData;
 }) {
-  // Everything below is a draft kept on this page. Nothing is written until Save.
-  const [slides, setSlides] = useState<DraftSlide[]>(initialSlides);
-  const [title, setTitle] = useState(deck.title);
-  const [saved, setSaved] = useState({ title: deck.title, ids: initialSlides.map((s) => s.id).join() });
+  const { slides, setSlides, title, setTitle, saved, setSaved, dirty } = useDeckDraft(deck, initialSlides);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [exporting, setExporting] = useState<string | null>(null);
   const [saving, startSaving] = useTransition();
   const [deleting, startDelete] = useTransition();
-
-  const dirty = title.trim() !== saved.title || slides.map((s) => s.id).join() !== saved.ids;
-  // Someone else saved this deck: take it unless there are unsaved changes here.
-  const [shown, setShown] = useState(initialSlides);
-  if (initialSlides !== shown) {
-    setShown(initialSlides);
-    if (!dirty) {
-      setSlides(initialSlides);
-      setTitle(deck.title);
-      setSaved({ title: deck.title, ids: initialSlides.map((s) => s.id).join() });
-    }
-  }
 
   useUnsavedWarning(dirty);
 
@@ -82,7 +68,7 @@ export function DeckOverview({
       // Swap temporary ids for the real ones so the new slides can be opened.
       const next = slides.map((s) => (s.unsaved && res.ids?.[s.id] ? { id: res.ids[s.id], kind: s.kind, canvas: s.canvas } : s));
       setSlides(next);
-      setSaved({ title: title.trim(), ids: next.map((s) => s.id).join() });
+      setSaved({ title: title.trim(), ids: idsOf(next) });
       setNotice("Saved.");
     });
 
@@ -91,7 +77,7 @@ export function DeckOverview({
     setSlides(initialSlides);
     setTitle(saved.title);
     // initialSlides is what the page loaded with; after an earlier save, reload to get the saved state.
-    if (initialSlides.map((s) => s.id).join() !== saved.ids) window.location.reload();
+    if (idsOf(initialSlides) !== saved.ids) window.location.reload();
   };
 
   /** Leaving for a slide editor would lose the draft; ask first. */
