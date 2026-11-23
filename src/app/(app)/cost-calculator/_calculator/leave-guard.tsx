@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { typingIn, undoKey } from "@/components/undo-redo";
+import { LEAVE_EVENT, type LeaveTo } from "@/components/unsaved-warning";
 
 /**
  * Leaving the calculator: straight away when nothing has changed since it
@@ -29,21 +29,20 @@ export function useLeaveGuard(snapshot: string, fallback: string) {
       setAsking({ to: url.pathname + url.search + url.hash });
     };
     const onUnload = (e: BeforeUnloadEvent) => e.preventDefault();
-    // Undo/redo outside a text box would change screen (UndoRedo): undo asks
-    // first, like ← Back; redo (forward) is held until the changes are saved.
-    const onKey = (e: KeyboardEvent) => {
-      const kind = undoKey(e);
-      if (!kind || typingIn(e.target)) return;
+    // A shortcut changing screen (shortcuts.tsx): ask first, like a link.
+    // Forward is held until the changes are saved.
+    const onLeave = (e: Event) => {
       e.preventDefault();
-      if (kind === "undo") setAsking({ to: null });
+      const to = (e as CustomEvent<LeaveTo>).detail;
+      if (to !== "forward") setAsking({ to });
     };
     document.addEventListener("click", onClick, true);
     window.addEventListener("beforeunload", onUnload);
-    window.addEventListener("keydown", onKey);
+    window.addEventListener(LEAVE_EVENT, onLeave);
     return () => {
       document.removeEventListener("click", onClick, true);
       window.removeEventListener("beforeunload", onUnload);
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener(LEAVE_EVENT, onLeave);
     };
   }, [dirty]);
 

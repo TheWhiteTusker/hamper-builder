@@ -1,5 +1,6 @@
 import { useEffect, useState, type RefObject } from "react";
 import { useRouter } from "next/navigation";
+import { useUnsavedWarning } from "@/components/unsaved-warning";
 import type Konva from "konva";
 import type { ActionResult } from "../editor";
 import type { CanvasDoc } from "./use-canvas-doc";
@@ -99,12 +100,7 @@ export function useStageSave({
     return () => clearTimeout(t);
   }, [toast]);
 
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
+  useUnsavedWarning(dirty);
 
   // The editor is full-screen; stop the page behind it scrolling.
   useEffect(() => {

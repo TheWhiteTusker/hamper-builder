@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
+import { useUnsavedWarning } from "@/components/unsaved-warning";
 import Link from "@/components/link";
 import { PageHeader } from "@/components/ui";
 import { exportPptx } from "@/components/studio/export-pptx";
@@ -34,12 +35,7 @@ export function DeckOverview({
 
   const dirty = title.trim() !== saved.title || slides.map((s) => s.id).join() !== saved.ids;
 
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
+  useUnsavedWarning(dirty);
 
   const edit = (fn: (list: DraftSlide[]) => DraftSlide[]) => {
     setSlides(fn);

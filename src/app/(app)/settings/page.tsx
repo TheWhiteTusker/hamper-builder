@@ -7,7 +7,8 @@ import { CompanyForm } from "./_forms/company-form";
 import { TermsForm } from "./_forms/setting-forms";
 import { CategoryList } from "./_forms/category-list";
 import { UserRoleForm } from "./_forms/user-role-form";
-import { UpdateAppButton } from "./_forms/update-app-button";
+import { ToolsTab } from "./_forms/tools-tab";
+import { KeyBindings } from "./_forms/key-bindings";
 import { PickListManager } from "./pick-list-manager";
 import { resolveColors } from "@/lib/product-code";
 import { loadCostRows } from "../cost-calculator/load";
@@ -24,14 +25,9 @@ const TABS = [
   { key: "tools", label: "Tools", hint: "Recycle Bin, price refresh and app updates." },
   { key: "users", label: "Users", hint: "Who can sign in and what they can do." },
   { key: "company", label: "Company & terms", hint: "Your letterhead details, GST and the terms printed on quotes and invoices." },
+  { key: "keys", label: "Key bindings", hint: "Shortcuts and mouse buttons for the app, like a game's controls." },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
-
-// Most-used first; the one-time import sits at the bottom of the tab.
-const TOOLS = [
-  { href: "/bin", title: "Recycle Bin", hint: "Restore deleted hampers, products and photos. Kept for 30 days." },
-  { href: "/admin/refresh-prices", title: "Refresh prices", hint: "Update saved hampers with today's product prices." },
-];
 
 export default async function SettingsPage({
   searchParams,
@@ -72,50 +68,8 @@ export default async function SettingsPage({
       {tab === "categories" && <CategoriesTab supabase={supabase} />}
       {tab === "company" && <GeneralTab supabase={supabase} />}
       {tab === "users" && <UsersTab supabase={supabase} selfId={profile.id} />}
-      {tab === "tools" && (
-        <section className="card divide-y divide-(--color-line)">
-          {TOOLS.map((t) => (
-            <div key={t.href} className="flex flex-wrap items-center justify-between gap-3 p-4">
-              <div>
-                <h2 className="text-sm font-semibold">{t.title}</h2>
-                <p className="mt-0.5 text-xs text-(--color-muted)">{t.hint}</p>
-              </div>
-              <Link href={t.href} className="btn-secondary">
-                Open
-              </Link>
-            </div>
-          ))}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <div>
-              <h2 className="text-sm font-semibold">App</h2>
-              {/* The app shows its own version; the website, the newest release. */}
-              <p className="mt-0.5 text-xs text-(--color-muted)">
-                Lattice Lane Hamper Builder
-                {version && (
-                  <>
-                    {" "}· {desktop ? "Version" : "Latest release"}{" "}
-                    <span className="font-mono font-medium text-(--color-brand)">v{version}</span>
-                  </>
-                )}
-              </p>
-            </div>
-            <UpdateAppButton desktop={desktop} />
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <div>
-              <h2 className="text-sm font-semibold">
-                Import old workbook <span className="badge ml-1 align-middle">One-time</span>
-              </h2>
-              <p className="mt-0.5 text-xs text-(--color-muted)">
-                Moves products, hampers and quotes across from the old 6-tab spreadsheet.
-              </p>
-            </div>
-            <Link href="/admin/import" className="btn-secondary">
-              Open
-            </Link>
-          </div>
-        </section>
-      )}
+      {tab === "tools" && <ToolsTab desktop={desktop} version={version} />}
+      {tab === "keys" && <KeyBindings />}
     </>
   );
 }

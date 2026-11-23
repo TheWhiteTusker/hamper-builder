@@ -1,5 +1,5 @@
 // One undo/redo history per tab, newest last: ticks, review marks and moves
-// between screens (components/undo-redo.tsx). In memory, so a reload starts
+// between screens (components/shortcuts.tsx). In memory, so a reload starts
 // it fresh.
 
 type Step = { undo: () => void; redo: () => void };
