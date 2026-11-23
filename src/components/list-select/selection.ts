@@ -8,7 +8,7 @@ import { record } from "@/lib/undo";
 // not per account.
 export type ListKind = "products" | "hampers";
 /** A list's ticked rows, or its rows bookmarked for review (same store, own key). */
-export type Store = ListKind | "review-products";
+export type Store = ListKind | `review-${ListKind}`;
 
 const key = (kind: Store) => `lattice:selected-${kind}`;
 const EVENT = "lattice:selection";
@@ -52,8 +52,13 @@ export function useSelected(kind: Store) {
   return useSyncExternalStore(subscribe, () => read(kind), () => EMPTY);
 }
 
-// A product is ticked or marked for review, never both: doing one undoes the other.
-const RIVAL: Partial<Record<Store, Store>> = { products: "review-products", "review-products": "products" };
+// A row is ticked or marked for review, never both: doing one undoes the other.
+const RIVAL: Partial<Record<Store, Store>> = {
+  products: "review-products",
+  "review-products": "products",
+  hampers: "review-hampers",
+  "review-hampers": "hampers",
+};
 
 /** Every tick, mark and clear goes through here, so each is one undo step. */
 function change(next: Partial<Record<Store, string[]>>) {

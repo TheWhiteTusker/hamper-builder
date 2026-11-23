@@ -23,13 +23,14 @@ export function SelectBox({ kind, id, label, className = "" }: Row & { className
   );
 }
 
-/** Bookmark beside a product's tick box: marks it for review. Shown on row hover; the row's red shows it's marked. */
-export function ReviewMark({ id, label }: { id: string; label: string }) {
-  const on = useSelected("review-products").includes(id);
+/** Bookmark beside a row's tick box: marks it for review. Shown on row hover; the row's red shows it's marked. */
+export function ReviewMark({ kind, id, label }: Row) {
+  const store = `review-${kind}` as const;
+  const on = useSelected(store).includes(id);
   return (
     <button
       type="button"
-      onClick={() => setSelected("review-products", id, !on)}
+      onClick={() => setSelected(store, id, !on)}
       aria-pressed={on}
       aria-label={`Mark ${label} for review`}
       title={on ? "Marked for review (click to unmark)" : "Mark for review"}

@@ -30,7 +30,7 @@ export const ProductRow = memo(function ProductRow({ p, admin }: { p: ProductWit
             label={p.code}
             className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
           />
-          <ReviewMark id={p.id} label={p.code} />
+          <ReviewMark kind="products" id={p.id} label={p.code} />
         </div>
         {p.image_url ? (
           <ImagePreview

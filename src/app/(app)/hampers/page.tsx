@@ -87,12 +87,13 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
       <RememberListPosition kind="hampers" />
 
       {/* The form wraps the whole table so every filter can sit in the header
-          cell of the column it filters. */}
-      <form key={[q, collection, minItems, minCost, maxCost, minPrice, maxPrice].join("|")} className="card list-scroll">
+          cell of the column it filters. row-gutter (globals.css): room left of
+          the table for each row's tick box and bookmark. */}
+      <form key={[q, collection, minItems, minCost, maxCost, minPrice, maxPrice].join("|")} className="list-scroll row-gutter">
+        <div className="card">
         <Table className="min-w-300">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-8" aria-label="Selected"></TableHead>
               <TableHead className="w-14"></TableHead>
               <TableHead>Code</TableHead>
               <TableHead>Hamper</TableHead>
@@ -106,7 +107,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
             </TableRow>
 
             <TableRow>
-              <TableHead colSpan={2} className="pb-2"></TableHead>
+              <TableHead className="pb-2"></TableHead>
               <TableHead colSpan={2} className="pb-2">
                 <input
                   name="q"
@@ -166,7 +167,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} className="py-10 text-center text-sm text-(--color-muted)">
+                <TableCell colSpan={10} className="py-10 text-center text-sm text-(--color-muted)">
                   {filtered ? "No hampers match that search." : "No hampers yet."}
                   {manage && !filtered && (
                     <Link href="/hampers/new" className="ml-2 underline">
@@ -180,6 +181,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
             )}
           </TableBody>
         </Table>
+        </div>
         {/* Inside the scroll box, so it only shows once the rows are scrolled to the end. */}
         <LoadMore shown={rows.length} total={total} />
       </form>
