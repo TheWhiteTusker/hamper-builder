@@ -69,6 +69,8 @@ async function startServer() {
 }
 
 ipcMain.handle("check-for-updates", async () => checkForUpdate(true));
+// Each tick asks for this, so it is on disk even if the app is killed next.
+ipcMain.on("flush-storage", () => session.defaultSession.flushStorageData());
 
 function createWindow() {
   const ico = path.join(__dirname, "..", "build", "icon.ico");

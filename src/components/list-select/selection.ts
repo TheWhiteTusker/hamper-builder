@@ -36,6 +36,9 @@ function write(kind: Store, next: string[]) {
   try {
     localStorage.setItem(key(kind), JSON.stringify(next));
   } catch {}
+  // Desktop app: save to disk now. Chromium holds writes in memory for 5s+,
+  // so an installer or crash killing the app lost the latest ticks.
+  (window as { electron?: { flushStorage?: () => void } }).electron?.flushStorage?.();
   window.dispatchEvent(new Event(EVENT));
 }
 
