@@ -8,14 +8,15 @@ import type { HamperSummary } from "@/lib/types";
 import { ReviewMark, SelectBox } from "@/components/list-select/row-select";
 
 /** One hamper in the list: picture, figures, and red where it loses money. Memo: a live change re-renders only its own row. */
-export const HamperRow = memo(function HamperRow({ h }: { h: HamperSummary }) {
+export const HamperRow = memo(function HamperRow({ h, n }: { h: HamperSummary; n: number }) {
   return (
     <TableRow
       // Ticked: the brand tint. Marked for review: red. Never both (selection.ts);
       // the ! only covers the instant between the two writes. As the Product Master.
       className="group has-checked:bg-(--color-brand)/15 has-aria-pressed:bg-red-100!"
     >
-      <TableCell className="relative w-14">
+      <TableCell className="num relative w-12 text-(--color-muted)">
+        {n}
         {/* In the gutter left of the table (.row-gutter), shown on row hover or keyboard
             focus (always on touch screens); the row's colour shows what's ticked or marked. */}
         <div className="absolute top-1/2 right-full mr-1.5 flex -translate-y-1/2 items-center gap-1">
@@ -27,6 +28,8 @@ export const HamperRow = memo(function HamperRow({ h }: { h: HamperSummary }) {
           />
           <ReviewMark kind="hampers" id={h.id} label={h.code} />
         </div>
+      </TableCell>
+      <TableCell className="w-14">
         <Link href={`/hampers/${encodeURIComponent(h.code)}`} className="block h-10 w-10">
           {h.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element

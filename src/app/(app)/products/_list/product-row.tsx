@@ -12,14 +12,15 @@ import { DeleteProductButton } from "./delete-product-button";
 import { ReviewMark, SelectBox } from "@/components/list-select/row-select";
 
 /** One product in the Product Master table. Memo: a live change re-renders only its own row. */
-export const ProductRow = memo(function ProductRow({ p, admin }: { p: ProductWithCategory; admin: boolean }) {
+export const ProductRow = memo(function ProductRow({ p, n, admin }: { p: ProductWithCategory; n: number; admin: boolean }) {
   return (
     <TableRow
       // Ticked: the brand tint. Marked for review: red. Never both (selection.ts);
       // the ! only covers the instant between the two writes.
       className={`group has-checked:bg-(--color-brand)/15 has-aria-pressed:bg-red-100! ${p.is_active ? "" : "opacity-55"}`}
     >
-      <TableCell className="relative w-12 py-1.5 px-2 text-center">
+      <TableCell className="num relative w-12 text-(--color-muted)">
+        {n}
         {/* In the gutter left of the table (.row-gutter). Both show only on row hover or
             keyboard focus (always on touch screens, which can't hover); the row's colour
             shows what's ticked or marked. */}
@@ -32,6 +33,8 @@ export const ProductRow = memo(function ProductRow({ p, admin }: { p: ProductWit
           />
           <ReviewMark kind="products" id={p.id} label={p.code} />
         </div>
+      </TableCell>
+      <TableCell className="w-12 py-1.5 px-2 text-center">
         {p.image_url ? (
           <ImagePreview
             src={p.image_url}

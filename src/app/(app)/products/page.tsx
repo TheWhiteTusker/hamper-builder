@@ -142,6 +142,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="num w-12">S.No.</TableHead>
                 <TableHead className="w-12 text-center">Photo</TableHead>
                 <TableHead>Code</TableHead>
                 <TableHead>Product</TableHead>

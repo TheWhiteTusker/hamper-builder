@@ -94,6 +94,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
         <Table className="min-w-300">
           <TableHeader>
             <TableRow>
+              <TableHead className="num w-12">S.No.</TableHead>
               <TableHead className="w-14"></TableHead>
               <TableHead>Code</TableHead>
               <TableHead>Hamper</TableHead>
@@ -107,7 +108,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
             </TableRow>
 
             <TableRow>
-              <TableHead className="pb-2"></TableHead>
+              <TableHead colSpan={2} className="pb-2"></TableHead>
               <TableHead colSpan={2} className="pb-2">
                 <input
                   name="q"
@@ -167,7 +168,7 @@ export default async function HampersPage({ searchParams }: { searchParams: Sear
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="py-10 text-center text-sm text-(--color-muted)">
+                <TableCell colSpan={11} className="py-10 text-center text-sm text-(--color-muted)">
                   {filtered ? "No hampers match that search." : "No hampers yet."}
                   {manage && !filtered && (
                     <Link href="/hampers/new" className="ml-2 underline">

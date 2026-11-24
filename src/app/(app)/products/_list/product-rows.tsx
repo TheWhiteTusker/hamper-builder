@@ -26,8 +26,8 @@ export function ProductRows({
 
   return (
     <TableBody>
-      {rows.map((p) => (
-        <ProductRow key={p.id} p={p} admin={admin} />
+      {rows.map((p, i) => (
+        <ProductRow key={p.id} p={p} n={i + 1} admin={admin} />
       ))}
     </TableBody>
   );
