@@ -54,9 +54,11 @@ export function readOverheads(row: string[]): Record<string, number> {
 }
 
 /**
- * The Cost Lines tab as each product's lines. An item on the Rates page takes
- * its rate and unit from there, as the calculator does; one that is not keeps
- * what was typed, with a warning. An unknown Type is an error.
+ * The Cost Lines tab as each product's lines. Each item takes its rate, unit
+ * and wastage from the Rates page, as the calculator does. An item not on the
+ * Rates page is an error, as is an unknown Type: saved unlinked, a line shows
+ * "(not in master)" in the calculator and never follows the Rates page's rate
+ * (how "LED Lights" for "LED Light" once slipped in). Names match in any case.
  * A wastage % typed over a Rates item's is a change to the Rates page: it goes
  * into `wastage` (variety id -> new %) and onto every line of that item.
  */
@@ -76,38 +78,39 @@ export function readCostLines(
     if (!code || (!get("Type") && !get("Category") && !get("Variety"))) return;
     const stage = stageBy.get(norm(get("Type")));
     if (!stage) {
-      errors.push(`Cost Lines row ${n}: Type "${get("Type")}" isn't one of ${SHEET_STAGES.map((s) => s.label).join(", ")}.`);
+      errors.push(`Cost Lines row ${n}: Type "${get("Type")}" isn't one of ${stages.map((s) => stageLabel(s.code, s.name)).join(", ")}.`);
       return;
     }
     const cat = stage.categories.find((c) => norm(c.name) === norm(get("Category")));
     const sub = cat?.subcategories.find((s) => norm(s.name) === norm(get("Subcategory")));
     const v = sub?.varieties.find((x) => norm(x.name) === norm(get("Variety")));
-    const subName = sub?.name ?? get("Subcategory");
-    const varName = v?.name ?? get("Variety");
+    const path = [get("Type"), get("Category"), get("Subcategory"), get("Variety")].filter(Boolean).join(" › ");
+    if (!cat || !sub || !v) {
+      errors.push(`Cost Lines row ${n}: ${code}'s ${path} isn't on the Rates page. Spell it as the Rates page does, or add it there first.`);
+      return;
+    }
     const size = norm(get("Size In"));
     const line: ProductCostLine = {
       stage_code: stage.code,
-      category_name: cat?.name ?? get("Category"),
-      subcategory_name: subName || null,
-      variety_name: varName || null,
-      item_name: [subName, varName].filter(Boolean).join(" ") || get("Category"),
-      cost_variety_id: v?.id ?? null,
+      category_name: cat.name,
+      subcategory_name: sub.name,
+      variety_name: v.name,
+      item_name: `${sub.name} ${v.name}`,
+      cost_variety_id: v.id,
       length: numOrNull(get("Length")),
       breadth: numOrNull(get("Breadth")),
       dimension_unit: size === "mm" || size === "cm" ? size : "inch",
-      unit: v?.unit ?? (get("Unit") || (stage.code === "machine" ? "min" : "piece")),
-      rate: v ? Number(v.default_rate) : num(get("Rate")),
+      unit: v.unit,
+      rate: Number(v.default_rate),
       duration_minutes: numOrNull(get("Minutes")),
       qty: get("Qty") === "" ? 1 : num(get("Qty")),
-      wastage_pct: v ? Number(v.default_wastage_pct) : num(get("Wastage %")),
+      wastage_pct: Number(v.default_wastage_pct),
       mrp: num(get("MRP")) > 0 ? num(get("MRP")) : null,
       line_total: 0,
     };
-    const path = [get("Type"), get("Category"), get("Subcategory"), get("Variety")].filter(Boolean).join(" › ");
-    if (!v) warnings.push(`${code}: ${path} isn't on the Rates page, so its typed rate ₹${line.rate} is used.`);
     // Untouched rows still show the Rates value, so only a different one is an edit.
     const typed = get("Wastage %");
-    if (v && typed !== "" && round2(num(typed)) !== Number(v.default_wastage_pct)) {
+    if (typed !== "" && round2(num(typed)) !== Number(v.default_wastage_pct)) {
       const w = round2(num(typed));
       const seen = wastage.get(v.id);
       if (seen != null && seen !== w) errors.push(`Cost Lines row ${n}: ${path} has wastage ${w}% here but ${seen}% on another row; use one.`);

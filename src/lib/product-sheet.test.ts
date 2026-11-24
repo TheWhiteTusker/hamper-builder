@@ -12,9 +12,18 @@ const RATES = {
     { id: "st1", code: "material", name: "Material", calculation_type: "dimension", sort_order: 1, is_active: true },
     { id: "st2", code: "machine", name: "Machine Cost", calculation_type: "time_based", sort_order: 2, is_active: true },
   ],
-  categories: [{ id: "c1", stage_id: "st1", name: "Woodbased", sort_order: 0, is_active: true }],
-  subcategories: [{ id: "s1", category_id: "c1", name: "Birch", sort_order: 0, is_active: true }],
-  varieties: [{ id: "v1", subcategory_id: "s1", name: "3mm", default_rate: 90, unit: "sq ft", default_wastage_pct: 10, notes: null, sort_order: 0, is_active: true }],
+  categories: [
+    { id: "c1", stage_id: "st1", name: "Woodbased", sort_order: 0, is_active: true },
+    { id: "c2", stage_id: "st2", name: "Laser", sort_order: 0, is_active: true },
+  ],
+  subcategories: [
+    { id: "s1", category_id: "c1", name: "Birch", sort_order: 0, is_active: true },
+    { id: "s2", category_id: "c2", name: "CO2", sort_order: 0, is_active: true },
+  ],
+  varieties: [
+    { id: "v1", subcategory_id: "s1", name: "3mm", default_rate: 90, unit: "sq ft", default_wastage_pct: 10, notes: null, sort_order: 0, is_active: true },
+    { id: "v2", subcategory_id: "s2", name: "Cutting", default_rate: 120, unit: "hour", default_wastage_pct: 0, notes: null, sort_order: 0, is_active: true },
+  ],
 } satisfies CostRows;
 
 const product = (code: string, cost_price: number, default_sp: number, markup_pct = 0) =>
@@ -63,7 +72,7 @@ test("product sheet: Cost Lines and overheads round-trip without moving the cost
   });
   const lines = [
     line({}),
-    line({ stage_code: "machine", category_name: "Laser", subcategory_name: null, variety_name: "Cutting", cost_variety_id: null, length: null, breadth: null, unit: "hour", rate: 120, duration_minutes: 30, wastage_pct: 0, line_total: 60, sort_order: 2 }),
+    line({ stage_code: "machine", category_name: "Laser", subcategory_name: "CO2", variety_name: "Cutting", cost_variety_id: "v2", length: null, breadth: null, unit: "hour", rate: 120, duration_minutes: 30, wastage_pct: 0, line_total: 60, sort_order: 2 }),
   ];
   // 198 × 1.1 overhead + 60
   const costed = { ...product("E", 277.8, 560, 50), product_cost_sheets: [{ stage_overheads: { material: 10 }, product_cost_lines: lines }] };
@@ -83,15 +92,18 @@ test("product sheet: Cost Lines and overheads round-trip without moving the cost
   assert.equal(ws.B2.v, "Item E & <more>", "lines show the product's name");
   assert.match(ws.B2.f ?? "", /MATCH\(A2,'Product Master'!\$A:\$A/, "looked up from the Product Master tab");
   assert.match(ws.M2.f ?? "", /MATCH\(/, "a master item's rate is looked up");
-  assert.equal(ws.M3.f, undefined, "an item not on the Rates page keeps its typed rate");
   assert.equal(ws.A4, undefined, "a gap row before the next product's lines");
   assert.equal(ws.A5.v, "G");
+  assert.equal(ws.M5.f, undefined, "a line not linked to the Rates page keeps its typed rate");
   assert.equal(tab(RATES_SHEET)[1].join(), "Material,Woodbased,Birch,3mm,sq ft,90.00,10,Material|Woodbased|Birch|3mm");
 
   const result = buildImport({ products: master });
-  const warnings: string[] = [];
-  const read = readCostLines(tab(LINES_SHEET), buildCostTree(RATES), warnings, []).get("E")!;
+  const [warnings, errors] = [[] as string[], [] as string[]];
+  const back = readCostLines(tab(LINES_SHEET), buildCostTree(RATES), warnings, errors);
+  assert.deepEqual(errors, []);
+  const read = back.get("E")!;
   assert.deepEqual(read.map((l) => l.line_total), [198, 60]);
+  assert.equal(back.get("G")![0].cost_variety_id, "v1", "an unlinked line whose names are on the Rates page comes back linked");
   assert.equal(result.products[0].cost_price, 277.8);
   const saved = { sheetId: "s1", overheads: { material: 10 }, lines };
   assert.equal(planSheetCosting(result.products[0], read, readOverheads(master[1]), saved, warnings), null, "nothing changed");

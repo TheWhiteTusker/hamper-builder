@@ -8,9 +8,18 @@ const RATES = {
     { id: "st1", code: "material", name: "Material", calculation_type: "dimension", sort_order: 1, is_active: true },
     { id: "st2", code: "machine", name: "Machine Cost", calculation_type: "time_based", sort_order: 2, is_active: true },
   ],
-  categories: [{ id: "c1", stage_id: "st1", name: "Woodbased", sort_order: 0, is_active: true }],
-  subcategories: [{ id: "s1", category_id: "c1", name: "Birch", sort_order: 0, is_active: true }],
-  varieties: [{ id: "v1", subcategory_id: "s1", name: "3mm", default_rate: 90, unit: "sq ft", default_wastage_pct: 10, notes: null, sort_order: 0, is_active: true }],
+  categories: [
+    { id: "c1", stage_id: "st1", name: "Woodbased", sort_order: 0, is_active: true },
+    { id: "c2", stage_id: "st2", name: "Laser", sort_order: 0, is_active: true },
+  ],
+  subcategories: [
+    { id: "s1", category_id: "c1", name: "Birch", sort_order: 0, is_active: true },
+    { id: "s2", category_id: "c2", name: "CO2", sort_order: 0, is_active: true },
+  ],
+  varieties: [
+    { id: "v1", subcategory_id: "s1", name: "3mm", default_rate: 90, unit: "sq ft", default_wastage_pct: 10, notes: null, sort_order: 0, is_active: true },
+    { id: "v2", subcategory_id: "s2", name: "Cutting", default_rate: 120, unit: "hour", default_wastage_pct: 0, notes: null, sort_order: 0, is_active: true },
+  ],
 } satisfies CostRows;
 
 const row = (cells: Partial<Record<(typeof LINE_HEADERS)[number], string>>) => LINE_HEADERS.map((h) => cells[h] ?? "");
@@ -22,14 +31,14 @@ test("readOverheads: blank and 0 left out; percents read either way", () => {
   assert.deepEqual(readOverheads(r), { material: 12.5, finishing: 5 });
 });
 
-test("readCostLines: master items take the master's rate; others keep what was typed", () => {
+test("readCostLines: items take the Rates page's rate; ones not on it are errors", () => {
   const warnings: string[] = [];
   const errors: string[] = [];
   const lines = readCostLines(
     grid(
       // Typed rate, unit and wastage are ignored for an item on the Rates page; names any case.
       row({ "Product Code": "A", Type: "material", Category: "woodbased", Subcategory: "BIRCH", Variety: "3mm", Length: "12", Breadth: "12", Rate: "1", Unit: "piece" }),
-      row({ "Product Code": "A", Type: "Machine Cost", Category: "Laser", Variety: "Cutting", Minutes: "30", Unit: "hour", Rate: "120" }),
+      row({ "Product Code": "A", Type: "Machine Cost", Category: "Laser", Subcategory: "co2", Variety: "Cutting", Minutes: "30", Rate: "5" }),
       row({ "Product Code": "B", Type: "Material", Category: "Woodbased", Subcategory: "Birch", Variety: "3mm", Qty: "0" }),
       row({ "Product Code": "B" }), // a code with nothing else: an unused row
     ),
@@ -38,18 +47,29 @@ test("readCostLines: master items take the master's rate; others keep what was t
     errors,
   );
   assert.deepEqual(errors, []);
+  assert.deepEqual(warnings, []);
   const [birch, laser] = lines.get("A")!;
   assert.equal(birch.cost_variety_id, "v1");
   assert.deepEqual([birch.category_name, birch.subcategory_name, birch.unit, birch.rate, birch.wastage_pct], ["Woodbased", "Birch", "sq ft", 90, 10]);
   assert.equal(birch.line_total, 99, "1 sq ft × 90 + 10%");
-  assert.deepEqual([laser.stage_code, laser.cost_variety_id, laser.unit, laser.line_total, laser.sort_order], ["machine", null, "hour", 60, 2]);
+  assert.deepEqual([laser.stage_code, laser.cost_variety_id, laser.subcategory_name, laser.unit, laser.line_total, laser.sort_order], ["machine", "v2", "CO2", "hour", 60, 2]);
   assert.equal(lines.get("B")!.length, 1);
   assert.equal(lines.get("B")![0].line_total, 0, "qty 0 costs nothing");
-  assert.equal(warnings.length, 1);
-  assert.match(warnings[0], /^A: Machine Cost › Laser › Cutting isn't on the Rates page, so its typed rate ₹120 is used/);
+
+  // A near miss ("Birches" for "Birch") is not saved unlinked: it stops the import.
+  const missed = readCostLines(
+    grid(row({ "Product Code": "D", Type: "Material", Category: "Woodbased", Subcategory: "Birches", Variety: "3mm", Rate: "90" })),
+    buildCostTree(RATES),
+    warnings,
+    errors,
+  );
+  assert.equal(missed.size, 0);
+  assert.match(errors[0], /^Cost Lines row 2: D's Material › Woodbased › Birches › 3mm isn't on the Rates page/);
+  errors.length = 0;
 
   readCostLines(grid(row({ "Product Code": "C", Type: "Matrial", Category: "Woodbased" })), buildCostTree(RATES), [], errors);
-  assert.match(errors[0], /row 2: Type "Matrial" isn't one of Material, Hardware/);
+  // Only the stages in use are offered: a hidden one (Misc) isn't loaded, so isn't listed.
+  assert.match(errors[0], /row 2: Type "Matrial" isn't one of Material, Machine\.$/);
 });
 
 test("readCostLines: a typed wastage changes the Rates item for all its lines", () => {
