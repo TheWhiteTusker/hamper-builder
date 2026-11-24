@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "./studio.css";
 @import "./landing.css";
+@import "./select.css";
+@import "./loading.css";
 
 /* Palette taken from latticelane.com's own Shopify colour schemes:
    cream #faf8ee, sage #54655b, soft gold #ddcf8b, deep green #2c332f.

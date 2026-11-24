@@ -76,7 +76,8 @@ async function download(base, version) {
     parent: getWin(),
     modal: true,
     width: 440,
-    height: 220,
+    // Fits the card (40px padding, heading, version, bar, %) without a scrollbar.
+    height: 300,
     frame: false,
     resizable: false,
     minimizable: false,
