@@ -87,7 +87,12 @@ pub fn pick_objects(masks: &[LowMask], o: PickOpts) -> Vec<LowMask> {
     }
     kept.iter()
         .enumerate()
-        .filter(|(ci, c)| !kept.iter().enumerate().any(|(ki, k)| ki != *ci && k.2 > c.2 && overlap(&c.1, &k.1) as f64 / c.2 as f64 >= o.contained))
+        .filter(|(ci, c)| {
+            !kept
+                .iter()
+                .enumerate()
+                .any(|(ki, k)| ki != *ci && k.2 > c.2 && overlap(&c.1, &k.1) as f64 / c.2 as f64 >= o.contained)
+        })
         .map(|(_, c)| c.0.clone())
         .collect()
 }
@@ -179,7 +184,10 @@ pub fn fill_holes(rgba: &mut [u8], w: usize, h: usize, hole: &[bool]) {
     let mut queued = vec![false; n];
     let around = |i: usize| {
         let (x, y) = ((i % w) as i64, (i / w) as i64);
-        (-1..=1).flat_map(move |dy| (-1..=1).map(move |dx| (x + dx, y + dy))).filter(|(nx, ny)| *nx >= 0 && *ny >= 0 && *nx < w as i64 && *ny < h as i64).map(|(nx, ny)| ny as usize * w + nx as usize)
+        (-1..=1)
+            .flat_map(move |dy| (-1..=1).map(move |dx| (x + dx, y + dy)))
+            .filter(|(nx, ny)| *nx >= 0 && *ny >= 0 && *nx < w as i64 && *ny < h as i64)
+            .map(|(nx, ny)| ny as usize * w + nx as usize)
     };
     let mut ring: Vec<usize> = Vec::new();
     for i in 0..n {
@@ -413,7 +421,10 @@ mod tests {
         assert_eq!(pick_objects(&[part, twin, big(), backdrop, speck, shy], o), vec![big()]);
         let left = mask(&["##....", "##....", "......", "......", "......", "......"], 0.9);
         let right = mask(&["......", "......", "......", "......", "....##", "....##"], 0.97);
-        assert_eq!(pick_objects(&[left.clone(), right.clone()], PickOpts { min_area: 0.05, ..Default::default() }), vec![right, left]);
+        assert_eq!(
+            pick_objects(&[left.clone(), right.clone()], PickOpts { min_area: 0.05, ..Default::default() }),
+            vec![right, left]
+        );
     }
 
     #[test]
@@ -459,7 +470,13 @@ mod tests {
     #[test]
     fn placing_pieces() {
         let base = Base::at("p".into(), 100.0, 50.0);
-        let img = Image { product_id: None, url: "https://x.test/a.png".into(), width: 200.0, height: 100.0, fit: Fit::Stretch };
+        let img = Image {
+            product_id: None,
+            url: "https://x.test/a.png".into(),
+            width: 200.0,
+            height: 100.0,
+            fit: Fit::Stretch,
+        };
         let p = FramePlacer::new(&base, &img, 400.0, 400.0);
         assert_eq!((p.kx, p.ky, p.at(200.0, 200.0)), (0.5, 0.25, (200.0, 100.0)));
         let c = FramePlacer::new(&base, &Image { fit: Fit::Contain, ..img.clone() }, 400.0, 400.0);

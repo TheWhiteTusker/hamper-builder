@@ -10,7 +10,9 @@ use lattice_core::Decimal;
 use lattice_core::api::ApiError;
 use lattice_core::js::{self, dec, f};
 use lattice_core::money::{amount_in_words, format_money, format_pct};
-use lattice_core::pricing::{COMBINED_ORDER, QuoteLineInput, QuoteOpts, QuotePricing, group_by_option, price_option, price_quote};
+use lattice_core::pricing::{
+    COMBINED_ORDER, QuoteLineInput, QuoteOpts, QuotePricing, group_by_option, price_option, price_quote,
+};
 use lattice_core::records::{Category, DocType, QuoteItem, QuoteSummary};
 use lattice_core::settings::CompanySettings;
 use leptos::prelude::*;
@@ -35,13 +37,20 @@ async fn load_printable(doc_no: String) -> Result<Printable, ApiError> {
         .one::<QuoteSummary>()
         .await?
         .ok_or_else(|| ApiError::NotFound("No such quotation.".into()))?;
-    let (l, c) = (Q::from("quote_items").select("*").eq("quote_id", &quote.quote.id).order("line_no"), categories_query());
+    let (l, c) =
+        (Q::from("quote_items").select("*").eq("quote_id", &quote.quote.id).order("line_no"), categories_query());
     let (lines, settings, categories) = join!(l.rows::<QuoteItem>(), load_settings(), c.rows::<Category>());
     let lines = lines?;
     let ids: Vec<&str> = lines.iter().filter_map(|l| l.hamper_id.as_deref()).collect();
     let mut contents: BTreeMap<String, Vec<ContentItem>> = BTreeMap::new();
     if !ids.is_empty() {
-        for item in Q::from("hamper_items").select("*").in_list("hamper_id", &ids).order("line_no").rows::<ContentItem>().await? {
+        for item in Q::from("hamper_items")
+            .select("*")
+            .in_list("hamper_id", &ids)
+            .order("line_no")
+            .rows::<ContentItem>()
+            .await?
+        {
             contents.entry(item.hamper_id.clone()).or_default().push(item);
         }
     }
@@ -51,7 +60,10 @@ async fn load_printable(doc_no: String) -> Result<Printable, ApiError> {
 }
 
 fn priced(lines: &[&QuoteItem]) -> Vec<QuoteLineInput> {
-    lines.iter().map(|l| QuoteLineInput { qty: l.qty, catalogue_price: l.catalogue_price, discount_pct: l.discount_pct }).collect()
+    lines
+        .iter()
+        .map(|l| QuoteLineInput { qty: l.qty, catalogue_price: l.catalogue_price, discount_pct: l.discount_pct })
+        .collect()
 }
 
 /// `/quotes/LLQT-012/print`.
@@ -59,7 +71,9 @@ fn priced(lines: &[&QuoteItem]) -> Vec<QuoteLineInput> {
 pub fn PrintQuote() -> impl IntoView {
     let params = use_params_map();
     let doc_no = Memo::new(move |_| {
-        params.with(|p| p.get("doc").map(|c| js_sys::decode_uri_component(&c).map(String::from).unwrap_or(c)).unwrap_or_default())
+        params.with(|p| {
+            p.get("doc").map(|c| js_sys::decode_uri_component(&c).map(String::from).unwrap_or(c)).unwrap_or_default()
+        })
     });
     view! {
         {move || {
@@ -154,7 +168,13 @@ fn QuotationSheet(p: Printable) -> impl IntoView {
     let body = if combined {
         let t = price_quote(
             &priced(&all),
-            &QuoteOpts { quote_structure: q.quote_structure.clone(), order_discount: q.order_discount, adj1: q.adj1, adj2: q.adj2, gst_rate: q.gst_rate },
+            &QuoteOpts {
+                quote_structure: q.quote_structure.clone(),
+                order_discount: q.order_discount,
+                adj1: q.adj1,
+                adj2: q.adj2,
+                gst_rate: q.gst_rate,
+            },
         );
         let money = |v: Option<Decimal>| format_money(v);
         view! {
@@ -263,14 +283,22 @@ fn ProformaSheet(p: Printable) -> impl IntoView {
     // An invoice always has a total, even if it came from an option-based quote.
     let t = price_quote(
         &priced(&all),
-        &QuoteOpts { quote_structure: COMBINED_ORDER.into(), order_discount: q.order_discount, adj1: q.adj1, adj2: q.adj2, gst_rate: q.gst_rate },
+        &QuoteOpts {
+            quote_structure: COMBINED_ORDER.into(),
+            order_discount: q.order_discount,
+            adj1: q.adj1,
+            adj2: q.adj2,
+            gst_rate: q.gst_rate,
+        },
     );
-    let (taxable, gst, grand) = (t.taxable_value.unwrap_or_default(), t.gst_amount.unwrap_or_default(), t.grand_total.unwrap_or_default());
+    let (taxable, gst, grand) =
+        (t.taxable_value.unwrap_or_default(), t.gst_amount.unwrap_or_default(), t.grand_total.unwrap_or_default());
     let date = q.doc_date.clone().unwrap_or_default().split('-').rev().collect::<Vec<_>>().join("/");
     // A GSTIN starts with the state code: same state splits into CGST + SGST,
     // another state is IGST. No client GSTIN counts as the same state.
     let state = |g: &str| g.chars().take(2).collect::<String>();
-    let inter_state = q.gstin.as_deref().is_some_and(|g| !g.is_empty() && !c.gstin.is_empty() && state(g) != state(&c.gstin));
+    let inter_state =
+        q.gstin.as_deref().is_some_and(|g| !g.is_empty() && !c.gstin.is_empty() && state(g) != state(&c.gstin));
     let pct = |rate: f64| format!("{}%", js_str(js::round2(rate * 100.0)));
     let rate = f(q.gst_rate);
     let adjusted = q.order_discount > Decimal::ZERO || q.adj1 > Decimal::ZERO || q.adj2 > Decimal::ZERO;

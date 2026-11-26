@@ -23,7 +23,9 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 
 fn admin_gate() -> Option<AnyView> {
-    (!me().role.is_admin()).then(|| view! { <div class="card p-6 text-sm text-(--color-muted)">"Only an admin can use this."</div> }.into_any())
+    (!me().role.is_admin()).then(|| {
+        view! { <div class="card p-6 text-sm text-(--color-muted)">"Only an admin can use this."</div> }.into_any()
+    })
 }
 
 #[derive(Deserialize)]
@@ -172,8 +174,11 @@ pub fn ProductSheetPage() -> impl IntoView {
 async fn products_csv() -> Result<String, ApiError> {
     let rows: Vec<ProductWithCategory> =
         Q::from("products").select("*,categories(name,counts_as_item)").null("deleted_at").order("code").rows().await?;
-    let mut grid: Vec<Vec<String>> =
-        vec![["Product Code", "Category", "Product Name", "Source", "Cost Price", "Target Margin %", "Default SP", "Active"].map(String::from).to_vec()];
+    let mut grid: Vec<Vec<String>> = vec![
+        ["Product Code", "Category", "Product Name", "Source", "Cost Price", "Target Margin %", "Default SP", "Active"]
+            .map(String::from)
+            .to_vec(),
+    ];
     grid.extend(rows.into_iter().map(|r| {
         let p = r.product;
         vec![
@@ -246,7 +251,11 @@ fn input_of(grids: &[(usize, Grid)]) -> ImportInput {
 }
 
 async fn file_text(file: &web_sys::File) -> Result<String, ApiError> {
-    JsFuture::from(file.text()).await.ok().and_then(|v| v.as_string()).ok_or_else(|| ApiError::Invalid(format!("Could not read {}. Export it again as CSV.", file.name())))
+    JsFuture::from(file.text())
+        .await
+        .ok()
+        .and_then(|v| v.as_string())
+        .ok_or_else(|| ApiError::Invalid(format!("Could not read {}. Export it again as CSV.", file.name())))
 }
 
 fn files_of(e: &leptos::ev::Event) -> Vec<web_sys::File> {
@@ -294,13 +303,22 @@ pub fn ImportWorkbook() -> impl IntoView {
                     for (i, (_, label, _)) in SHEETS.iter().enumerate() {
                         match tabs.iter().find(|(n, _)| n == label) {
                             // As SheetJS read them (blankrows: false): no empty rows.
-                            Some((_, g)) => set_tab(i, Some(g.iter().filter(|r| r.iter().any(|c| !c.is_empty())).cloned().collect()), (*label).into()),
+                            Some((_, g)) => set_tab(
+                                i,
+                                Some(g.iter().filter(|r| r.iter().any(|c| !c.is_empty())).cloned().collect()),
+                                (*label).into(),
+                            ),
                             None => missing.push(*label),
                         }
                     }
-                    parse_error.set((!missing.is_empty()).then(|| format!("{} has no tab named: {}", file.name(), missing.join(", "))));
+                    parse_error.set(
+                        (!missing.is_empty())
+                            .then(|| format!("{} has no tab named: {}", file.name(), missing.join(", "))),
+                    );
                 }
-                Err(_) => parse_error.set(Some(format!("Could not read {}. Check it is a .xlsx workbook.", file.name()))),
+                Err(_) => {
+                    parse_error.set(Some(format!("Could not read {}. Check it is a .xlsx workbook.", file.name())))
+                }
             }
         });
     };

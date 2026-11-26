@@ -122,6 +122,12 @@ impl Supabase {
         Ok(Self { http, url: url.trim_end_matches('/').to_string(), anon: anon.to_string() })
     }
 
+    /// Realtime's socket address, for the UI's live updates.
+    pub fn realtime_url(&self) -> String {
+        let host = self.url.replacen("https://", "wss://", 1).replacen("http://", "ws://", 1);
+        format!("{host}/realtime/v1/websocket?apikey={}&vsn=1.0.0", self.anon)
+    }
+
     /// The shared network client, for the few calls that aren't Supabase's.
     pub fn http(&self) -> &reqwest::Client {
         &self.http

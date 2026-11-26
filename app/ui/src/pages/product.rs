@@ -47,6 +47,7 @@ fn ProductPage(code: String) -> impl IntoView {
     let categories = use_categories();
 
     view! {
+        <crate::list_position::BackToList kind="products" />
         {move || match (costing.data.get(), costing.error.get()) {
             (None, Some(e)) => view! { <div class="card p-6 text-sm text-red-800">{e.to_string()}</div> }.into_any(),
             (None, None) => view! { <div class="card h-64 animate-pulse bg-white/60"></div> }.into_any(),
@@ -115,6 +116,7 @@ fn Loaded(
                 .collect_view()}
             {(!bought.is_empty()).then(|| view! { <CostTable badge="B".into() title="Bought Out Items".into() lines=bought overhead=Decimal::ZERO /> })}
             <PriceSummary totals=totals cost=product.cost_price markup=markup sp=product.default_sp mrp_max=mrp_max notes=notes />
+            {crate::db::me().role.is_admin().then(|| view! { <crate::pages::history::ProductHistory product_id=product.id.clone() /> })}
         </div>
     }
 }

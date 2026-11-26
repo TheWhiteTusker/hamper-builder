@@ -4,12 +4,11 @@
 mod builder;
 mod print;
 
-pub use builder::{NewQuote, QuotePage};
-pub use print::PrintQuote;
 use crate::components::{EmptyState, PageHeader};
 use crate::data::use_settings;
 use crate::db::{Q, live};
 use crate::kit::dstr;
+pub use builder::{NewQuote, QuotePage};
 use lattice_core::Decimal;
 use lattice_core::lenient;
 use lattice_core::money::format_money;
@@ -18,6 +17,7 @@ use leptos::prelude::*;
 use leptos_router::NavigateOptions;
 use leptos_router::components::A;
 use leptos_router::hooks::{use_navigate, use_query_map};
+pub use print::PrintQuote;
 use serde::{Deserialize, Serialize};
 
 pub fn quote_href(doc_no: &str) -> String {
@@ -53,7 +53,9 @@ pub fn Quotes() -> impl IntoView {
             m.replace(k, v);
         }
         let qs = m.to_query_string();
-        navigate.with_value(|nav| nav(&format!("/quotes{qs}"), NavigateOptions { replace: true, scroll: false, ..Default::default() }));
+        navigate.with_value(|nav| {
+            nav(&format!("/quotes{qs}"), NavigateOptions { replace: true, scroll: false, ..Default::default() })
+        });
     };
     let filtered_on = move || ["q", "status", "type"].iter().any(|k| !param(k).trim().is_empty());
     // Filtered on the device as you type: no Apply button, no round trip.
@@ -65,7 +67,10 @@ pub fn Quotes() -> impl IntoView {
                 all.iter()
                     .filter(|s| {
                         let d = &s.quote;
-                        (q.is_empty() || d.client_name.to_lowercase().contains(&q) || d.doc_no.to_lowercase().contains(&q) || has(&d.occasion))
+                        (q.is_empty()
+                            || d.client_name.to_lowercase().contains(&q)
+                            || d.doc_no.to_lowercase().contains(&q)
+                            || has(&d.occasion))
                             && (status.is_empty() || d.status == status)
                             && (kind.is_empty() || doc_value(d.doc_type) == kind)
                     })

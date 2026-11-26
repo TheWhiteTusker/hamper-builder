@@ -137,7 +137,12 @@ impl Sheet {
             columns: self
                 .columns
                 .iter()
-                .map(|c| ColumnData { header: c.header.clone(), width: c.width, format: c.format, calculated: c.formula.is_some() })
+                .map(|c| ColumnData {
+                    header: c.header.clone(),
+                    width: c.width,
+                    format: c.format,
+                    calculated: c.formula.is_some(),
+                })
                 .collect(),
             rows,
         }

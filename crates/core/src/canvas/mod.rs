@@ -71,7 +71,18 @@ pub struct Base {
 
 impl Base {
     pub fn at(id: String, x: f64, y: f64) -> Self {
-        Self { id, name: None, visible: true, locked: false, x, y, rotation: 0.0, scale_x: 1.0, scale_y: 1.0, opacity: 1.0 }
+        Self {
+            id,
+            name: None,
+            visible: true,
+            locked: false,
+            x,
+            y,
+            rotation: 0.0,
+            scale_x: 1.0,
+            scale_y: 1.0,
+            opacity: 1.0,
+        }
     }
 }
 
@@ -410,7 +421,10 @@ impl Layer {
                 Shape::Ellipse(e) => style_ok(&e.style) && e.radius_x > 0.0 && e.radius_y > 0.0,
                 Shape::Polygon(p) => style_ok(&p.style) && int_in(p.sides, 3.0, 12.0) && p.radius > 0.0,
                 Shape::Star(s) => {
-                    style_ok(&s.style) && int_in(s.num_points, 3.0, 20.0) && s.inner_radius > 0.0 && s.outer_radius > 0.0
+                    style_ok(&s.style)
+                        && int_in(s.num_points, 3.0, 20.0)
+                        && s.inner_radius > 0.0
+                        && s.outer_radius > 0.0
                 }
                 Shape::Line(l) => line_ok(l),
                 Shape::Curve(c) => line_ok(&c.line) && c.curvature.is_finite(),
@@ -572,7 +586,13 @@ pub struct TextStyle {
     pub letter_spacing: f64,
 }
 
-const fn ts(font_family: &'static str, font_size: f64, font_style: FontStyle, color: &'static str, letter_spacing: f64) -> TextStyle {
+const fn ts(
+    font_family: &'static str,
+    font_size: f64,
+    font_style: FontStyle,
+    color: &'static str,
+    letter_spacing: f64,
+) -> TextStyle {
     TextStyle { font_family, font_size, font_style, color, letter_spacing }
 }
 
@@ -616,23 +636,48 @@ pub fn make_text(page: &Canvas, id: String, text: &str, s: &TextStyle) -> Layer 
 pub fn element(label: &str, page: &Canvas, id: String) -> Option<Layer> {
     let (cx, cy) = (page.width / 2.0, page.height / 2.0);
     let style = || Style { fill: Fill::solid("#c8a97e"), stroke: "#2c332f".into(), stroke_width: 0.0 };
-    let line = |dash: Option<Vec<f64>>| Line { points: vec![0.0, 0.0, 400.0, 0.0], stroke: "#2c332f".into(), stroke_width: 4.0, dash, line_cap: LineCap::Round };
+    let line = |dash: Option<Vec<f64>>| Line {
+        points: vec![0.0, 0.0, 400.0, 0.0],
+        stroke: "#2c332f".into(),
+        stroke_width: 4.0,
+        dash,
+        line_cap: LineCap::Round,
+    };
     let (x, y, shape) = match label {
-        "Square" => (cx - 150.0, cy - 150.0, Shape::Rect(Rect { style: style(), width: 300.0, height: 300.0, corner_radius: 0.0 })),
-        "Rounded square" => (cx - 150.0, cy - 150.0, Shape::Rect(Rect { style: style(), width: 300.0, height: 300.0, corner_radius: 48.0 })),
-        "Rectangle" => (cx - 250.0, cy - 100.0, Shape::Rect(Rect { style: style(), width: 500.0, height: 200.0, corner_radius: 0.0 })),
+        "Square" => (
+            cx - 150.0,
+            cy - 150.0,
+            Shape::Rect(Rect { style: style(), width: 300.0, height: 300.0, corner_radius: 0.0 }),
+        ),
+        "Rounded square" => (
+            cx - 150.0,
+            cy - 150.0,
+            Shape::Rect(Rect { style: style(), width: 300.0, height: 300.0, corner_radius: 48.0 }),
+        ),
+        "Rectangle" => (
+            cx - 250.0,
+            cy - 100.0,
+            Shape::Rect(Rect { style: style(), width: 500.0, height: 200.0, corner_radius: 0.0 }),
+        ),
         "Circle" => (cx, cy, Shape::Ellipse(Ellipse { style: style(), radius_x: 150.0, radius_y: 150.0 })),
         "Triangle" => (cx, cy, Shape::Polygon(Polygon { style: style(), sides: 3.0, radius: 170.0 })),
         "Pentagon" => (cx, cy, Shape::Polygon(Polygon { style: style(), sides: 5.0, radius: 160.0 })),
         "Hexagon" => (cx, cy, Shape::Polygon(Polygon { style: style(), sides: 6.0, radius: 160.0 })),
-        "Star" => (cx, cy, Shape::Star(Star { style: style(), num_points: 5.0, inner_radius: 70.0, outer_radius: 170.0 })),
-        "Burst" => (cx, cy, Shape::Star(Star { style: style(), num_points: 12.0, inner_radius: 130.0, outer_radius: 170.0 })),
+        "Star" => {
+            (cx, cy, Shape::Star(Star { style: style(), num_points: 5.0, inner_radius: 70.0, outer_radius: 170.0 }))
+        }
+        "Burst" => {
+            (cx, cy, Shape::Star(Star { style: style(), num_points: 12.0, inner_radius: 130.0, outer_radius: 170.0 }))
+        }
         "Line" => (cx - 200.0, cy, Shape::Line(line(None))),
         "Dashed line" => (cx - 200.0, cy, Shape::Line(line(Some(vec![16.0, 12.0])))),
         "Curved line" => (
             cx - 200.0,
             cy,
-            Shape::Curve(Curve { line: Line { points: vec![0.0, 0.0, 200.0, -120.0, 400.0, 0.0], ..line(None) }, curvature: 0.5 }),
+            Shape::Curve(Curve {
+                line: Line { points: vec![0.0, 0.0, 200.0, -120.0, 400.0, 0.0], ..line(None) },
+                curvature: 0.5,
+            }),
         ),
         _ => return None,
     };
@@ -649,10 +694,19 @@ pub const ELEMENTS: [(&str, &str); 12] = [
     ("Pentagon", r#"<polygon points="24,3 45,19 37,44 11,44 3,19"/>"#),
     ("Hexagon", r#"<polygon points="24,3 43,14 43,34 24,45 5,34 5,14"/>"#),
     ("Star", r#"<polygon points="24,3 30,18 46,18 33,28 38,44 24,34 10,44 15,28 2,18 18,18"/>"#),
-    ("Burst", r#"<polygon points="24,2 28,15 40,8 33,20 46,24 33,28 40,40 28,33 24,46 20,33 8,40 15,28 2,24 15,20 8,8 20,15"/>"#),
+    (
+        "Burst",
+        r#"<polygon points="24,2 28,15 40,8 33,20 46,24 33,28 40,40 28,33 24,46 20,33 8,40 15,28 2,24 15,20 8,8 20,15"/>"#,
+    ),
     ("Line", r#"<line x1="6" y1="24" x2="42" y2="24" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>"#),
-    ("Curved line", r#"<path d="M6 34 Q24 10 42 34" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>"#),
-    ("Dashed line", r#"<line x1="6" y1="24" x2="42" y2="24" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="6,4"/>"#),
+    (
+        "Curved line",
+        r#"<path d="M6 34 Q24 10 42 34" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>"#,
+    ),
+    (
+        "Dashed line",
+        r#"<line x1="6" y1="24" x2="42" y2="24" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="6,4"/>"#,
+    ),
 ];
 
 #[cfg(test)]
@@ -684,7 +738,13 @@ mod tests {
         doc.layers.push(text_layer());
         doc.layers.push(Layer {
             base: Base { scale_x: 2.0, scale_y: 2.0, opacity: 0.5, ..Base::at("i1".into(), 0.0, 0.0) },
-            shape: Shape::Image(Image { product_id: None, url: "https://example.com/a.png".into(), width: 200.0, height: 100.0, fit: Fit::Stretch }),
+            shape: Shape::Image(Image {
+                product_id: None,
+                url: "https://example.com/a.png".into(),
+                width: 200.0,
+                height: 100.0,
+                fit: Fit::Stretch,
+            }),
         });
         let raw = serde_json::to_value(&doc).unwrap();
         assert_eq!(raw["layers"][0]["kind"], "text");
@@ -695,7 +755,11 @@ mod tests {
         assert_eq!(parse_canvas(&json!({ "layers": "nope" })), empty_canvas());
         let mut bad = raw.clone();
         bad["layers"][0]["fill"]["from"] = json!("red");
-        assert_eq!(parse_canvas(&bad), empty_canvas(), "a colour that isn't #rrggbb fails the whole design, as zod did");
+        assert_eq!(
+            parse_canvas(&bad),
+            empty_canvas(),
+            "a colour that isn't #rrggbb fails the whole design, as zod did"
+        );
     }
 
     #[test]
@@ -724,12 +788,21 @@ mod tests {
         assert_eq!(gradient_line(0.0, 100.0, 50.0, 0.0, 0.0), (0.0, 25.0, 100.0, 25.0));
         let (x0, y0, _, y1) = gradient_line(90.0, 40.0, 60.0, -20.0, -30.0);
         assert!(x0.abs() < 1e-9 && (y0 + 30.0).abs() < 1e-9 && (y1 - 30.0).abs() < 1e-9);
-        assert_eq!(fill_css(&Fill::Linear { from: "#000000".into(), to: "#ffffff".into(), angle: 0.0 }), "linear-gradient(90deg, #000000, #ffffff)");
+        assert_eq!(
+            fill_css(&Fill::Linear { from: "#000000".into(), to: "#ffffff".into(), angle: 0.0 }),
+            "linear-gradient(90deg, #000000, #ffffff)"
+        );
     }
 
     #[test]
     fn contain_and_cover() {
-        let i = Image { product_id: None, url: "https://e.com/a.png".into(), width: 400.0, height: 400.0, fit: Fit::Contain };
+        let i = Image {
+            product_id: None,
+            url: "https://e.com/a.png".into(),
+            width: 400.0,
+            height: 400.0,
+            fit: Fit::Contain,
+        };
         assert_eq!(contain_box(&i, 100.0, 200.0), (200.0, 400.0, -100.0, 0.0));
         assert_eq!(contain_box(&Image { fit: Fit::Stretch, ..i }, 100.0, 200.0), (400.0, 400.0, 0.0, 0.0));
         assert_eq!(background_cover(1000.0, 500.0, 100.0, 100.0), (0.0, -250.0, 1000.0, 1000.0));
@@ -737,7 +810,14 @@ mod tests {
 
     #[test]
     fn labels() {
-        let p = |sides| Layer { base: Base::at("p".into(), 0.0, 0.0), shape: Shape::Polygon(Polygon { style: Style { fill: Fill::solid("#000000"), stroke: "#000000".into(), stroke_width: 0.0 }, sides, radius: 1.0 }) };
+        let p = |sides| Layer {
+            base: Base::at("p".into(), 0.0, 0.0),
+            shape: Shape::Polygon(Polygon {
+                style: Style { fill: Fill::solid("#000000"), stroke: "#000000".into(), stroke_width: 0.0 },
+                sides,
+                radius: 1.0,
+            }),
+        };
         assert_eq!(layer_label(&p(3.0)), "Triangle");
         assert_eq!(layer_label(&p(5.0)), "5-sided shape");
         let blank = element("Square", &empty_canvas(), "x".into());

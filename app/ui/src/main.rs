@@ -4,11 +4,18 @@ mod components;
 mod data;
 mod db;
 mod kit;
+mod leave;
+mod list_position;
 mod pages;
 mod photos;
+mod realtime;
+mod release;
+mod shortcuts;
 mod state;
 mod studio;
 mod tauri;
+mod undo;
+mod updates;
 
 use components::{Nav, OfflineBanner};
 use lattice_core::api::{ApiError, SessionInfo};
@@ -22,6 +29,7 @@ use state::{Freshness, Phase};
 fn App() -> impl IntoView {
     let auth = state::provide_app_state();
     auth.reload();
+    updates::Updates::provide();
 
     // A reset link opened the app and signed in (or failed): re-read the session.
     tauri::listen::<Result<(), ApiError>>("session-changed", move |result| {
@@ -36,6 +44,7 @@ fn App() -> impl IntoView {
     let _focus = window_event_listener(leptos::ev::focus, move |_| tick.update(|n| *n += 1));
 
     view! {
+        <updates::UpdatePrompt />
         <Router>
             {move || match auth.phase.get() {
                 Phase::Loading => view! { <div class="min-h-screen bg-black"></div> }.into_any(),
@@ -51,7 +60,10 @@ fn App() -> impl IntoView {
 fn Shell(info: SessionInfo) -> impl IntoView {
     let profile = info.profile.unwrap_or_default();
     let dash = profile.clone();
+    shortcuts::KeyBindings::provide();
+    realtime::start(profile.id.clone());
     view! {
+        <shortcuts::Shortcuts />
         <Nav profile=profile />
         <OfflineBanner />
         <main id="top" class="mx-auto w-full max-w-350 flex-1 px-4 py-6">
@@ -70,10 +82,12 @@ fn Shell(info: SessionInfo) -> impl IntoView {
                 <Route path=path!("/clients") view=clients::Clients />
                 <Route path=path!("/products") view=pages::products::Products />
                 <Route path=path!("/products/new") view=pages::calculator::NewProduct />
+                <Route path=path!("/products/history") view=pages::history::ProductHistoryPage />
                 <Route path=path!("/products/*code") view=pages::product::ProductView />
                 <Route path=path!("/cost-calculator") view=|| view! { <Redirect path="/products/new" /> } />
                 <Route path=path!("/cost-calculator/master") view=|| view! { <pages::rates::RatesMaster /> } />
                 <Route path=path!("/cost-calculator/master/excel/:mode") view=admin::RateSheetPage />
+                <Route path=path!("/cost-calculator/history/*code") view=pages::history::CostingHistory />
                 <Route path=path!("/cost-calculator/*code") view=pages::calculator::ProductCostingPage />
                 <Route path=path!("/presentations") view=presentations::Presentations />
                 <Route path=path!("/presentations/new") view=presentations::NewPresentation />

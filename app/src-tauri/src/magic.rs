@@ -19,7 +19,10 @@ use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Emitter, Manager};
 
 const MODELS: [(&str, &str); 3] = [
-    ("mobile_sam-tiny-vitt.safetensors", "https://huggingface.co/lmz/candle-sam/resolve/main/mobile_sam-tiny-vitt.safetensors"),
+    (
+        "mobile_sam-tiny-vitt.safetensors",
+        "https://huggingface.co/lmz/candle-sam/resolve/main/mobile_sam-tiny-vitt.safetensors",
+    ),
     ("text-detection.rten", "https://ocrs-models.s3-accelerate.amazonaws.com/text-detection.rten"),
     ("text-recognition.rten", "https://ocrs-models.s3-accelerate.amazonaws.com/text-recognition.rten"),
 ];
@@ -75,7 +78,12 @@ async fn ensure_models(app: &AppHandle) -> Result<PathBuf, ApiError> {
     Ok(dir)
 }
 
-async fn download(client: &reqwest::Client, url: &str, path: &Path, progress: impl Fn(Option<f64>)) -> Result<(), String> {
+async fn download(
+    client: &reqwest::Client,
+    url: &str,
+    path: &Path,
+    progress: impl Fn(Option<f64>),
+) -> Result<(), String> {
     let mut resp = client.get(url).send().await.map_err(|e| e.to_string())?;
     if !resp.status().is_success() {
         return Err(format!("HTTP {}", resp.status()));
@@ -127,9 +135,15 @@ fn looks_like_text(s: &str) -> bool {
 }
 
 fn read_lines(dir: &Path, rgb: &image::RgbImage) -> Result<Vec<OcrLine>, ApiError> {
-    let load = |n: &str| rten::Model::load_file(dir.join(n)).map_err(|e| ApiError::Server(format!("Could not open the OCR model: {e}")));
-    let engine = OcrEngine::new(OcrEngineParams { detection_model: Some(load("text-detection.rten")?), recognition_model: Some(load("text-recognition.rten")?), ..Default::default() })
-        .map_err(|e| ApiError::Server(e.to_string()))?;
+    let load = |n: &str| {
+        rten::Model::load_file(dir.join(n)).map_err(|e| ApiError::Server(format!("Could not open the OCR model: {e}")))
+    };
+    let engine = OcrEngine::new(OcrEngineParams {
+        detection_model: Some(load("text-detection.rten")?),
+        recognition_model: Some(load("text-recognition.rten")?),
+        ..Default::default()
+    })
+    .map_err(|e| ApiError::Server(e.to_string()))?;
     let src = ImageSource::from_bytes(rgb.as_raw(), rgb.dimensions()).map_err(|e| ApiError::Server(e.to_string()))?;
     let input = engine.prepare_input(src).map_err(|e| ApiError::Server(e.to_string()))?;
     let words = engine.detect_words(&input).map_err(|e| ApiError::Server(e.to_string()))?;
@@ -153,7 +167,11 @@ fn read_lines(dir: &Path, rgb: &image::RgbImage) -> Result<Vec<OcrLine>, ApiErro
         .collect())
 }
 
-fn find_objects(app: &AppHandle, dir: &Path, rgb: &image::RgbImage) -> Result<(Vec<LowMask>, f64, usize, usize), ApiError> {
+fn find_objects(
+    app: &AppHandle,
+    dir: &Path,
+    rgb: &image::RgbImage,
+) -> Result<(Vec<LowMask>, f64, usize, usize), ApiError> {
     let e = |x: candle_core::Error| ApiError::Server(format!("Finding objects failed: {x}"));
     let device = Device::Cpu;
     let weights = std::fs::read(dir.join("mobile_sam-tiny-vitt.safetensors")).map_err(err)?;
@@ -164,7 +182,10 @@ fn find_objects(app: &AppHandle, dir: &Path, rgb: &image::RgbImage) -> Result<(V
     let k = IMAGE_SIZE as f64 / f64::from(w.max(h));
     let (rw, rh) = (((f64::from(w) * k).round() as u32).max(1), ((f64::from(h) * k).round() as u32).max(1));
     let small = image::imageops::resize(rgb, rw, rh, image::imageops::FilterType::Triangle);
-    let img = Tensor::from_vec(small.into_raw(), (rh as usize, rw as usize, 3), &device).map_err(e)?.permute((2, 0, 1)).map_err(e)?;
+    let img = Tensor::from_vec(small.into_raw(), (rh as usize, rw as usize, 3), &device)
+        .map_err(e)?
+        .permute((2, 0, 1))
+        .map_err(e)?;
     let embeddings = sam.embeddings(&img).map_err(e)?;
     // Masks come back at a quarter of 1024; only the top-left rw/4 × rh/4 is image.
     let (mw, mh) = ((rw as usize).div_ceil(4), (rh as usize).div_ceil(4));
@@ -172,10 +193,15 @@ fn find_objects(app: &AppHandle, dir: &Path, rgb: &image::RgbImage) -> Result<(V
     for j in 0..GRID {
         for i in 0..GRID {
             let point = ((i as f64 + 0.5) / GRID as f64, (j as f64 + 0.5) / GRID as f64, true);
-            let (low, iou) = sam.forward_for_embeddings(&embeddings, rh as usize, rw as usize, &[point], true).map_err(e)?;
+            let (low, iou) =
+                sam.forward_for_embeddings(&embeddings, rh as usize, rw as usize, &[point], true).map_err(e)?;
             let scores: Vec<f32> = iou.flatten_all().map_err(e)?.to_vec1().map_err(e)?;
             // SAM offers three readings per point (part, object, whole); keep the one it rates best.
-            let (best, score) = scores.iter().copied().enumerate().fold((0, f32::MIN), |acc, (c, s)| if s > acc.1 { (c, s) } else { acc });
+            let (best, score) = scores
+                .iter()
+                .copied()
+                .enumerate()
+                .fold((0, f32::MIN), |acc, (c, s)| if s > acc.1 { (c, s) } else { acc });
             let m = low.i((0, best)).map_err(e)?.i((..mh, ..mw)).map_err(e)?;
             let logits: Vec<f32> = m.flatten_all().map_err(e)?.to_vec1().map_err(e)?;
             masks.push(LowMask { logits, w: mw, h: mh, score });
@@ -196,19 +222,29 @@ pub async fn magic_analyze(app: AppHandle, request: tauri::ipc::Request<'_>) -> 
     step(&app, "Reading text", None);
     let app2 = app.clone();
     tauri::async_runtime::spawn_blocking(move || -> Result<Analysis, ApiError> {
-        let rgb = image::load_from_memory(&bytes).map_err(|_| ApiError::Invalid("That image could not be read.".into()))?.to_rgb8();
+        let rgb = image::load_from_memory(&bytes)
+            .map_err(|_| ApiError::Invalid("That image could not be read.".into()))?
+            .to_rgb8();
         let lines = read_lines(&dir, &rgb)?;
         step(&app2, "Finding objects", Some(0.0));
         let (masks, scale, _, _) = find_objects(&app2, &dir, &rgb)?;
         let cells: Vec<(f64, f64, f64, f64)> = lines
             .iter()
-            .map(|l| (l.line.x0 as f64 * scale, l.line.y0 as f64 * scale, (l.line.x1 - l.line.x0) as f64 * scale, (l.line.y1 - l.line.y0) as f64 * scale))
+            .map(|l| {
+                (
+                    l.line.x0 as f64 * scale,
+                    l.line.y0 as f64 * scale,
+                    (l.line.x1 - l.line.x0) as f64 * scale,
+                    (l.line.y1 - l.line.y0) as f64 * scale,
+                )
+            })
             .collect();
         let kept: Vec<Mask> = pick_objects(&masks, PickOpts::default())
             .into_iter()
             .filter(|m| share_inside(m, &cells) < 0.5)
             .map(|m| {
-                let q: Vec<u8> = m.logits.iter().map(|v| ((v * 4.0).round().clamp(-127.0, 127.0) as i8) as u8).collect();
+                let q: Vec<u8> =
+                    m.logits.iter().map(|v| ((v * 4.0).round().clamp(-127.0, 127.0) as i8) as u8).collect();
                 Mask { w: m.w, h: m.h, score: m.score, logits_q: base64::engine::general_purpose::STANDARD.encode(q) }
             })
             .collect();

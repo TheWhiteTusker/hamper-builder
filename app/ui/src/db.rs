@@ -52,6 +52,12 @@ impl Q {
     pub fn ilike(self, col: &str, pattern: &str) -> Self {
         self.p(col, format!("ilike.{pattern}"))
     }
+    /// Rows where any of `cols` contains `text`, case-insensitively (`or=(…)`).
+    pub fn search(self, cols: &[&str], text: &str) -> Self {
+        let pattern = quoted(&format!("*{text}*"));
+        let terms: Vec<String> = cols.iter().map(|c| format!("{c}.ilike.{pattern}")).collect();
+        self.p("or", format!("({})", terms.join(",")))
+    }
     pub fn in_list<S: AsRef<str>>(self, col: &str, values: &[S]) -> Self {
         let list: Vec<String> = values.iter().map(|v| quoted(v.as_ref())).collect();
         self.p(col, format!("in.({})", list.join(",")))
@@ -212,6 +218,11 @@ impl<T: Send + Sync + 'static> Clone for Live<T> {
 impl<T: Send + Sync + 'static> Copy for Live<T> {}
 
 impl<T: Send + Sync + 'static> Live<T> {
+    /// Fetches again now (more rows asked for, say).
+    pub fn refetch(&self) {
+        self.reload.update(|n| *n += 1);
+    }
+
     /// Shows a change straight away, before the server confirms it.
     pub fn patch(&self, f: impl FnOnce(&mut T)) {
         self.data.update(|d| {

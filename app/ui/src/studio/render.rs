@@ -7,7 +7,9 @@
 use super::{image, load_fonts, load_image};
 use lattice_core::api::ApiError;
 use lattice_core::canvas::arrange::Box as Rect;
-use lattice_core::canvas::{Canvas, Decoration, Fill, Layer, Shape, Text, background_cover, contain_box, gradient_line};
+use lattice_core::canvas::{
+    Canvas, Decoration, Fill, Layer, Shape, Text, background_cover, contain_box, gradient_line,
+};
 use std::cell::RefCell;
 use std::f64::consts::PI;
 use wasm_bindgen::{JsCast, JsValue};
@@ -122,7 +124,10 @@ pub fn layout_text(t: &Text) -> Vec<TextLine> {
     let Some(ctx) = measurer() else { return Vec::new() };
     ctx.set_font(&font_css(t));
     let graph = |s: &str| s.chars().count();
-    let width_of = |s: &str, n: usize| ctx.measure_text(s).map(|m| m.width()).unwrap_or(0.0) + if t.letter_spacing != 0.0 { t.letter_spacing * n as f64 } else { 0.0 };
+    let width_of = |s: &str, n: usize| {
+        ctx.measure_text(s).map(|m| m.width()).unwrap_or(0.0)
+            + if t.letter_spacing != 0.0 { t.letter_spacing * n as f64 } else { 0.0 }
+    };
     let max_width = t.width;
     let mut out = Vec::new();
     for line in t.text.split('\n') {
@@ -211,7 +216,9 @@ pub fn self_rect(l: &Layer) -> Rect {
         Shape::Rect(r) => Rect { x: 0.0, y: 0.0, width: r.width, height: r.height },
         Shape::Ellipse(e) => Rect { x: -e.radius_x, y: -e.radius_y, width: e.radius_x * 2.0, height: e.radius_y * 2.0 },
         Shape::Polygon(p) => bbox(&polygon_points(p.sides, p.radius)),
-        Shape::Star(s) => Rect { x: -s.outer_radius, y: -s.outer_radius, width: s.outer_radius * 2.0, height: s.outer_radius * 2.0 },
+        Shape::Star(s) => {
+            Rect { x: -s.outer_radius, y: -s.outer_radius, width: s.outer_radius * 2.0, height: s.outer_radius * 2.0 }
+        }
         Shape::Line(x) => bbox(&pairs(&x.points)),
         Shape::Curve(c) => bbox(&curve_samples(&c.line.points)),
     }
@@ -230,7 +237,12 @@ pub fn client_rect(l: &Layer) -> Rect {
     let r = self_rect(l);
     let p = stroke_pad(l);
     let m = node_mat(l);
-    let corners = [(r.x - p, r.y - p), (r.x + r.width + p, r.y - p), (r.x + r.width + p, r.y + r.height + p), (r.x - p, r.y + r.height + p)];
+    let corners = [
+        (r.x - p, r.y - p),
+        (r.x + r.width + p, r.y - p),
+        (r.x + r.width + p, r.y + r.height + p),
+        (r.x - p, r.y + r.height + p),
+    ];
     bbox(&corners.iter().map(|(x, y)| m.apply(*x, *y)).collect::<Vec<_>>())
 }
 
@@ -249,25 +261,34 @@ pub fn bbox(pts: &[(f64, f64)]) -> Rect {
 }
 
 fn pairs(p: &[f64]) -> Vec<(f64, f64)> {
-    p.chunks(2).filter_map(|c| match c { [x, y] => Some((*x, *y)), _ => None }).collect()
+    p.chunks(2)
+        .filter_map(|c| match c {
+            [x, y] => Some((*x, *y)),
+            _ => None,
+        })
+        .collect()
 }
 
 /// Konva `RegularPolygon`: vertex n at (r·sin(2πn/s), −r·cos(2πn/s)).
 pub fn polygon_points(sides: f64, r: f64) -> Vec<(f64, f64)> {
     let s = sides.max(3.0) as usize;
-    (0..s).map(|n| {
-        let a = n as f64 * 2.0 * PI / s as f64;
-        (r * a.sin(), -r * a.cos())
-    }).collect()
+    (0..s)
+        .map(|n| {
+            let a = n as f64 * 2.0 * PI / s as f64;
+            (r * a.sin(), -r * a.cos())
+        })
+        .collect()
 }
 
 pub fn star_points(num: f64, inner: f64, outer: f64) -> Vec<(f64, f64)> {
     let n = num.max(3.0) as usize;
-    (0..n * 2).map(|i| {
-        let r = if i % 2 == 0 { outer } else { inner };
-        let a = i as f64 * PI / n as f64;
-        (r * a.sin(), -r * a.cos())
-    }).collect()
+    (0..n * 2)
+        .map(|i| {
+            let r = if i % 2 == 0 { outer } else { inner };
+            let a = i as f64 * PI / n as f64;
+            (r * a.sin(), -r * a.cos())
+        })
+        .collect()
 }
 
 /// A curve as drawn: start, bend (the quadratic control point), end.
@@ -525,7 +546,8 @@ pub fn draw_page(ctx: &Ctx, c: &Canvas, skip: &dyn Fn(&Layer) -> bool) {
     set_fill(ctx, &c.background.fill, c.width, c.height, 0.0, 0.0);
     ctx.fill();
     if let Some(img) = c.background.image_url.as_deref().and_then(image) {
-        let (x, y, w, h) = background_cover(c.width, c.height, f64::from(img.natural_width()), f64::from(img.natural_height()));
+        let (x, y, w, h) =
+            background_cover(c.width, c.height, f64::from(img.natural_width()), f64::from(img.natural_height()));
         let _ = ctx.draw_image_with_html_image_element_and_dw_and_dh(&img, x, y, w, h);
     }
     for l in &c.layers {
@@ -555,7 +577,11 @@ pub async fn prepare(c: &Canvas) {
 
 /// The page drawn off-screen at `pixel_ratio`, plus each text layer's laid-out
 /// height (for the PowerPoint text boxes). `skip_text` leaves text out.
-pub async fn render(c: &Canvas, pixel_ratio: f64, skip_text: bool) -> Result<(HtmlCanvasElement, Vec<(Layer, f64)>), ApiError> {
+pub async fn render(
+    c: &Canvas,
+    pixel_ratio: f64,
+    skip_text: bool,
+) -> Result<(HtmlCanvasElement, Vec<(Layer, f64)>), ApiError> {
     prepare(c).await;
     let (w, h) = ((c.width * pixel_ratio).round() as u32, (c.height * pixel_ratio).round() as u32);
     let (el, ctx) = new_canvas(w, h).ok_or_else(|| ApiError::Server("No canvas to draw on.".into()))?;
@@ -574,12 +600,24 @@ pub async fn render(c: &Canvas, pixel_ratio: f64, skip_text: bool) -> Result<(Ht
 }
 
 /// The page as PNG bytes.
-pub async fn render_png(c: &Canvas, pixel_ratio: f64, skip_text: bool) -> Result<(Vec<u8>, Vec<(Layer, f64)>), ApiError> {
+pub async fn render_png(
+    c: &Canvas,
+    pixel_ratio: f64,
+    skip_text: bool,
+) -> Result<(Vec<u8>, Vec<(Layer, f64)>), ApiError> {
     let (el, texts) = render(c, pixel_ratio, skip_text).await?;
     let blob = crate::photos::to_blob(&el, "image/png", None)
         .await
-        .map_err(|_| ApiError::Invalid("Export blocked by an image from another website. Upload that image to the product instead.".into()))?
-        .ok_or_else(|| ApiError::Invalid("Export blocked by an image from another website. Upload that image to the product instead.".into()))?;
+        .map_err(|_| {
+            ApiError::Invalid(
+                "Export blocked by an image from another website. Upload that image to the product instead.".into(),
+            )
+        })?
+        .ok_or_else(|| {
+            ApiError::Invalid(
+                "Export blocked by an image from another website. Upload that image to the product instead.".into(),
+            )
+        })?;
     Ok((crate::photos::blob_bytes(&blob).await?, texts))
 }
 

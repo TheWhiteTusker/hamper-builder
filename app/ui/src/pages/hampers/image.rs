@@ -27,20 +27,29 @@ async fn save_hamper_canvas(id: String, code: String, canvas: Canvas, png: Optio
         return Err("Invalid design.".into());
     }
     let path = format!("hampers/{id}/cover-{}.png", js_sys::Date::now() as u64);
-    let url = db::upload(PHOTOS, &path, &png, "image/png", true).await.map_err(|e| format!("Storage upload failed: {e}"))?;
+    let url =
+        db::upload(PHOTOS, &path, &png, "image/png", true).await.map_err(|e| format!("Storage upload failed: {e}"))?;
     #[derive(Deserialize)]
     struct Before {
         image_url: Option<String>,
     }
     let before = Q::from("hampers").select("image_url").eq("id", &id).one::<Before>().await.ok().flatten();
-    let updated = Q::from("hampers").eq("id", &id).update(&json!({ "canvas": canvas, "image_url": url }), Some("id")).await;
+    let updated =
+        Q::from("hampers").eq("id", &id).update(&json!({ "canvas": canvas, "image_url": url }), Some("id")).await;
     let ok = updated.as_ref().is_ok_and(|v| v.as_array().is_some_and(|a| !a.is_empty()));
     if !ok {
         let _ = db::remove_files(&[path]).await;
-        return Err(updated.err().map_or_else(|| "You don't have permission to edit this hamper.".into(), |e| e.to_string()));
+        return Err(updated
+            .err()
+            .map_or_else(|| "You don't have permission to edit this hamper.".into(), |e| e.to_string()));
     }
     // The previous PNG goes, if it was one of this hamper's own.
-    if let Some(old) = before.and_then(|b| b.image_url).as_deref().and_then(storage_path_of).filter(|p| p.starts_with(&format!("hampers/{id}/"))) {
+    if let Some(old) = before
+        .and_then(|b| b.image_url)
+        .as_deref()
+        .and_then(storage_path_of)
+        .filter(|p| p.starts_with(&format!("hampers/{id}/")))
+    {
         let _ = db::remove_files(&[old]).await;
     }
     db::cache_drop(&["hampers", &format!("hamper:{code}"), "quote_options"]).await;
@@ -59,19 +68,33 @@ pub fn HamperImage() -> impl IntoView {
         return view! { <div class="card p-6 text-sm text-(--color-muted)">"Only a manager or admin can design hamper images."</div> }.into_any();
     }
     let params = use_params_map();
-    let code = params.with_untracked(|p| p.get("code").map(|c| js_sys::decode_uri_component(&c).map(String::from).unwrap_or(c)).unwrap_or_default());
+    let code = params.with_untracked(|p| {
+        p.get("code").map(|c| js_sys::decode_uri_component(&c).map(String::from).unwrap_or(c)).unwrap_or_default()
+    });
     let loaded = RwSignal::new(None::<Result<Loaded, String>>);
     let catalog = use_catalog();
     {
         let code = code.clone();
         spawn_local(async move {
             let res: Result<Loaded, String> = async {
-                let hamper = Q::from("hampers").select("*").eq("code", &code).null("deleted_at").one::<Hamper>().await.map_err(|e| e.to_string())?.ok_or("No such hamper.")?;
+                let hamper = Q::from("hampers")
+                    .select("*")
+                    .eq("code", &code)
+                    .null("deleted_at")
+                    .one::<Hamper>()
+                    .await
+                    .map_err(|e| e.to_string())?
+                    .ok_or("No such hamper.")?;
                 #[derive(Deserialize)]
                 struct Item {
                     product_id: Option<String>,
                 }
-                let items: Vec<Item> = Q::from("hamper_items").select("product_id").eq("hamper_id", &hamper.id).rows().await.map_err(|e| e.to_string())?;
+                let items: Vec<Item> = Q::from("hamper_items")
+                    .select("product_id")
+                    .eq("hamper_id", &hamper.id)
+                    .rows()
+                    .await
+                    .map_err(|e| e.to_string())?;
                 let mut product_ids: Vec<String> = Vec::new();
                 for p in items.into_iter().filter_map(|i| i.product_id) {
                     if !product_ids.contains(&p) {
@@ -93,14 +116,18 @@ pub fn HamperImage() -> impl IntoView {
         let (Some(Ok(l)), Some(products)) = (loaded.get(), catalog.data.get()) else { return };
         let h = l.hamper;
         let (id, code) = (h.id.clone(), h.code.clone());
-        let on_save: SaveFn = Rc::new(move |canvas, png| save_hamper_canvas(id.clone(), code.clone(), canvas, png).boxed_local());
+        let on_save: SaveFn =
+            Rc::new(move |canvas, png| save_hamper_canvas(id.clone(), code.clone(), canvas, png).boxed_local());
         ready.set(Some(StudioConfig {
             title: h.name.clone(),
             subtitle: h.code.clone(),
             back_href: format!("{}/edit", hamper_href(&h.code)),
             download_name: h.code.clone(),
             initial: h.canvas.as_ref().map_or_else(lattice_core::canvas::empty_canvas, parse_canvas),
-            products: products.into_iter().map(|p| PickerProduct { id: p.id, code: p.code, name: p.name, image_url: p.image_url }).collect(),
+            products: products
+                .into_iter()
+                .map(|p| PickerProduct { id: p.id, code: p.code, name: p.name, image_url: p.image_url })
+                .collect(),
             hamper_product_ids: l.product_ids,
             on_save,
             save_image: true,

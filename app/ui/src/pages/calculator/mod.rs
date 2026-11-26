@@ -140,7 +140,7 @@ fn with_master(mut l: ProductCostLine, stages: &[StageNode]) -> ProductCostLine 
                     l.item_name = format!("{} {}", sub.row.name, v.name);
                     l.rate = v.default_rate;
                     l.unit.clone_from(&v.unit);
-                    l.wastage_pct = if l.stage_code == BOUGHT_OUT { Decimal::ZERO } else { v.default_wastage_pct };
+                    l.wastage_pct = v.default_wastage_pct;
                     let calc = calculate_line_cost(&l);
                     l.calculated_area = Some(calc.calculated_area);
                     l.line_total = calc.line_total;
@@ -300,6 +300,21 @@ impl Calc {
             if saved > Decimal::ZERO { num_text(saved) } else { String::new() }
         };
         calc.manual_sp.set(sp);
+
+        // Markup is the anchor: when the cost moves (an overhead, a line, a rate),
+        // the price follows at the same markup instead of waiting for a markup
+        // edit. Only on a change, so a hand-typed SP stays put until the cost does.
+        Effect::new(move |prev: Option<Decimal>| {
+            let cost = calc.totals.with(|t| t.total_cost);
+            if prev.is_some_and(|p| p != cost) && cost > Decimal::ZERO {
+                untrack(|| {
+                    if let Some(sp) = calc.sp_at(&calc.markup.get()) {
+                        calc.manual_sp.set(num_text(sp));
+                    }
+                });
+            }
+            cost
+        });
         calc
     }
 
@@ -320,6 +335,20 @@ impl Calc {
         self.lines.update(|ls| {
             if let Some(x) = ls.iter_mut().find(|x| x.key == key) {
                 edit(&mut x.l);
+                let calc = calculate_line_cost(&x.l);
+                x.l.calculated_area = Some(calc.calculated_area);
+                x.l.line_total = calc.line_total;
+            }
+        });
+    }
+
+    /// A rate's wastage is the rate's, not the line's: it changes on every line
+    /// of that rate, and on the Rates page when the costing is saved.
+    pub fn set_wastage(&self, key: u64, pct: Decimal) {
+        self.lines.update(|ls| {
+            let id = ls.iter().find(|x| x.key == key).and_then(|x| x.l.cost_variety_id.clone());
+            for x in ls.iter_mut().filter(|x| x.key == key || (id.is_some() && x.l.cost_variety_id == id)) {
+                x.l.wastage_pct = pct;
                 let calc = calculate_line_cost(&x.l);
                 x.l.calculated_area = Some(calc.calculated_area);
                 x.l.line_total = calc.line_total;
@@ -372,7 +401,7 @@ impl Calc {
                     l.cost_variety_id = Some(v.id);
                     l.unit = v.unit;
                     l.rate = v.default_rate;
-                    l.wastage_pct = if l.stage_code == BOUGHT_OUT { Decimal::ZERO } else { v.default_wastage_pct };
+                    l.wastage_pct = v.default_wastage_pct;
                 }
                 Some((sub, None)) => {
                     l.item_name = format!("{sub} {name}");

@@ -16,7 +16,12 @@ pub(crate) fn err(e: impl std::fmt::Display) -> ApiError {
 }
 
 /// Where to save, chosen in the system dialog; None if cancelled.
-pub(crate) async fn ask_where(app: &AppHandle, file_name: &str, label: &str, ext: &'static str) -> Result<Option<PathBuf>, ApiError> {
+pub(crate) async fn ask_where(
+    app: &AppHandle,
+    file_name: &str,
+    label: &str,
+    ext: &'static str,
+) -> Result<Option<PathBuf>, ApiError> {
     let dialog = app.dialog().file().set_file_name(file_name).add_filter(label, &[ext]);
     let picked = tauri::async_runtime::spawn_blocking(move || dialog.blocking_save_file()).await.map_err(err)?;
     picked.map(|p| p.into_path().map_err(err)).transpose()
@@ -175,8 +180,8 @@ pub fn read_xlsx(request: tauri::ipc::Request<'_>) -> Result<Vec<Tab>, ApiError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lattice_core::sheets::ColumnData;
     use lattice_core::Decimal;
+    use lattice_core::sheets::ColumnData;
 
     #[test]
     fn dates_from_serials() {

@@ -109,8 +109,7 @@ pub(crate) fn line_cost_f(line: &ProductCostLine) -> (f64, f64) {
     let stage = line.stage();
     let rate = f(line.rate);
     let qty = line.qty_f();
-    // Bought-out items take only the sheet-level markup, never a per-line one.
-    let wastage = if stage == "bought_out" { 0.0 } else { f(line.wastage_pct) };
+    let wastage = f(line.wastage_pct);
 
     // Machine time: minutes × the rate per minute (or per hour ÷ 60). A machine
     // rate quoted by size (engraving per sq inch) is priced on dimensions below.
@@ -338,9 +337,9 @@ mod tests {
         let t = calculate_cost_sheet_totals(&lines, dec!(50), &StageOverheads::new());
         assert_eq!(t.material_total, dec!(100));
         assert_eq!(t.hardware_total, dec!(0));
-        assert_eq!(t.other_total, dec!(300));
-        assert_eq!(t.total_cost, dec!(400));
-        assert_eq!(t.calculated_sp, dec!(800));
+        assert_eq!(t.other_total, dec!(350), "bought-out 200 + 25% wastage");
+        assert_eq!(t.total_cost, dec!(450));
+        assert_eq!(t.calculated_sp, dec!(900));
     }
 
     #[test]

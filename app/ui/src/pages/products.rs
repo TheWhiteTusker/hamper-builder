@@ -6,7 +6,7 @@ use crate::components::{EmptyState, PageHeader};
 use crate::data::use_categories;
 use crate::db::{self, Q, live, me};
 use crate::kit::{
-    ImagePreview, ListMenu, Menu, MenuItem, RowMenu, SelectBox, Selection, SelectionCount, confirm, costing_href,
+    ImagePreview, ListMenu, Menu, MenuItem, ROW_TINT, RowNumber, Selection, SelectionCount, confirm, costing_href,
     product_href,
 };
 use lattice_core::money::format_money;
@@ -48,6 +48,7 @@ pub fn Products() -> impl IntoView {
     let products = live::<ProductWithCategory>("products", products_query());
     let categories = use_categories();
     let sel = Selection::new("products");
+    crate::list_position::remember("products", move || products.data.with(Option::is_some));
     let query = use_query_map();
     let navigate = StoredValue::new_local(use_navigate());
 
@@ -113,6 +114,7 @@ pub fn Products() -> impl IntoView {
                             MenuItem { href: "/admin/products/export", title: "Download list", hint: "All products as a CSV file" },
                         ]
                     />
+                    <A href="/products/history" attr:class="btn-secondary">"History"</A>
                     <A href="/products/new" attr:class="btn-primary">"New product"</A>
                 }
                     .into_any()
@@ -205,11 +207,14 @@ pub fn Products() -> impl IntoView {
             Some(rows) => {
                 let more = rows.len().saturating_sub(shown.get());
                 view! {
-                    <div class="card overflow-x-auto">
+                    // row-gutter (app.css): room left of the table for each row's tick box and bookmark.
+                    <div class="list-scroll row-gutter">
+                        // No outline: just the rows' own lines, with the gutter's buttons outside them.
+                        <div class="rounded-lg bg-white">
                         <table class="w-full border-collapse text-sm">
                             <thead>
                                 <tr>
-                                    <th class="th w-8" aria-label="Selected"></th>
+                                    <th class="th num w-12">"S.No."</th>
                                     <th class="th w-12 text-center">"Photo"</th>
                                     <th class="th">"Code"</th>
                                     <th class="th">"Product"</th>
@@ -225,18 +230,21 @@ pub fn Products() -> impl IntoView {
                                 {rows
                                     .into_iter()
                                     .take(shown.get())
-                                    .map(|p| view! { <Row p=p admin=admin sel=sel on_delete=remove /> })
+                                    .enumerate()
+                                    .map(|(i, p)| view! { <Row p=p n=i + 1 admin=admin sel=sel on_delete=remove /> })
                                     .collect_view()}
                             </tbody>
                         </table>
-                    </div>
-                    {(more > 0).then(|| view! {
-                        <div class="mt-4 text-center">
-                            <button type="button" class="btn-secondary" on:click=move |_| shown.update(|n| *n += PAGE * 2)>
-                                {format!("Show more ({more} left)")}
-                            </button>
                         </div>
-                    })}
+                        // Inside the scroll box, so it only shows once the rows are scrolled to the end.
+                        {(more > 0).then(|| view! {
+                            <div class="mt-4 text-center">
+                                <button type="button" class="btn-secondary" on:click=move |_| shown.update(|n| *n += PAGE * 2)>
+                                    {format!("Show more ({more} left)")}
+                                </button>
+                            </div>
+                        })}
+                    </div>
                 }
                     .into_any()
             }
@@ -247,13 +255,13 @@ pub fn Products() -> impl IntoView {
 #[component]
 fn Row(
     p: ProductWithCategory,
+    n: usize,
     admin: bool,
     sel: Selection,
     on_delete: impl Fn(String, String) + Copy + 'static,
 ) -> impl IntoView {
     let ProductWithCategory { product, categories } = p;
     let (id, code, name) = (product.id.clone(), product.code.clone(), product.name.clone());
-    let selected_id = id.clone();
     let label = format!("{code} ({name})");
     let photo = match product.image_url.clone() {
         Some(url) => view! {
@@ -275,25 +283,19 @@ fn Row(
         }
             .into_any(),
     };
-    let row_class = move || {
-        format!(
-            "{} {}",
-            if sel.has(&selected_id) { "bg-(--color-brand)/5" } else { "" },
-            if product.is_active { "" } else { "opacity-55" }
-        )
-    };
+    let row_class = move || format!("{} {}", ROW_TINT, if product.is_active { "" } else { "opacity-55" });
     let markup = product.markup_pct.map_or_else(|| "—".to_string(), |m| format!("{}%", m.normalize()));
     let (del_id, del_label) = (id.clone(), label.clone());
     let (view_href, edit_href) = (product_href(&code), costing_href(&code));
     let (edit_href2, view_href2) = (edit_href.clone(), view_href.clone());
-    let (code_cell, code_label, code_menu) = (code.clone(), code.clone(), code);
+    let (code_cell, code_label) = (code.clone(), code);
     let category_name = categories.map_or_else(|| "—".to_string(), |c| c.name);
     let source = product.source.clone().unwrap_or_else(|| "—".into());
     let inactive = !product.is_active;
     let (cost, sp) = (format_money(Some(product.cost_price)), format_money(Some(product.default_sp)));
     view! {
         <tr class=row_class>
-            <td class="td w-8 px-2 text-center"><SelectBox sel=sel id=id.clone() label=code_label /></td>
+            <RowNumber sel=sel n=n id=id label=code_label />
             <td class="td w-12 px-2 py-1.5 text-center">{photo}</td>
             <td class="td whitespace-nowrap font-mono">
                 <A href=view_href attr:class="font-semibold text-(--color-ink) hover:text-(--color-brand) hover:underline">{code_cell}</A>
@@ -325,7 +327,6 @@ fn Row(
                         view! { <A href=edit_href2 attr:class="font-medium text-(--color-brand) hover:underline">"Costing"</A> }
                             .into_any()
                     }}
-                    <RowMenu sel=sel id=id label=code_menu />
                 </div>
             </td>
         </tr>

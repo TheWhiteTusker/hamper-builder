@@ -14,8 +14,8 @@ use lattice_core::canvas::{Canvas, Shape, fonts_href};
 use leptos::prelude::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
+use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::HtmlImageElement;
 
@@ -182,7 +182,12 @@ const LOGO_SIZE: Size = Size { width: 1600.0, height: 887.0 };
 /// The Lattice Lane logo for designs. It lives in storage so every design
 /// keeps a stable URL; copied from the app's own asset the first time.
 pub async fn brand_logo() -> Option<Photo> {
-    let url: String = crate::tauri::invoke("storage_public_url", &serde_json::json!({ "bucket": crate::db::PHOTOS, "path": LOGO_PATH })).await.ok()?;
+    let url: String = crate::tauri::invoke(
+        "storage_public_url",
+        &serde_json::json!({ "bucket": crate::db::PHOTOS, "path": LOGO_PATH }),
+    )
+    .await
+    .ok()?;
     let there = crate::db::list_files("brand").await.ok()?.iter().any(|p| p == LOGO_PATH);
     if !there {
         let img = load_image("/assets/brand/deck-logo.png").await.ok()?;

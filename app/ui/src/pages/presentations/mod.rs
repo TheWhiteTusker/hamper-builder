@@ -19,7 +19,9 @@ use futures::join;
 use lattice_core::Decimal;
 use lattice_core::api::ApiError;
 use lattice_core::canvas::Canvas;
-use lattice_core::canvas::deck::{DeckItemInfo, HamperInfo, Photo, ProductInfo, Size, closing_slide, cover_slide, hamper_slide, product_slide};
+use lattice_core::canvas::deck::{
+    DeckItemInfo, HamperInfo, Photo, ProductInfo, Size, closing_slide, cover_slide, hamper_slide, product_slide,
+};
 use lattice_core::images::thumb_url;
 use lattice_core::js::f;
 use lattice_core::lenient;
@@ -47,18 +49,14 @@ struct CountRow {
     count: i64,
 }
 
-/// "19 Nov 2026, 3:42 pm", as `toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })`.
-fn when(ts: &str) -> String {
-    let d = js_sys::Date::new(&ts.into());
-    let opts = js_sys::Object::new();
-    let _ = js_sys::Reflect::set(&opts, &"dateStyle".into(), &"medium".into());
-    let _ = js_sys::Reflect::set(&opts, &"timeStyle".into(), &"short".into());
-    d.to_locale_string("en-IN", &opts).as_string().unwrap_or_default()
-}
+use crate::kit::when;
 
 #[component]
 pub fn Presentations() -> impl IntoView {
-    let decks = live::<DeckRow>("presentations", Q::from("presentations").select("id,title,updated_at,presentation_slides(count)").order_desc("updated_at"));
+    let decks = live::<DeckRow>(
+        "presentations",
+        Q::from("presentations").select("id,title,updated_at,presentation_slides(count)").order_desc("updated_at"),
+    );
     view! {
         <PageHeader title="Presentations" subtitle="Client decks: a cover, a slide per hamper or product, and a closing slide">
             <A href="/presentations/new" attr:class="btn-primary">"New presentation"</A>
@@ -133,10 +131,23 @@ struct PickRow {
 pub async fn load_picker() -> Result<PickerData, ApiError> {
     let (h, p) = (
         Q::from("hamper_summary").select("id,code,name,final_catalogue_sp,image_url").order("code"),
-        Q::from("products").select("id,code,name,default_sp,image_url").eq("is_active", "true").null("deleted_at").order("name"),
+        Q::from("products")
+            .select("id,code,name,default_sp,image_url")
+            .eq("is_active", "true")
+            .null("deleted_at")
+            .order("name"),
     );
     let (hampers, products) = join!(h.rows::<PickRow>(), p.rows::<PickRow>());
-    let map = |kind: ItemKind| move |r: PickRow| Pickable { kind, id: r.id, code: r.code, name: r.name, price: r.final_catalogue_sp, image_url: r.image_url };
+    let map = |kind: ItemKind| {
+        move |r: PickRow| Pickable {
+            kind,
+            id: r.id,
+            code: r.code,
+            name: r.name,
+            price: r.final_catalogue_sp,
+            image_url: r.image_url,
+        }
+    };
     Ok(PickerData {
         hampers: hampers?.into_iter().map(map(ItemKind::Hamper)).collect(),
         products: products?.into_iter().map(map(ItemKind::Product)).collect(),
@@ -170,14 +181,18 @@ pub fn ItemPicker(data: PickerData, value: RwSignal<Vec<DeckItem>>) -> impl Into
             }
         });
     };
-    let find = move |item: &DeckItem| data.with_value(|d| d.hampers.iter().chain(&d.products).find(|p| p.kind == item.kind && p.id == item.id).cloned());
+    let find = move |item: &DeckItem| {
+        data.with_value(|d| {
+            d.hampers.iter().chain(&d.products).find(|p| p.kind == item.kind && p.id == item.id).cloned()
+        })
+    };
     view! {
         <div class="grid gap-4 lg:grid-cols-[1fr_360px]">
             <div class="card flex min-h-0 flex-col p-3">
                 <div class="mb-3 flex flex-wrap items-center gap-2">
                     <button type="button" class=move || if tab.get() == ItemKind::Hamper { "btn-primary" } else { "btn-secondary" } on:click=move |_| tab.set(ItemKind::Hamper)>{format!("Hampers ({nh})")}</button>
                     <button type="button" class=move || if tab.get() == ItemKind::Product { "btn-primary" } else { "btn-secondary" } on:click=move |_| tab.set(ItemKind::Product)>{format!("Products ({np})")}</button>
-                    <input class="input ml-auto max-w-xs" placeholder="Search name or code" prop:value=q on:input=move |e| q.set(event_target_value(&e)) />
+                    <input name="q" class="input ml-auto max-w-xs" placeholder="Search name or code" prop:value=q on:input=move |e| q.set(event_target_value(&e)) />
                 </div>
                 <ul class="max-h-[480px] divide-y divide-(--color-line) overflow-y-auto">
                     {move || {
@@ -307,8 +322,12 @@ async fn load_deck_data(items: &[DeckItem]) -> Result<(Vec<HamperInfo>, Vec<Prod
     let hamper_ids: Vec<&str> = items.iter().filter(|i| i.kind == ItemKind::Hamper).map(|i| i.id.as_str()).collect();
     let product_ids: Vec<&str> = items.iter().filter(|i| i.kind == ItemKind::Product).map(|i| i.id.as_str()).collect();
     let hq = Q::from("hamper_summary").select("id,code,name,final_catalogue_sp,image_url").in_list("id", &hamper_ids);
-    let lq = Q::from("hamper_items").select("hamper_id,product_id,product_name,category_name,products(image_url)").in_list("hamper_id", &hamper_ids).order("line_no");
-    let pq = Q::from("products").select("id,code,name,default_sp,image_url,categories(name)").in_list("id", &product_ids);
+    let lq = Q::from("hamper_items")
+        .select("hamper_id,product_id,product_name,category_name,products(image_url)")
+        .in_list("hamper_id", &hamper_ids)
+        .order("line_no");
+    let pq =
+        Q::from("products").select("id,code,name,default_sp,image_url,categories(name)").in_list("id", &product_ids);
     let cq = Q::from("categories").select("name,counts_as_item");
     let none = async { Ok(Vec::new()) };
     let (hampers, lines, products, cats, logo) = join!(
@@ -319,8 +338,10 @@ async fn load_deck_data(items: &[DeckItem]) -> Result<(Vec<HamperInfo>, Vec<Prod
         brand_logo(),
     );
     let (hampers, lines, products, cats) = (hampers?, lines?, products?, cats?);
-    let counts: HashMap<String, bool> = cats.into_iter().map(|c| (c.name.trim().to_lowercase(), c.counts_as_item)).collect();
-    let counts_as_item = |c: &Option<String>| counts.get(&c.as_deref().unwrap_or("").trim().to_lowercase()).copied().unwrap_or(true);
+    let counts: HashMap<String, bool> =
+        cats.into_iter().map(|c| (c.name.trim().to_lowercase(), c.counts_as_item)).collect();
+    let counts_as_item =
+        |c: &Option<String>| counts.get(&c.as_deref().unwrap_or("").trim().to_lowercase()).copied().unwrap_or(true);
     let hamper_infos = hamper_ids
         .iter()
         .filter_map(|id| hampers.iter().find(|h| h.id == *id))
@@ -360,7 +381,11 @@ async fn load_deck_data(items: &[DeckItem]) -> Result<(Vec<HamperInfo>, Vec<Prod
 /// Lays out slides for the picked items once the photos' proportions are
 /// known (photos that fail to load are left out). With `text`, the entry and
 /// closing slides too (port of `buildSlides`).
-pub async fn build_slides(items: &[DeckItem], note: &str, text: Option<&DeckText>) -> Result<Vec<SlideInput>, ApiError> {
+pub async fn build_slides(
+    items: &[DeckItem],
+    note: &str,
+    text: Option<&DeckText>,
+) -> Result<Vec<SlideInput>, ApiError> {
     let (hampers, products, logo) = load_deck_data(items).await?;
     let mut urls: Vec<String> = Vec::new();
     for h in &hampers {
@@ -385,18 +410,33 @@ pub async fn build_slides(items: &[DeckItem], note: &str, text: Option<&DeckText
         match item.kind {
             ItemKind::Hamper => {
                 if let Some(h) = hampers.iter().find(|h| h.id == item.id) {
-                    middle.push(SlideInput { kind: "hamper".into(), hamper_id: Some(h.id.clone()), product_id: None, canvas: hamper_slide(&mut ids, h, &size_of, note, logo.as_ref()) });
+                    middle.push(SlideInput {
+                        kind: "hamper".into(),
+                        hamper_id: Some(h.id.clone()),
+                        product_id: None,
+                        canvas: hamper_slide(&mut ids, h, &size_of, note, logo.as_ref()),
+                    });
                 }
             }
             ItemKind::Product => {
                 if let Some(p) = products.iter().find(|p| p.id == item.id) {
-                    middle.push(SlideInput { kind: "product".into(), hamper_id: None, product_id: Some(p.id.clone()), canvas: product_slide(&mut ids, p, &size_of, note, logo.as_ref()) });
+                    middle.push(SlideInput {
+                        kind: "product".into(),
+                        hamper_id: None,
+                        product_id: Some(p.id.clone()),
+                        canvas: product_slide(&mut ids, p, &size_of, note, logo.as_ref()),
+                    });
                 }
             }
         }
     }
     let Some(t) = text else { return Ok(middle) };
-    let mut out = vec![SlideInput { kind: "cover".into(), hamper_id: None, product_id: None, canvas: cover_slide(&mut ids, &t.title, &t.subtitle, logo.as_ref()) }];
+    let mut out = vec![SlideInput {
+        kind: "cover".into(),
+        hamper_id: None,
+        product_id: None,
+        canvas: cover_slide(&mut ids, &t.title, &t.subtitle, logo.as_ref()),
+    }];
     out.extend(middle);
     out.push(SlideInput {
         kind: "closing".into(),

@@ -3,7 +3,9 @@
 //! resize and rotate handles, line handles, marquee, drawing, pan and zoom),
 //! keyboard shortcuts, images, and saving.
 
-use super::panels::{ContextMenu, ContextToolbar, Footer, LayersPanel, PageStrip, Rail, SidePanel, Tab, Topbar, TransformPanel};
+use super::panels::{
+    ContextMenu, ContextToolbar, Footer, LayersPanel, PageStrip, Rail, SidePanel, Tab, Topbar, TransformPanel,
+};
 use super::render::{self, Mat, client_rect, hit, node_mat, self_rect};
 use super::{PickerProduct, images_tick, load_image, now_ms, uuid};
 use futures::future::LocalBoxFuture;
@@ -112,8 +114,16 @@ impl Anchor {
     }
 }
 
-const ALL_ANCHORS: [Anchor; 8] =
-    [Anchor::TopLeft, Anchor::TopRight, Anchor::BottomRight, Anchor::BottomLeft, Anchor::TopMid, Anchor::RightMid, Anchor::BottomMid, Anchor::LeftMid];
+const ALL_ANCHORS: [Anchor; 8] = [
+    Anchor::TopLeft,
+    Anchor::TopRight,
+    Anchor::BottomRight,
+    Anchor::BottomLeft,
+    Anchor::TopMid,
+    Anchor::RightMid,
+    Anchor::BottomMid,
+    Anchor::LeftMid,
+];
 
 /// What the transformer wraps: one layer (its own rotated box) or several (their combined box).
 /// Short-lived and one at a time, so the size gap between variants costs nothing.
@@ -255,7 +265,9 @@ impl Ed {
         self.select_many(ids);
     }
     pub fn select_all(&self) {
-        let ids = self.with_canvas_untracked(|c| c.layers.iter().filter(|l| l.base.visible && !l.base.locked).map(|l| l.base.id.clone()).collect());
+        let ids = self.with_canvas_untracked(|c| {
+            c.layers.iter().filter(|l| l.base.visible && !l.base.locked).map(|l| l.base.id.clone()).collect()
+        });
         self.select_many(ids);
     }
     pub fn add_many(&self, layers: Vec<Layer>) {
@@ -279,7 +291,9 @@ impl Ed {
         c
     }
     pub fn duplicate(&self, ids: &[String]) {
-        let copies = self.with_canvas_untracked(|c| c.layers.iter().filter(|l| ids.iter().any(|i| i == l.id())).map(Self::copy_of).collect());
+        let copies = self.with_canvas_untracked(|c| {
+            c.layers.iter().filter(|l| ids.iter().any(|i| i == l.id())).map(Self::copy_of).collect()
+        });
         self.add_many(copies);
     }
     pub fn copy(&self) {
@@ -319,7 +333,13 @@ impl Ed {
 
     /// Unlocked layers among `ids`, with their boxes on the page.
     fn movable(&self, ids: &[String]) -> Vec<(String, Rect)> {
-        self.with_canvas_untracked(|c| c.layers.iter().filter(|l| ids.iter().any(|i| i == l.id()) && !l.base.locked).map(|l| (l.base.id.clone(), client_rect(l))).collect())
+        self.with_canvas_untracked(|c| {
+            c.layers
+                .iter()
+                .filter(|l| ids.iter().any(|i| i == l.id()) && !l.base.locked)
+                .map(|l| (l.base.id.clone(), client_rect(l)))
+                .collect()
+        })
     }
     /// One layer aligns to the page; several align to each other.
     pub fn align(&self, ids: &[String], at: PageAlign) {
@@ -351,7 +371,10 @@ impl Ed {
             next.base.scale_y = -next.base.scale_y;
         }
         let after = client_rect(&next);
-        let (dx, dy) = (before.x + before.width / 2.0 - (after.x + after.width / 2.0), before.y + before.height / 2.0 - (after.y + after.height / 2.0));
+        let (dx, dy) = (
+            before.x + before.width / 2.0 - (after.x + after.width / 2.0),
+            before.y + before.height / 2.0 - (after.y + after.height / 2.0),
+        );
         self.patch(
             id,
             |x| {
@@ -365,7 +388,11 @@ impl Ed {
     }
     /// Scales a layer down to fit the page (never up) and centres it.
     pub fn fit_to_page(&self, id: &str) {
-        let Some((l, w, h)) = self.with_canvas_untracked(|c| c.layers.iter().find(|l| l.id() == id).cloned().map(|l| (l, c.width, c.height))) else { return };
+        let Some((l, w, h)) = self
+            .with_canvas_untracked(|c| c.layers.iter().find(|l| l.id() == id).cloned().map(|l| (l, c.width, c.height)))
+        else {
+            return;
+        };
         let k = arrange::fit_scale(client_rect(&l), w, h, 0.9);
         let mut next = l.clone();
         next.base.scale_x *= k;
@@ -388,7 +415,13 @@ impl Ed {
         self.toast.set(Some((ok, text.clone())));
         let toast = self.toast;
         set_timeout(
-            move || toast.update(|t| if t.as_ref().is_some_and(|(_, x)| *x == text) { *t = None }),
+            move || {
+                toast.update(|t| {
+                    if t.as_ref().is_some_and(|(_, x)| *x == text) {
+                        *t = None
+                    }
+                })
+            },
             std::time::Duration::from_millis(if ok { 3500 } else { 7000 }),
         );
     }
@@ -422,7 +455,11 @@ impl Ed {
             let (ax, ay) = anchor.unwrap_or((bw / 2.0, bh / 2.0));
             let px = (ax - ((bw - w * z) / 2.0 + v.pan_x)) / z;
             let py = (ay - ((bh - h * z) / 2.0 + v.pan_y)) / z;
-            *v = View { zoom: Some(nz), pan_x: ax - px * nz - (bw - w * nz) / 2.0, pan_y: ay - py * nz - (bh - h * nz) / 2.0 };
+            *v = View {
+                zoom: Some(nz),
+                pan_x: ax - px * nz - (bw - w * nz) / 2.0,
+                pan_y: ay - py * nz - (bh - h * nz) / 2.0,
+            };
         });
     }
     pub fn zoom_fit(&self) {
@@ -458,7 +495,15 @@ impl Ed {
     // ---------------------------------------------------------- images
 
     /// A new image at `at` (or the page centre), scaled to fit within `share` of the page.
-    fn image_layer(&self, img: &web_sys::HtmlImageElement, url: &str, name: &str, product_id: Option<String>, at: Option<(f64, f64)>, share: f64) -> Layer {
+    fn image_layer(
+        &self,
+        img: &web_sys::HtmlImageElement,
+        url: &str,
+        name: &str,
+        product_id: Option<String>,
+        at: Option<(f64, f64)>,
+        share: f64,
+    ) -> Layer {
         let (w, h) = self.with_canvas_untracked(|c| (c.width, c.height));
         let (nw, nh) = (f64::from(img.natural_width()).max(1.0), f64::from(img.natural_height()).max(1.0));
         let k = 1f64.min(w.min(h) * share / nw.max(nh));
@@ -466,7 +511,13 @@ impl Ed {
         let (cx, cy) = at.unwrap_or((w / 2.0, h / 2.0));
         Layer {
             base: Base { name: Some(name.into()), ..Base::at(uuid(), cx - iw / 2.0, cy - ih / 2.0) },
-            shape: Shape::Image(Image { product_id, url: url.into(), width: iw, height: ih, fit: lattice_core::canvas::Fit::Stretch }),
+            shape: Shape::Image(Image {
+                product_id,
+                url: url.into(),
+                width: iw,
+                height: ih,
+                fit: lattice_core::canvas::Fit::Stretch,
+            }),
         }
     }
     /// An image that isn't a product photo (an upload, the logo).
@@ -482,7 +533,9 @@ impl Ed {
     pub fn add_logo(&self) {
         let ed = *self;
         spawn_local(async move {
-            let Some(logo) = super::brand_logo().await else { return ed.notify(false, "Could not load the Lattice Lane logo.") };
+            let Some(logo) = super::brand_logo().await else {
+                return ed.notify(false, "Could not load the Lattice Lane logo.");
+            };
             match load_image(&logo.url).await {
                 Ok(img) => ed.add(ed.image_layer(&img, &logo.url, "Logo", None, None, 0.3)),
                 Err(_) => ed.notify(false, "Could not load the Lattice Lane logo."),
@@ -494,9 +547,16 @@ impl Ed {
         let ed = *self;
         spawn_local(async move {
             let Ok(img) = load_image(&url).await else {
-                return ed.notify(false, "That image could not be loaded. If it's an external link, upload it to the product instead.");
+                return ed.notify(
+                    false,
+                    "That image could not be loaded. If it's an external link, upload it to the product instead.",
+                );
             };
-            let swapping = ed.swap_id.get_untracked().and_then(|id| ed.with_canvas_untracked(|c| c.layers.iter().find(|l| l.id() == id && l.kind() == "image").map(|l| l.base.id.clone())));
+            let swapping = ed.swap_id.get_untracked().and_then(|id| {
+                ed.with_canvas_untracked(|c| {
+                    c.layers.iter().find(|l| l.id() == id && l.kind() == "image").map(|l| l.base.id.clone())
+                })
+            });
             if let Some(id) = swapping {
                 let (nw, nh) = (f64::from(img.natural_width()).max(1.0), f64::from(img.natural_height()).max(1.0));
                 ed.patch(
@@ -525,7 +585,9 @@ impl Ed {
         let (bytes, mime, ext) = crate::photos::optimize(file).await.map_err(|e| e.to_string())?;
         let folder = self.config.with_value(|c| c.upload_folder.clone());
         let path = crate::photos::asset_path(&folder, &ext);
-        crate::db::upload(crate::db::PHOTOS, &path, &bytes, &mime, false).await.map_err(|e| format!("Storage upload failed: {e}"))
+        crate::db::upload(crate::db::PHOTOS, &path, &bytes, &mime, false)
+            .await
+            .map_err(|e| format!("Storage upload failed: {e}"))
     }
     /// Uploads images and adds each to the page as its own layer.
     pub fn upload_images(&self, files: Vec<web_sys::File>) {
@@ -543,7 +605,14 @@ impl Ed {
                         done.push((url.clone(), file.name()));
                         let off = i as f64 * 40.0;
                         match load_image(&url).await {
-                            Ok(img) => added.push(ed.image_layer(&img, &url, &file.name(), None, Some((w / 2.0 + off, h / 2.0 + off)), 0.45)),
+                            Ok(img) => added.push(ed.image_layer(
+                                &img,
+                                &url,
+                                &file.name(),
+                                None,
+                                Some((w / 2.0 + off, h / 2.0 + off)),
+                                0.45,
+                            )),
                             Err(_) => failed.push(format!("{}: uploaded but could not be displayed", file.name())),
                         }
                     }
@@ -603,18 +672,28 @@ impl Ed {
                 let k = 1f64.min(2000.0 / nw.max(nh));
                 let (w, h) = ((nw * k).round() as u32, (nh * k).round() as u32);
                 let (c, ctx) = render::new_canvas(w, h).ok_or("No canvas")?;
-                ctx.draw_image_with_html_image_element_and_dw_and_dh(&img, 0.0, 0.0, f64::from(w), f64::from(h)).map_err(|_| "Could not draw")?;
-                let data = ctx.get_image_data(0.0, 0.0, f64::from(w), f64::from(h)).map_err(|_| "Export blocked by an image from another website.")?;
+                ctx.draw_image_with_html_image_element_and_dw_and_dh(&img, 0.0, 0.0, f64::from(w), f64::from(h))
+                    .map_err(|_| "Could not draw")?;
+                let data = ctx
+                    .get_image_data(0.0, 0.0, f64::from(w), f64::from(h))
+                    .map_err(|_| "Export blocked by an image from another website.")?;
                 let mut px = data.data().0;
                 lattice_core::canvas::cutout::remove_background(&mut px, w as usize, h as usize, tolerance);
-                let out = web_sys::ImageData::new_with_u8_clamped_array_and_sh(wasm_bindgen::Clamped(&px), w, h).map_err(|_| "Could not process")?;
+                let out = web_sys::ImageData::new_with_u8_clamped_array_and_sh(wasm_bindgen::Clamped(&px), w, h)
+                    .map_err(|_| "Could not process")?;
                 ctx.put_image_data(&out, 0.0, 0.0).map_err(|_| "Could not process")?;
-                let blob = crate::photos::to_blob(&c, "image/png", None).await.map_err(|e| e.to_string())?.ok_or("render failed")?;
+                let blob = crate::photos::to_blob(&c, "image/png", None)
+                    .await
+                    .map_err(|e| e.to_string())?
+                    .ok_or("render failed")?;
                 let opts = web_sys::FilePropertyBag::new();
                 opts.set_type("image/png");
                 let parts = js_sys::Array::of1(&blob);
-                let file = web_sys::File::new_with_blob_sequence_and_options(&parts, "cutout.png", &opts).map_err(|_| "Could not process")?;
-                let saved = crate::photos::upload_product_image(&file, &product_id, None, false).await.map_err(|e| e.to_string())?;
+                let file = web_sys::File::new_with_blob_sequence_and_options(&parts, "cutout.png", &opts)
+                    .map_err(|_| "Could not process")?;
+                let saved = crate::photos::upload_product_image(&file, &product_id, None, false)
+                    .await
+                    .map_err(|e| e.to_string())?;
                 Ok(saved.url)
             }
             .await;
@@ -647,7 +726,8 @@ impl Ed {
         self.saving.set(true);
         self.editing.set(None);
         let canvas = self.hist.with_untracked(|h| h.present.clone());
-        let (save_image, on_save, msg) = self.config.with_value(|c| (c.save_image, c.on_save.clone(), c.saved_message.clone()));
+        let (save_image, on_save, msg) =
+            self.config.with_value(|c| (c.save_image, c.on_save.clone(), c.saved_message.clone()));
         let png = if save_image {
             match render::render_png(&canvas, 1.0, false).await {
                 Ok((bytes, _)) => Some(bytes),
@@ -681,7 +761,9 @@ impl Ed {
             let name = ed.config.with_value(|c| c.download_name.clone());
             match render::render_png(&canvas, 1.0, false).await {
                 Ok((bytes, _)) => {
-                    let saved: Result<Option<String>, _> = crate::tauri::invoke_raw("save_bytes", &bytes, &[("x-file-name", &format!("{name}.png"))]).await;
+                    let saved: Result<Option<String>, _> =
+                        crate::tauri::invoke_raw("save_bytes", &bytes, &[("x-file-name", &format!("{name}.png"))])
+                            .await;
                     if let Err(e) = saved {
                         ed.notify(false, e.to_string());
                     }
@@ -699,7 +781,11 @@ impl Ed {
         }
         let ids = self.selected.get_untracked();
         let sel: Vec<Layer> = self.with_canvas_untracked(|c| {
-            c.layers.iter().filter(|l| ids.contains(&l.base.id) && l.base.visible && (ids.len() == 1 || !l.base.locked)).cloned().collect()
+            c.layers
+                .iter()
+                .filter(|l| ids.contains(&l.base.id) && l.base.visible && (ids.len() == 1 || !l.base.locked))
+                .cloned()
+                .collect()
         });
         match sel.as_slice() {
             [] => None,
@@ -709,7 +795,10 @@ impl Ed {
                 }
                 Some(Frame::Single { m: node_mat(l), r: self_rect(l), layer: l.clone() })
             }
-            many => Some(Frame::Multi { ids: many.iter().map(|l| l.base.id.clone()).collect(), b: arrange::bounds_of(&many.iter().map(client_rect).collect::<Vec<_>>()) }),
+            many => Some(Frame::Multi {
+                ids: many.iter().map(|l| l.base.id.clone()).collect(),
+                b: arrange::bounds_of(&many.iter().map(client_rect).collect::<Vec<_>>()),
+            }),
         }
     }
 }
@@ -720,7 +809,14 @@ fn anchors_for(f: &Frame) -> Vec<Anchor> {
         Frame::Single { layer, .. } if layer.base.locked => Vec::new(),
         Frame::Single { layer, .. } => match layer.shape {
             Shape::Image(_) => ALL_ANCHORS[..4].to_vec(),
-            Shape::Text(_) => vec![Anchor::TopLeft, Anchor::TopRight, Anchor::BottomRight, Anchor::BottomLeft, Anchor::RightMid, Anchor::LeftMid],
+            Shape::Text(_) => vec![
+                Anchor::TopLeft,
+                Anchor::TopRight,
+                Anchor::BottomRight,
+                Anchor::BottomLeft,
+                Anchor::RightMid,
+                Anchor::LeftMid,
+            ],
             _ => ALL_ANCHORS.to_vec(),
         },
     }
@@ -784,7 +880,8 @@ fn apply_resize(anchor: Anchor, frame: &Frame, origin: &[Layer], p: (f64, f64), 
             let rot = b.rotation.to_radians();
             // Pointer relative to the fixed point, in the layer's unscaled local frame.
             let (vx, vy) = (p.0 - fixed.0, p.1 - fixed.1);
-            let (lx, ly) = ((vx * rot.cos() + vy * rot.sin()) / b.scale_x, (-vx * rot.sin() + vy * rot.cos()) / b.scale_y);
+            let (lx, ly) =
+                ((vx * rot.cos() + vy * rot.sin()) / b.scale_x, (-vx * rot.sin() + vy * rot.cos()) / b.scale_y);
             let a = (al.0 - pl.0, al.1 - pl.1);
             let text_side = matches!(o.shape, Shape::Text(_)) && matches!(anchor, Anchor::LeftMid | Anchor::RightMid);
             let keep = anchor.corner() && matches!(o.shape, Shape::Image(_) | Shape::Text(_));
@@ -803,7 +900,11 @@ fn apply_resize(anchor: Anchor, frame: &Frame, origin: &[Layer], p: (f64, f64), 
             }
             // No flipping through the handles, and nothing smaller than 8 screen px.
             let min = 8.0 / zoom;
-            if fx <= 0.0 || fy <= 0.0 || (r.width * b.scale_x * fx).abs() < min || (r.height * b.scale_y * fy).abs() < min {
+            if fx <= 0.0
+                || fy <= 0.0
+                || (r.width * b.scale_x * fx).abs() < min
+                || (r.height * b.scale_y * fy).abs() < min
+            {
                 return;
             }
             let Some(l) = layers.iter_mut().find(|l| l.id() == layer.id()) else { return };
@@ -895,7 +996,11 @@ fn draw(ed: Ed, el: &web_sys::HtmlCanvasElement) {
         el.set_width(pw);
         el.set_height(ph);
     }
-    let Some(ctx) = el.get_context("2d").ok().flatten().and_then(|c| c.dyn_into::<web_sys::CanvasRenderingContext2d>().ok()) else { return };
+    let Some(ctx) =
+        el.get_context("2d").ok().flatten().and_then(|c| c.dyn_into::<web_sys::CanvasRenderingContext2d>().ok())
+    else {
+        return;
+    };
     let _ = ctx.set_transform(dpr, 0.0, 0.0, dpr, 0.0, 0.0);
     ctx.clear_rect(0.0, 0.0, bw, bh);
     let (ox, oy, z) = ed.origin();
@@ -971,10 +1076,16 @@ fn draw(ed: Ed, el: &web_sys::HtmlCanvasElement) {
             ctx.stroke();
         }
         // Line and curve handles.
-        let one = if selected.len() == 1 { selected.first().and_then(|s| c.layers.iter().find(|l| l.base.id == *s)) } else { None };
+        let one = if selected.len() == 1 {
+            selected.first().and_then(|s| c.layers.iter().find(|l| l.base.id == *s))
+        } else {
+            None
+        };
         if let Some(l) = one.filter(|l| !l.base.locked && l.line().is_some()) {
             let p = line_points(l);
-            let at = |i: usize| (l.base.x + p.get(i * 2).copied().unwrap_or(0.0), l.base.y + p.get(i * 2 + 1).copied().unwrap_or(0.0));
+            let at = |i: usize| {
+                (l.base.x + p.get(i * 2).copied().unwrap_or(0.0), l.base.y + p.get(i * 2 + 1).copied().unwrap_or(0.0))
+            };
             let handle = |pt: (f64, f64), bend: bool| {
                 ctx.begin_path();
                 let _ = ctx.arc(pt.0, pt.1, if bend { 9.5 } else { 8.0 } * px, 0.0, std::f64::consts::TAU);
@@ -1008,7 +1119,10 @@ fn draw(ed: Ed, el: &web_sys::HtmlCanvasElement) {
     if let Some(f) = ed.frame() {
         let to_board = |p: (f64, f64)| (ox + p.0 * z, oy + p.1 * z);
         let locked = matches!(&f, Frame::Single { layer, .. } if layer.base.locked);
-        let corners: Vec<(f64, f64)> = [Anchor::TopLeft, Anchor::TopRight, Anchor::BottomRight, Anchor::BottomLeft].iter().map(|a| to_board(anchor_point(&f, *a))).collect();
+        let corners: Vec<(f64, f64)> = [Anchor::TopLeft, Anchor::TopRight, Anchor::BottomRight, Anchor::BottomLeft]
+            .iter()
+            .map(|a| to_board(anchor_point(&f, *a)))
+            .collect();
         ctx.begin_path();
         for (i, (x, y)) in corners.iter().enumerate() {
             if i == 0 {
@@ -1075,6 +1189,7 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
         config: StoredValue::new_local(config),
         board_el: NodeRef::new(),
     };
+    crate::leave::warn_unsaved(move || untrack(|| ed.dirty()));
     let canvas_el = NodeRef::<html::Canvas>::new();
     // Progress from the native models, while a split is running.
     let magic = ed.magic;
@@ -1089,10 +1204,14 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
     let loaded_faces = StoredValue::new(Vec::<String>::new());
     Effect::new(move |_| {
         let c = ed.canvas();
-        let faces: Vec<String> = c.layers.iter().filter_map(|l| match &l.shape {
-            Shape::Text(t) => Some(format!("{}|{}", t.font_style.css(), t.font_family)),
-            _ => None,
-        }).collect();
+        let faces: Vec<String> = c
+            .layers
+            .iter()
+            .filter_map(|l| match &l.shape {
+                Shape::Text(t) => Some(format!("{}|{}", t.font_style.css(), t.font_family)),
+                _ => None,
+            })
+            .collect();
         if faces.iter().all(|f| loaded_faces.with_value(|v| v.contains(f))) {
             return;
         }
@@ -1169,12 +1288,20 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
         // Line and curve handles.
         let sel = ed.selected.get_untracked();
         if sel.len() == 1
-            && let Some(l) = ed.with_canvas_untracked(|c| c.layers.iter().find(|l| sel.first() == Some(&l.base.id) && !l.base.locked && l.line().is_some()).cloned())
+            && let Some(l) = ed.with_canvas_untracked(|c| {
+                c.layers
+                    .iter()
+                    .find(|l| sel.first() == Some(&l.base.id) && !l.base.locked && l.line().is_some())
+                    .cloned()
+            })
         {
             let pts = line_points(&l);
             let n = pts.len() / 2;
             for i in 0..n {
-                let at = (l.base.x + pts.get(i * 2).copied().unwrap_or(0.0), l.base.y + pts.get(i * 2 + 1).copied().unwrap_or(0.0));
+                let at = (
+                    l.base.x + pts.get(i * 2).copied().unwrap_or(0.0),
+                    l.base.y + pts.get(i * 2 + 1).copied().unwrap_or(0.0),
+                );
                 if near(at, 12.0) {
                     ed.gesture.set_value(Some(Gesture::Handle { id: l.base.id.clone(), which: i, group }));
                     return;
@@ -1182,7 +1309,13 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
             }
         }
         let editing = ed.editing.get_untracked();
-        let top = ed.with_canvas_untracked(|c| c.layers.iter().rev().find(|l| l.base.visible && editing.as_deref() != Some(l.id()) && hit(l, p.0, p.1, z)).cloned());
+        let top = ed.with_canvas_untracked(|c| {
+            c.layers
+                .iter()
+                .rev()
+                .find(|l| l.base.visible && editing.as_deref() != Some(l.id()) && hit(l, p.0, p.1, z))
+                .cloned()
+        });
         let additive = e.shift_key() || e.ctrl_key() || e.meta_key();
         match top {
             Some(l) => {
@@ -1199,13 +1332,26 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
                 let now_sel = ed.selected.get_untracked();
                 let ids: Vec<String> = if now_sel.contains(&id) { now_sel } else { vec![id] };
                 let (origin, rects, others) = ed.with_canvas_untracked(|c| {
-                    let moving: Vec<Layer> = c.layers.iter().filter(|x| ids.contains(&x.base.id) && !x.base.locked).cloned().collect();
+                    let moving: Vec<Layer> =
+                        c.layers.iter().filter(|x| ids.contains(&x.base.id) && !x.base.locked).cloned().collect();
                     let rects = moving.iter().map(client_rect).collect();
-                    let others = c.layers.iter().filter(|x| !ids.contains(&x.base.id) && x.base.visible).map(client_rect).collect();
+                    let others = c
+                        .layers
+                        .iter()
+                        .filter(|x| !ids.contains(&x.base.id) && x.base.visible)
+                        .map(client_rect)
+                        .collect();
                     (moving, rects, others)
                 });
                 ed.hover.set(None);
-                ed.gesture.set_value(Some(Gesture::Drag { ids: origin.iter().map(|x| x.base.id.clone()).collect(), start: p, origin, rects, others, group }));
+                ed.gesture.set_value(Some(Gesture::Drag {
+                    ids: origin.iter().map(|x| x.base.id.clone()).collect(),
+                    start: p,
+                    origin,
+                    rects,
+                    others,
+                    group,
+                }));
             }
             None => {
                 if !additive {
@@ -1227,7 +1373,14 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
                 return ed.hover.set(None);
             }
             let sel = ed.selected.get_untracked();
-            let r = ed.with_canvas_untracked(|c| c.layers.iter().rev().find(|l| l.base.visible && hit(l, p.0, p.1, z)).filter(|l| !sel.contains(&l.base.id)).map(client_rect));
+            let r = ed.with_canvas_untracked(|c| {
+                c.layers
+                    .iter()
+                    .rev()
+                    .find(|l| l.base.visible && hit(l, p.0, p.1, z))
+                    .filter(|l| !sel.contains(&l.base.id))
+                    .map(client_rect)
+            });
             if ed.hover.get_untracked() != r {
                 ed.hover.set(r);
             }
@@ -1245,7 +1398,8 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
             }
             Gesture::Draw => {
                 if let Some((s, _, tool)) = ed.drawing.get_untracked() {
-                    let (x, y, snapped) = arrange::snap_to_right_angle(s, p, ed.snap_right.get_untracked(), e.shift_key());
+                    let (x, y, snapped) =
+                        arrange::snap_to_right_angle(s, p, ed.snap_right.get_untracked(), e.shift_key());
                     ed.drawing.set(Some((s, (x, y), tool)));
                     ed.guides.set(guide_for(snapped, s));
                 }
@@ -1283,12 +1437,21 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
                 ed.change(|c| apply_rotate(&frame, &origin, p, &mut c.layers), Some(&group));
             }
             Gesture::Handle { id, which, group } => {
-                let Some(l) = ed.with_canvas_untracked(|c| c.layers.iter().find(|l| l.base.id == id).cloned()) else { return };
+                let Some(l) = ed.with_canvas_untracked(|c| c.layers.iter().find(|l| l.base.id == id).cloned()) else {
+                    return;
+                };
                 let pts = line_points(&l);
-                let at = |i: usize| (l.base.x + pts.get(i * 2).copied().unwrap_or(0.0), l.base.y + pts.get(i * 2 + 1).copied().unwrap_or(0.0));
+                let at = |i: usize| {
+                    (
+                        l.base.x + pts.get(i * 2).copied().unwrap_or(0.0),
+                        l.base.y + pts.get(i * 2 + 1).copied().unwrap_or(0.0),
+                    )
+                };
                 let curve = l.kind() == "curve";
                 let end_i = if curve { 2 } else { 1 };
-                let snapped = |origin: (f64, f64)| arrange::snap_to_right_angle(origin, p, ed.snap_right.get_untracked(), e.shift_key());
+                let snapped = |origin: (f64, f64)| {
+                    arrange::snap_to_right_angle(origin, p, ed.snap_right.get_untracked(), e.shift_key())
+                };
                 let new_points: Option<(f64, f64, Vec<f64>, Option<f64>)> = match (which, curve) {
                     (0, _) => {
                         // Start: snap against the end, move the layer origin.
@@ -1348,7 +1511,12 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
             }
             Gesture::Marquee { start, .. } => {
                 let (bx, by) = ed.board_point(cx, cy);
-                ed.marquee.set(Some(Rect { x: start.0.min(bx), y: start.1.min(by), width: (bx - start.0).abs(), height: (by - start.1).abs() }));
+                ed.marquee.set(Some(Rect {
+                    x: start.0.min(bx),
+                    y: start.1.min(by),
+                    width: (bx - start.0).abs(),
+                    height: (by - start.1).abs(),
+                }));
             }
         }
     };
@@ -1365,7 +1533,13 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
                 let (ox, oy, z) = ed.origin();
                 // Board box → page box.
                 let pa = Rect { x: (a.x - ox) / z, y: (a.y - oy) / z, width: a.width / z, height: a.height / z };
-                let hits: Vec<String> = ed.with_canvas_untracked(|c| c.layers.iter().filter(|l| l.base.visible && !l.base.locked && arrange::intersects(client_rect(l), pa)).map(|l| l.base.id.clone()).collect());
+                let hits: Vec<String> = ed.with_canvas_untracked(|c| {
+                    c.layers
+                        .iter()
+                        .filter(|l| l.base.visible && !l.base.locked && arrange::intersects(client_rect(l), pa))
+                        .map(|l| l.base.id.clone())
+                        .collect()
+                });
                 let mut ids = keep;
                 for h in hits {
                     if !ids.contains(&h) {
@@ -1383,13 +1557,22 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
                 if dist < 8.0 {
                     return;
                 }
-                let line = |points: Vec<f64>| Line { points, stroke: "#2c332f".into(), stroke_width: 4.0, dash: None, line_cap: LineCap::Round };
+                let line = |points: Vec<f64>| Line {
+                    points,
+                    stroke: "#2c332f".into(),
+                    stroke_width: 4.0,
+                    dash: None,
+                    line_cap: LineCap::Round,
+                };
                 let shape = if tool == Tool::Line {
                     Shape::Line(line(vec![0.0, 0.0, dx.round(), dy.round()]))
                 } else {
                     let off = dist * 0.4 / 2.0;
                     let (cx, cy) = (dx / 2.0 + (-dy / dist) * off, dy / 2.0 + (dx / dist) * off);
-                    Shape::Curve(Curve { line: line(vec![0.0, 0.0, cx.round(), cy.round(), dx.round(), dy.round()]), curvature: 0.4 })
+                    Shape::Curve(Curve {
+                        line: line(vec![0.0, 0.0, cx.round(), cy.round(), dx.round(), dy.round()]),
+                        curvature: 0.4,
+                    })
                 };
                 ed.add(Layer { base: Base::at(uuid(), s.0.round(), s.1.round()), shape });
             }
@@ -1400,7 +1583,8 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
     let dbl_click = move |e: web_sys::MouseEvent| {
         let p = ed.page_point(f64::from(e.client_x()), f64::from(e.client_y()));
         let z = ed.zoom();
-        let top = ed.with_canvas_untracked(|c| c.layers.iter().rev().find(|l| l.base.visible && hit(l, p.0, p.1, z)).cloned());
+        let top = ed
+            .with_canvas_untracked(|c| c.layers.iter().rev().find(|l| l.base.visible && hit(l, p.0, p.1, z)).cloned());
         if let Some(l) = top.filter(|l| l.kind() == "text" && !l.base.locked) {
             ed.select(Some(l.base.id.clone()));
             ed.editing.set(Some(l.base.id));
@@ -1411,7 +1595,9 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
         e.prevent_default();
         let p = ed.page_point(f64::from(e.client_x()), f64::from(e.client_y()));
         let z = ed.zoom();
-        let top = ed.with_canvas_untracked(|c| c.layers.iter().rev().find(|l| l.base.visible && hit(l, p.0, p.1, z)).map(|l| l.base.id.clone()));
+        let top = ed.with_canvas_untracked(|c| {
+            c.layers.iter().rev().find(|l| l.base.visible && hit(l, p.0, p.1, z)).map(|l| l.base.id.clone())
+        });
         match top {
             Some(id) if !ed.selected.get_untracked().contains(&id) => ed.select(Some(id)),
             Some(_) => {}
@@ -1451,7 +1637,11 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
         match v.get("product").filter(|p| !p.is_null()) {
             Some(p) => {
                 let s = |k: &str| p.get(k).and_then(|x| x.as_str()).unwrap_or_default().to_string();
-                ed.place_image(PickerProduct { id: s("id"), code: s("code"), name: s("name"), image_url: Some(url.clone()) }, url, at);
+                ed.place_image(
+                    PickerProduct { id: s("id"), code: s("code"), name: s("name"), image_url: Some(url.clone()) },
+                    url,
+                    at,
+                );
             }
             None => ed.add_image(url, v.get("name").and_then(|n| n.as_str()).unwrap_or("Image").to_string(), at),
         }
@@ -1459,11 +1649,10 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
 
     // Keyboard shortcuts.
     let navigate = StoredValue::new_local(use_navigate());
-    let _keys = window_event_listener(leptos::ev::keydown, move |e| {
-        let typing = e
-            .target()
-            .and_then(|t| t.dyn_into::<web_sys::HtmlElement>().ok())
-            .is_some_and(|t| matches!(t.tag_name().as_str(), "INPUT" | "TEXTAREA" | "SELECT") || t.is_content_editable());
+    crate::kit::on_window(leptos::ev::keydown, move |e| {
+        let typing = e.target().and_then(|t| t.dyn_into::<web_sys::HtmlElement>().ok()).is_some_and(|t| {
+            matches!(t.tag_name().as_str(), "INPUT" | "TEXTAREA" | "SELECT") || t.is_content_editable()
+        });
         let m = e.ctrl_key() || e.meta_key();
         let key = e.key().to_lowercase();
         if m && key == "s" {
@@ -1509,12 +1698,15 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
             _ if m && (e.code() == "BracketRight" || e.code() == "BracketLeft") && has => {
                 e.prevent_default();
                 let up = e.code() == "BracketRight";
-                ed.move_layers(&sel, match (e.shift_key(), up) {
-                    (true, true) => LayerMove::Front,
-                    (true, false) => LayerMove::Back,
-                    (false, true) => LayerMove::Forward,
-                    (false, false) => LayerMove::Backward,
-                });
+                ed.move_layers(
+                    &sel,
+                    match (e.shift_key(), up) {
+                        (true, true) => LayerMove::Front,
+                        (true, false) => LayerMove::Back,
+                        (false, true) => LayerMove::Forward,
+                        (false, false) => LayerMove::Backward,
+                    },
+                );
             }
             _ if m && key == "0" => {
                 e.prevent_default();
@@ -1541,7 +1733,13 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
                     "arrowup" => (0.0, -step),
                     _ => (0.0, step),
                 };
-                let ids: Vec<String> = ed.with_canvas_untracked(|c| c.layers.iter().filter(|l| sel.contains(&l.base.id) && !l.base.locked).map(|l| l.base.id.clone()).collect());
+                let ids: Vec<String> = ed.with_canvas_untracked(|c| {
+                    c.layers
+                        .iter()
+                        .filter(|l| sel.contains(&l.base.id) && !l.base.locked)
+                        .map(|l| l.base.id.clone())
+                        .collect()
+                });
                 let group = format!("nudge:{}", ids.join(","));
                 ed.shift(&ids.iter().map(|i| (i.clone(), dx, dy)).collect::<Vec<_>>(), Some(&group));
             }
@@ -1563,7 +1761,7 @@ pub fn Studio(config: StudioConfig) -> impl IntoView {
             _ => {}
         }
     });
-    let _keyup = window_event_listener(leptos::ev::keyup, move |e| {
+    crate::kit::on_window(leptos::ev::keyup, move |e| {
         if e.code() == "Space" {
             ed.space.set(false);
         }
@@ -1715,24 +1913,30 @@ fn PageResizeHandles(ed: Ed) -> impl IntoView {
         let from = (f64::from(e.client_x()), f64::from(e.client_y()));
         resizing.set(true);
         let size = |v: f64| v.clamp(100.0, 8000.0).round();
-        let mv = wasm_bindgen::closure::Closure::<dyn FnMut(web_sys::PointerEvent)>::new(move |ev: web_sys::PointerEvent| {
-            let w = if edge == "s" { w0 } else { size(w0 + (f64::from(ev.client_x()) - from.0) / z) };
-            let h = if edge == "e" {
-                h0
-            } else if edge == "se" && ev.shift_key() {
-                size(w * h0 / w0)
-            } else {
-                size(h0 + (f64::from(ev.client_y()) - from.1) / z)
-            };
-            ed.change(
-                |c| {
-                    c.width = w;
-                    c.height = h;
-                },
-                Some("page-size"),
-            );
-            ed.view.set(View { zoom: Some(z), pan_x: v0.pan_x + (w - w0) * z / 2.0, pan_y: v0.pan_y + (h - h0) * z / 2.0 });
-        });
+        let mv = wasm_bindgen::closure::Closure::<dyn FnMut(web_sys::PointerEvent)>::new(
+            move |ev: web_sys::PointerEvent| {
+                let w = if edge == "s" { w0 } else { size(w0 + (f64::from(ev.client_x()) - from.0) / z) };
+                let h = if edge == "e" {
+                    h0
+                } else if edge == "se" && ev.shift_key() {
+                    size(w * h0 / w0)
+                } else {
+                    size(h0 + (f64::from(ev.client_y()) - from.1) / z)
+                };
+                ed.change(
+                    |c| {
+                        c.width = w;
+                        c.height = h;
+                    },
+                    Some("page-size"),
+                );
+                ed.view.set(View {
+                    zoom: Some(z),
+                    pan_x: v0.pan_x + (w - w0) * z / 2.0,
+                    pan_y: v0.pan_y + (h - h0) * z / 2.0,
+                });
+            },
+        );
         let el2 = el.clone();
         let mv_fn: js_sys::Function = mv.as_ref().unchecked_ref::<js_sys::Function>().clone();
         let up = wasm_bindgen::closure::Closure::<dyn FnMut()>::new(move || {

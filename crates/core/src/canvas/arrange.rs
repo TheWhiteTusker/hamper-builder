@@ -99,8 +99,14 @@ pub fn snap(b: Box, others: &[Box], page_w: f64, page_h: f64, threshold: f64) ->
         }
         best
     };
-    let v = axis(stops(b.x, b.width), stops(0.0, page_w).into_iter().chain(others.iter().flat_map(|o| stops(o.x, o.width))).collect());
-    let h = axis(stops(b.y, b.height), stops(0.0, page_h).into_iter().chain(others.iter().flat_map(|o| stops(o.y, o.height))).collect());
+    let v = axis(
+        stops(b.x, b.width),
+        stops(0.0, page_w).into_iter().chain(others.iter().flat_map(|o| stops(o.x, o.width))).collect(),
+    );
+    let h = axis(
+        stops(b.y, b.height),
+        stops(0.0, page_h).into_iter().chain(others.iter().flat_map(|o| stops(o.y, o.height))).collect(),
+    );
     Snap {
         dx: v.map_or(0.0, |s| s.0),
         dy: h.map_or(0.0, |s| s.0),
@@ -196,7 +202,12 @@ pub enum Snapped {
 
 /// Snaps `target` to horizontal or vertical around `origin` when drawing or
 /// editing lines; with Shift, to 45° steps.
-pub fn snap_to_right_angle(origin: (f64, f64), target: (f64, f64), enabled: bool, shift: bool) -> (f64, f64, Option<Snapped>) {
+pub fn snap_to_right_angle(
+    origin: (f64, f64),
+    target: (f64, f64),
+    enabled: bool,
+    shift: bool,
+) -> (f64, f64, Option<Snapped>) {
     let (threshold_px, threshold_deg) = (18.0, 7.0);
     let (dx, dy) = (target.0 - origin.0, target.1 - origin.1);
     let dist = dx.hypot(dy);
@@ -267,7 +278,13 @@ mod tests {
     fn snapping_and_aligning() {
         let s = snap(Box { x: 447.0, y: 212.0, width: 100.0, height: 50.0 }, &[], 1000.0, 1000.0, 8.0);
         assert_eq!(s, Snap { dx: 3.0, dy: 0.0, vertical: vec![500.0], horizontal: vec![] });
-        let t = snap(Box { x: 305.0, y: 600.0, width: 50.0, height: 50.0 }, &[Box { x: 200.0, y: 0.0, width: 100.0, height: 20.0 }], 1000.0, 1000.0, 8.0);
+        let t = snap(
+            Box { x: 305.0, y: 600.0, width: 50.0, height: 50.0 },
+            &[Box { x: 200.0, y: 0.0, width: 100.0, height: 20.0 }],
+            1000.0,
+            1000.0,
+            8.0,
+        );
         assert_eq!((t.dx, t.vertical), (-5.0, vec![300.0]));
         let b = Box { x: 100.0, y: 100.0, width: 200.0, height: 100.0 };
         assert_eq!(align_to_page(b, 1000.0, 800.0, PageAlign::Center), (300.0, 0.0));

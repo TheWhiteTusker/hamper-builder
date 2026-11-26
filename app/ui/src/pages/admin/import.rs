@@ -7,7 +7,7 @@ use super::Report;
 use crate::data::{load_cost_rows, load_settings};
 use crate::db::{self, Q, insert, insert_returning};
 use crate::kit::{dstr, product_href};
-use crate::pages::calculator::line_row;
+use crate::pages::calculator::{line_row, reprice_varieties};
 use lattice_core::Decimal;
 use lattice_core::api::ApiError;
 use lattice_core::colors::color_code;
@@ -19,7 +19,9 @@ use lattice_core::lenient;
 use lattice_core::mrp::mrp_limit;
 use lattice_core::product_code::parse_product_code;
 use lattice_core::settings::merge_list;
-use lattice_core::sheets::product::{CostingPlan, ExistingCosting, SheetCost, plan_sheet_costing, read_cost_lines, read_overheads};
+use lattice_core::sheets::product::{
+    CostingPlan, ExistingCosting, SheetCost, plan_sheet_costing, read_cost_lines, read_overheads,
+};
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -179,15 +181,31 @@ struct CostedRow {
     product_cost_sheets: Vec<SheetRow>,
 }
 
-/// One plan per product whose costing the Cost Lines tab changes; sets its
-/// cost_price and margin. Planned on the dry run, so warnings show first.
-async fn plan_costings(result: &mut ImportResult, products: Option<&Grid>, lines: Option<&Grid>) -> Result<(Vec<CostingPlan>, Vec<String>), ApiError> {
-    let mut errors = Vec::new();
+/// What the Cost Lines tab changes: a plan per product (its cost_price and
+/// margin set), the Rates page wastage % it changes, and the errors that stop it.
+#[derive(Default)]
+struct Planned {
+    plans: Vec<CostingPlan>,
+    wastage: Vec<(String, Decimal)>,
+    errors: Vec<String>,
+}
+
+/// Planned on the dry run, so warnings show first.
+async fn plan_costings(
+    result: &mut ImportResult,
+    products: Option<&Grid>,
+    lines: Option<&Grid>,
+) -> Result<Planned, ApiError> {
+    let mut out = Planned::default();
     if body(lines).is_empty() {
-        return Ok((Vec::new(), errors));
+        return Ok(out);
     }
     let stages = build_cost_tree(&load_cost_rows().await?);
-    let sheet_lines = read_cost_lines(lines, &stages, &mut result.warnings, &mut errors);
+    let sheet_lines = read_cost_lines(lines, &stages, &mut result.warnings, &mut out.errors, &mut out.wastage);
+    if !out.wastage.is_empty() && !db::me().role.is_admin() {
+        out.errors
+            .push("Only an admin can change a rate's wastage, because it updates the products that use it.".into());
+    }
     let overheads: HashMap<String, StageOverheads> =
         body(products).into_iter().map(|row| (cell(Some(row), 0), read_overheads(row))).collect();
     let strays: Vec<String> = sheet_lines.keys().filter(|c| !overheads.contains_key(*c)).cloned().collect();
@@ -197,9 +215,10 @@ async fn plan_costings(result: &mut ImportResult, products: Option<&Grid>, lines
             strays.iter().take(8).cloned().collect::<Vec<_>>().join(", ")
         ));
     }
-    let costed: Vec<String> = result.products.iter().filter(|p| sheet_lines.contains_key(&p.code)).map(|p| p.code.clone()).collect();
-    if costed.is_empty() || !errors.is_empty() {
-        return Ok((Vec::new(), errors));
+    let costed: Vec<String> =
+        result.products.iter().filter(|p| sheet_lines.contains_key(&p.code)).map(|p| p.code.clone()).collect();
+    if costed.is_empty() || !out.errors.is_empty() {
+        return Ok(out);
     }
     // A live product wins over binned copies of its code.
     let mut rows: HashMap<String, CostedRow> = HashMap::new();
@@ -225,7 +244,8 @@ async fn plan_costings(result: &mut ImportResult, products: Option<&Grid>, lines
             lines: s.product_cost_lines.clone(),
         });
         let empty = StageOverheads::new();
-        let sheet_cost = SheetCost { code: &p.code, cost_price: p.cost_price, markup_pct: p.markup_pct.unwrap_or_default() };
+        let sheet_cost =
+            SheetCost { code: &p.code, cost_price: p.cost_price, markup_pct: p.markup_pct.unwrap_or_default() };
         let Some(plan) = plan_sheet_costing(
             &sheet_cost,
             sheet_lines.get(&p.code).map(Vec::as_slice).unwrap_or_default(),
@@ -240,12 +260,30 @@ async fn plan_costings(result: &mut ImportResult, products: Option<&Grid>, lines
         if let Some(limit) = mrp_limit(&plan.lines, Some(&plan.overheads), plan.totals.total_cost, gst)
             && p.default_sp > limit
         {
-            warnings.push(format!("{}: SP ₹{} is above its MRP limit of ₹{}.", p.code, dstr(p.default_sp), dstr(limit)));
+            warnings.push(format!(
+                "{}: SP ₹{} is above its MRP limit of ₹{}.",
+                p.code,
+                dstr(p.default_sp),
+                dstr(limit)
+            ));
         }
         plans.insert(p.code.clone(), plan);
     }
     result.warnings = warnings;
-    Ok((plans.into_values().collect(), errors))
+    out.plans = plans.into_values().collect();
+    Ok(out)
+}
+
+/// Writes the sheet's wastage changes to the Rates page and reprices every
+/// product using those rates. Run before the sheet's own products are saved,
+/// so their typed prices land last.
+async fn save_sheet_wastage(wastage: &[(String, Decimal)]) -> Result<(), ApiError> {
+    for (id, pct) in wastage {
+        Q::from("cost_varieties").eq("id", id).update(&json!({ "default_wastage_pct": pct }), None).await?;
+    }
+    let ids: Vec<String> = wastage.iter().map(|(id, _)| id.clone()).collect();
+    reprice_varieties(&ids).await.map_err(|e| ApiError::Server(format!("Wastage saved, but repricing failed: {e}")))?;
+    Ok(())
 }
 
 /// Writes the plans once their products are saved (new ones included).
@@ -262,7 +300,9 @@ async fn save_sheet_costing(plans: &[CostingPlan], products: &[ProductRow]) -> R
     let mut product_id: HashMap<String, String> = HashMap::new();
     for batch in plans.chunks(200) {
         let codes: Vec<&str> = batch.iter().map(|p| p.code.as_str()).collect();
-        for r in Q::from("products").select("id,code").in_list("code", &codes).null("deleted_at").rows::<IdCode>().await? {
+        for r in
+            Q::from("products").select("id,code").in_list("code", &codes).null("deleted_at").rows::<IdCode>().await?
+        {
             product_id.insert(r.code, r.id);
         }
     }
@@ -295,7 +335,8 @@ async fn save_sheet_costing(plans: &[CostingPlan], products: &[ProductRow]) -> R
         })
         .collect();
     in_chunks("product_cost_sheets", &upserts, Some("id")).await?;
-    let fresh: Vec<&CostingPlan> = plans.iter().filter(|p| p.sheet_id.is_none() && product_id.contains_key(&p.code)).collect();
+    let fresh: Vec<&CostingPlan> =
+        plans.iter().filter(|p| p.sheet_id.is_none() && product_id.contains_key(&p.code)).collect();
     #[derive(Deserialize)]
     struct NewSheet {
         id: String,
@@ -314,7 +355,12 @@ async fn save_sheet_costing(plans: &[CostingPlan], products: &[ProductRow]) -> R
     }
     let lines: Vec<Value> = plans
         .iter()
-        .flat_map(|p| sheet_id.get(&p.code).map(|id| p.lines.iter().map(|l| line_row(l, id)).collect::<Vec<_>>()).unwrap_or_default())
+        .flat_map(|p| {
+            sheet_id
+                .get(&p.code)
+                .map(|id| p.lines.iter().map(|l| line_row(l, id)).collect::<Vec<_>>())
+                .unwrap_or_default()
+        })
         .collect();
     in_chunks("product_cost_lines", &lines, None).await
 }
@@ -350,21 +396,33 @@ pub async fn run_import(input: ImportInput, apply: bool, sheet: Option<SheetMode
     }
 }
 
-async fn import(input: ImportInput, apply: bool, sheet: Option<SheetMode>, cost_lines: Option<Grid>) -> Result<Report, ApiError> {
+async fn import(
+    input: ImportInput,
+    apply: bool,
+    sheet: Option<SheetMode>,
+    cost_lines: Option<Grid>,
+) -> Result<Report, ApiError> {
     let mut result = build_import(&input);
     let mut costings = Vec::new();
+    let mut wastage = Vec::new();
     if let Some(mode) = sheet {
         if let Some(invalid) = prepare_sheet_products(&mut result, mode).await? {
             return Ok(Report::failed(invalid));
         }
-        let (plans, errors) = plan_costings(&mut result, input.products.as_ref(), cost_lines.as_ref()).await?;
-        if !errors.is_empty() {
-            return Ok(Report::failed(errors.iter().take(8).cloned().collect::<Vec<_>>().join(" ")));
+        let planned = plan_costings(&mut result, input.products.as_ref(), cost_lines.as_ref()).await?;
+        if !planned.errors.is_empty() {
+            return Ok(Report::failed(planned.errors.iter().take(8).cloned().collect::<Vec<_>>().join(" ")));
         }
-        costings = plans;
+        costings = planned.plans;
+        wastage = planned.wastage;
     }
     if !apply {
-        return Ok(Report { ok: true, counts: counts(&result, costings.len()), warnings: result.warnings, ..Default::default() });
+        return Ok(Report {
+            ok: true,
+            counts: counts(&result, costings.len()),
+            warnings: result.warnings,
+            ..Default::default()
+        });
     }
 
     // ---- categories
@@ -377,8 +435,13 @@ async fn import(input: ImportInput, apply: bool, sheet: Option<SheetMode>, cost_
         id: String,
         name: String,
     }
-    let category_id: HashMap<String, String> =
-        Q::from("categories").select("id,name").rows::<Named>().await?.into_iter().map(|c| (c.name.trim().to_lowercase(), c.id)).collect();
+    let category_id: HashMap<String, String> = Q::from("categories")
+        .select("id,name")
+        .rows::<Named>()
+        .await?
+        .into_iter()
+        .map(|c| (c.name.trim().to_lowercase(), c.id))
+        .collect();
 
     // ---- products
     let mut added_codes = Vec::new();
@@ -389,10 +452,16 @@ async fn import(input: ImportInput, apply: bool, sheet: Option<SheetMode>, cost_
             .map(|p| {
                 let mut m = obj(json!(p));
                 let cat = m.remove("category_name").and_then(|v| v.as_str().map(str::to_string));
-                m.insert("category_id".into(), json!(cat.and_then(|c| category_id.get(&c.trim().to_lowercase()).cloned())));
+                m.insert(
+                    "category_id".into(),
+                    json!(cat.and_then(|c| category_id.get(&c.trim().to_lowercase()).cloned())),
+                );
                 m
             })
             .collect();
+        if !wastage.is_empty() {
+            save_sheet_wastage(&wastage).await?;
+        }
         added_codes = save_by_code("products", rows).await?;
         save_sheet_costing(&costings, &result.products).await?;
     }
@@ -401,11 +470,20 @@ async fn import(input: ImportInput, apply: bool, sheet: Option<SheetMode>, cost_
     if !result.hampers.is_empty() {
         save_by_code("hampers", to_rows(json!(result.hampers)).into_iter().map(obj).collect()).await?;
     }
-    let hamper_id: HashMap<String, String> = Q::from("hampers").select("id,code").rows::<IdCode>().await?.into_iter().map(|h| (h.code, h.id)).collect();
-    let product_id: HashMap<String, String> = Q::from("products").select("id,code").rows::<IdCode>().await?.into_iter().map(|p| (p.code, p.id)).collect();
+    let hamper_id: HashMap<String, String> =
+        Q::from("hampers").select("id,code").rows::<IdCode>().await?.into_iter().map(|h| (h.code, h.id)).collect();
+    let product_id: HashMap<String, String> =
+        Q::from("products").select("id,code").rows::<IdCode>().await?.into_iter().map(|p| (p.code, p.id)).collect();
     if !result.hamper_items.is_empty() {
         // Replace the lines of every hamper imported, so a re-run doesn't append a second copy.
-        let touched: Vec<String> = result.hamper_items.iter().map(|i| i.hamper_code.clone()).collect::<HashSet<_>>().into_iter().filter_map(|c| hamper_id.get(&c).cloned()).collect();
+        let touched: Vec<String> = result
+            .hamper_items
+            .iter()
+            .map(|i| i.hamper_code.clone())
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .filter_map(|c| hamper_id.get(&c).cloned())
+            .collect();
         for batch in touched.chunks(CHUNK) {
             Q::from("hamper_items").in_list("hamper_id", batch).delete().await?;
         }
@@ -433,9 +511,17 @@ async fn import(input: ImportInput, apply: bool, sheet: Option<SheetMode>, cost_
         id: String,
         doc_no: String,
     }
-    let quote_id: HashMap<String, String> = Q::from("quotes").select("id,doc_no").rows::<Doc>().await?.into_iter().map(|q| (q.doc_no, q.id)).collect();
+    let quote_id: HashMap<String, String> =
+        Q::from("quotes").select("id,doc_no").rows::<Doc>().await?.into_iter().map(|q| (q.doc_no, q.id)).collect();
     if !result.quote_items.is_empty() {
-        let touched: Vec<String> = result.quote_items.iter().map(|i| i.doc_no.clone()).collect::<HashSet<_>>().into_iter().filter_map(|d| quote_id.get(&d).cloned()).collect();
+        let touched: Vec<String> = result
+            .quote_items
+            .iter()
+            .map(|i| i.doc_no.clone())
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .filter_map(|d| quote_id.get(&d).cloned())
+            .collect();
         for batch in touched.chunks(CHUNK) {
             Q::from("quote_items").in_list("quote_id", batch).delete().await?;
         }
@@ -458,20 +544,49 @@ async fn import(input: ImportInput, apply: bool, sheet: Option<SheetMode>, cost_
     let s = load_settings().await?;
     let r = &result;
     let mut updates = vec![
-        ("collections", json!(merge_list(&s.collections, &r.hampers.iter().map(|h| h.collection.clone()).collect::<Vec<_>>()))),
+        (
+            "collections",
+            json!(merge_list(&s.collections, &r.hampers.iter().map(|h| h.collection.clone()).collect::<Vec<_>>())),
+        ),
         ("sources", json!(merge_list(&s.sources, &r.products.iter().map(|p| p.source.clone()).collect::<Vec<_>>()))),
-        ("hamper_statuses", json!(merge_list(&s.hamper_statuses, &r.hampers.iter().map(|h| Some(h.status.clone())).collect::<Vec<_>>()))),
-        ("quote_statuses", json!(merge_list(&s.quote_statuses, &r.quotes.iter().map(|q| Some(q.status.clone())).collect::<Vec<_>>()))),
-        ("quote_structures", json!(merge_list(&s.quote_structures, &r.quotes.iter().map(|q| Some(q.quote_structure.clone())).collect::<Vec<_>>()))),
-        ("validity_options", json!(merge_list(&s.validity_options, &r.quotes.iter().map(|q| q.validity.clone()).collect::<Vec<_>>()))),
+        (
+            "hamper_statuses",
+            json!(merge_list(
+                &s.hamper_statuses,
+                &r.hampers.iter().map(|h| Some(h.status.clone())).collect::<Vec<_>>()
+            )),
+        ),
+        (
+            "quote_statuses",
+            json!(merge_list(&s.quote_statuses, &r.quotes.iter().map(|q| Some(q.status.clone())).collect::<Vec<_>>())),
+        ),
+        (
+            "quote_structures",
+            json!(merge_list(
+                &s.quote_structures,
+                &r.quotes.iter().map(|q| Some(q.quote_structure.clone())).collect::<Vec<_>>()
+            )),
+        ),
+        (
+            "validity_options",
+            json!(merge_list(&s.validity_options, &r.quotes.iter().map(|q| q.validity.clone()).collect::<Vec<_>>())),
+        ),
         (
             "detail_modes",
             json!(merge_list(
                 &s.detail_modes,
-                &std::iter::once(r.default_detail_mode.clone()).chain(r.quote_items.iter().map(|i| i.detail_mode.clone())).collect::<Vec<_>>()
+                &std::iter::once(r.default_detail_mode.clone())
+                    .chain(r.quote_items.iter().map(|i| i.detail_mode.clone()))
+                    .collect::<Vec<_>>()
             )),
         ),
-        ("packaging_treatments", json!(merge_list(&s.packaging_treatments, &r.quote_items.iter().map(|i| i.packaging_treatment.clone()).collect::<Vec<_>>()))),
+        (
+            "packaging_treatments",
+            json!(merge_list(
+                &s.packaging_treatments,
+                &r.quote_items.iter().map(|i| i.packaging_treatment.clone()).collect::<Vec<_>>()
+            )),
+        ),
     ];
     if let Some(d) = &r.default_detail_mode {
         updates.push(("default_detail_mode", json!(d)));
@@ -480,7 +595,18 @@ async fn import(input: ImportInput, apply: bool, sheet: Option<SheetMode>, cost_
     insert("app_settings", &rows, Some("key"), None).await?;
     // Numbering continues from the highest imported H### / LLQT-### / LLPI-###.
     db::rpc::<_, Value>("sync_doc_counters", &json!({})).await?;
-    db::cache_drop(&["products", "catalog", "hampers", "quotes", "categories", "settings", "dashboard", "quote_options", "cost_rows"]).await;
+    db::cache_drop(&[
+        "products",
+        "catalog",
+        "hampers",
+        "quotes",
+        "categories",
+        "settings",
+        "dashboard",
+        "quote_options",
+        "cost_rows",
+    ])
+    .await;
 
     let added = result
         .products
@@ -488,5 +614,12 @@ async fn import(input: ImportInput, apply: bool, sheet: Option<SheetMode>, cost_
         .filter(|p| added_codes.contains(&p.code))
         .map(|p| (format!("{} · {}", p.code, p.name), Some(product_href(&p.code))))
         .collect();
-    Ok(Report { ok: true, applied: true, counts: counts(&result, costings.len()), warnings: result.warnings, added, ..Default::default() })
+    Ok(Report {
+        ok: true,
+        applied: true,
+        counts: counts(&result, costings.len()),
+        warnings: result.warnings,
+        added,
+        ..Default::default()
+    })
 }

@@ -42,11 +42,23 @@ pub fn Tabs(master: bool) -> impl IntoView {
         )
     };
     let here = window().location().pathname().unwrap_or_default();
+    let history = here.starts_with("/cost-calculator/history");
+    // The product open in the calculator or its history; None on a blank calculator or Rates.
+    let rest = here.trim_start_matches("/cost-calculator").trim_start_matches('/');
+    let rest = rest.strip_prefix("history").unwrap_or(rest).trim_start_matches('/');
+    let code = (!master && !rest.is_empty() && !rest.starts_with("master")).then(|| crate::kit::decode_code(rest));
+    // On a product's costing the tabs stay on that product.
+    let costing =
+        if master { "/products/new".to_string() } else { code.as_deref().map_or(here, crate::kit::costing_href) };
     view! {
         <div class="flex items-center gap-1 rounded-lg bg-slate-100 p-1">
-            <A href=if master { "/products/new".to_string() } else { here } attr:class=tab(!master)>
+            <A href=costing attr:class=tab(!master && !history)>
                 {if master { "New product" } else { "Costing" }}
             </A>
+            // This product's changes only. History is admin-only (0026_product_history.sql).
+            {code.filter(|_| crate::db::me().role.is_admin()).map(|c| view! {
+                <A href=crate::kit::history_href(&c) attr:class=tab(history)>"History"</A>
+            })}
             <A href="/cost-calculator/master" attr:class=tab(master)>"Rates"</A>
         </div>
     }
@@ -150,6 +162,20 @@ pub fn CalculatorView(calc: Calc) -> impl IntoView {
         listener.with_value(|l| {
             let _ = document().remove_event_listener_with_callback_and_bool("click", l.as_ref().unchecked_ref(), true);
         });
+    });
+
+    // A shortcut changing screen (shortcuts.rs): ask first, like a link.
+    // Forward is held until the changes are saved.
+    crate::leave::guard(move |to| {
+        if !dirty.get_untracked() {
+            return true;
+        }
+        match to {
+            crate::leave::LeaveTo::Back => leaving.set(Some(None)),
+            crate::leave::LeaveTo::Path(p) => leaving.set(Some(Some(p.clone()))),
+            crate::leave::LeaveTo::Forward => {}
+        }
+        false
     });
 
     let save_now = move || start_save(calc, navigate);
@@ -1010,10 +1036,10 @@ fn StageSection(calc: Calc, stage: StageNode) -> impl IntoView {
                 if free_entry() {
                     "(Type Category → Subcategory → Variety, rate & unit — new items are added to the Rates page on save; + MRP for items with a printed MRP)".into()
                 } else if has_cats {
-                    "(Category → Subcategory → Variety — Cost Price = Rate × Qty; + MRP for items with a printed MRP)"
+                    "(Category → Subcategory → Variety — Cost Price = Rate × Qty + wastage; + MRP for items with a printed MRP)"
                         .into()
                 } else {
-                    "(Free-text description, rate & quantity — Cost Price = Rate × Qty; + MRP for items with a printed MRP)".into()
+                    "(Free-text description, rate & quantity — Cost Price = Rate × Qty + wastage; + MRP for items with a printed MRP)".into()
                 }
             } else if has_cats {
                 "(Category → Subcategory → Variety, dimensions & wastage)".into()
@@ -1093,7 +1119,8 @@ fn StageSection(calc: Calc, stage: StageNode) -> impl IntoView {
                                     view! { <th class="min-w-21.25 p-2">"Rate"</th><th class="min-w-22.5 p-2">"Unit"</th> }.into_any()
                                 }}
                                 <th class="min-w-16.25 p-2">"Qty"</th>
-                                <th class="min-w-18.75 p-2" title=is_bought.then_some("Printed MRP per piece, GST included")>{if is_bought { "MRP" } else { "Wastage %" }}</th>
+                                {is_bought.then(|| view! { <th class="min-w-18.75 p-2" title="Printed MRP per piece, GST included">"MRP"</th> })}
+                                <th class="min-w-18.75 p-2">"Wastage %"</th>
                                 <th class="min-w-23.75 p-2 text-right">"Total Cost"</th>
                                 <th class="min-w-25 p-2 text-center">"Actions"</th>
                             </tr>
@@ -1198,20 +1225,17 @@ fn LineRow(calc: Calc, stage: StoredValue<StageNode>, key: u64, free_entry: Sign
                 }.into_any()
             }}
             <td class="p-2"><NumInput value=Signal::derive(move || line.get().qty) min="0" on_change=move |v| calc.update(key, |l| l.qty = Some(v.unwrap_or_default())) /></td>
-            {if is_bought {
-                view! { <MrpCell calc=calc key=key line=line /> }.into_any()
-            } else {
-                view! {
-                    {move || if from_master() {
-                        view! {
-                            <td class="p-2 text-center font-mono text-xs font-semibold" title="Set on the Rates page">
-                                {move || { let l = line.get(); if l.variety_name.as_deref().is_some_and(|v| !v.is_empty()) { format!("{}%", num_text(l.wastage_pct)) } else { "—".into() } }}
-                            </td>
-                        }.into_any()
-                    } else {
-                        view! { <td class="p-2"><NumInput value=Signal::derive(move || Some(line.get().wastage_pct)) min="0" on_change=move |v| calc.update(key, |l| l.wastage_pct = v.unwrap_or_default()) /></td> }.into_any()
-                    }}
-                }.into_any()
+            {is_bought.then(|| view! { <MrpCell calc=calc key=key line=line /> })}
+            {move || {
+                let linked = line.with(|l| l.cost_variety_id.is_some());
+                if from_master() && !linked {
+                    view! { <td class="p-2 text-center font-mono text-xs font-semibold">"—"</td> }.into_any()
+                } else if linked {
+                    // Wastage belongs to the rate: editing it here changes it on the Rates page when saved.
+                    view! { <td class="p-2" title="Saving also changes this on the Rates page"><NumInput value=Signal::derive(move || Some(line.get().wastage_pct)) min="0" on_change=move |v| calc.set_wastage(key, v.unwrap_or_default()) /></td> }.into_any()
+                } else {
+                    view! { <td class="p-2"><NumInput value=Signal::derive(move || Some(line.get().wastage_pct)) min="0" on_change=move |v| calc.update(key, |l| l.wastage_pct = v.unwrap_or_default()) /></td> }.into_any()
+                }
             }}
             <td class="p-2 text-right font-mono font-semibold text-(--color-ink)">{move || format_money(Some(line.get().line_total))}</td>
             <td class="p-2 text-center">

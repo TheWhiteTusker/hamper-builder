@@ -113,15 +113,25 @@ fn now() -> OffsetDateTime {
 }
 
 fn days_left(deleted_ms: i64) -> i64 {
-    let deleted = OffsetDateTime::from_unix_timestamp_nanos(i128::from(deleted_ms) * 1_000_000).unwrap_or(OffsetDateTime::UNIX_EPOCH);
+    let deleted = OffsetDateTime::from_unix_timestamp_nanos(i128::from(deleted_ms) * 1_000_000)
+        .unwrap_or(OffsetDateTime::UNIX_EPOCH);
     calculate_expiry(deleted, now()).days_remaining
 }
 
 async fn load_bin() -> Result<Vec<BinItem>, ApiError> {
     let (h, p, i) = (
-        Q::from("hampers").select("id,code,name,collection,status,final_catalogue_sp,image_url,deleted_at").not_null("deleted_at").order_desc("deleted_at"),
-        Q::from("products").select("id,code,name,default_sp,cost_price,image_url,deleted_at,categories(name)").not_null("deleted_at").order_desc("deleted_at"),
-        Q::from("product_images").select("id,product_id,url,storage_path,color,is_primary,deleted_at,products(name,code)").not_null("deleted_at").order_desc("deleted_at"),
+        Q::from("hampers")
+            .select("id,code,name,collection,status,final_catalogue_sp,image_url,deleted_at")
+            .not_null("deleted_at")
+            .order_desc("deleted_at"),
+        Q::from("products")
+            .select("id,code,name,default_sp,cost_price,image_url,deleted_at,categories(name)")
+            .not_null("deleted_at")
+            .order_desc("deleted_at"),
+        Q::from("product_images")
+            .select("id,product_id,url,storage_path,color,is_primary,deleted_at,products(name,code)")
+            .not_null("deleted_at")
+            .order_desc("deleted_at"),
     );
     let (hampers, products, images) = join!(h.rows::<HamperRow>(), p.rows::<ProductRow>(), i.rows::<ImageRow>());
     let mut items: Vec<BinItem> = Vec::new();
@@ -141,7 +151,8 @@ async fn load_bin() -> Result<Vec<BinItem>, ApiError> {
         });
     }
     for p in products? {
-        let cat = p.categories.and_then(|c| c.name).filter(|c| !c.is_empty()).map(|c| format!("{c} • ")).unwrap_or_default();
+        let cat =
+            p.categories.and_then(|c| c.name).filter(|c| !c.is_empty()).map(|c| format!("{c} • ")).unwrap_or_default();
         items.push(BinItem {
             subtitle: format!("{cat}SP: ₹{} • Cost: ₹{}", dstr(p.default_sp), dstr(p.cost_price)),
             deleted_ms: ms_of(&p.deleted_at),
@@ -160,7 +171,11 @@ async fn load_bin() -> Result<Vec<BinItem>, ApiError> {
         let color = img.color.filter(|c| !c.is_empty()).map(|c| format!(" • Color: {c}")).unwrap_or_default();
         items.push(BinItem {
             title: name.as_ref().map_or_else(|| "Product Photo".to_string(), |n| format!("Photo for {n}")),
-            subtitle: format!("Product: {} ({}){color}", name.as_deref().unwrap_or("Unknown"), code.as_deref().unwrap_or("")),
+            subtitle: format!(
+                "Product: {} ({}){color}",
+                name.as_deref().unwrap_or("Unknown"),
+                code.as_deref().unwrap_or("")
+            ),
             deleted_ms: ms_of(&img.deleted_at),
             id: img.id,
             kind: Kind::Image,
@@ -200,7 +215,8 @@ async fn restore(item: &BinItem) -> Result<String, ApiError> {
             if item.kind == Kind::Product && !role.is_admin() {
                 return Err(ApiError::Forbidden("Only administrators can restore products.".into()));
             }
-            let row = Q::from(table).select("id,code,name").eq("id", &item.id).not_null("deleted_at").one::<Coded>().await?;
+            let row =
+                Q::from(table).select("id,code,name").eq("id", &item.id).not_null("deleted_at").one::<Coded>().await?;
             let Some(row) = row else {
                 return Err(ApiError::NotFound(format!("{} not found in Bin.", item.kind.label())));
             };
@@ -208,7 +224,10 @@ async fn restore(item: &BinItem) -> Result<String, ApiError> {
             let taken = Q::from(table).select("id").eq("code", &row.code).null("deleted_at").one::<Value>().await?;
             if taken.is_some() {
                 return Err(ApiError::Conflict(if item.kind == Kind::Hamper {
-                    format!("Cannot restore: an active hamper with code \"{}\" already exists. Please rename or delete it first.", row.code)
+                    format!(
+                        "Cannot restore: an active hamper with code \"{}\" already exists. Please rename or delete it first.",
+                        row.code
+                    )
                 } else {
                     format!("Cannot restore: an active product with code \"{}\" already exists.", row.code)
                 }));
@@ -225,7 +244,13 @@ async fn restore(item: &BinItem) -> Result<String, ApiError> {
                 product_id: String,
                 url: String,
             }
-            let Some(img) = Q::from("product_images").select("id,product_id,url").eq("id", &item.id).not_null("deleted_at").one::<Img>().await? else {
+            let Some(img) = Q::from("product_images")
+                .select("id,product_id,url")
+                .eq("id", &item.id)
+                .not_null("deleted_at")
+                .one::<Img>()
+                .await?
+            else {
                 return Err(ApiError::NotFound("Photo not found in Bin.".into()));
             };
             Q::from("product_images").eq("id", &item.id).update(&json!({ "deleted_at": null }), None).await?;
@@ -258,8 +283,12 @@ async fn delete_for_good(kind: Kind, id: &str) -> Result<(), ApiError> {
             Q::from("hampers").eq("id", id).delete().await?;
         }
         Kind::Product => {
-            let images: Vec<StoredPath> = Q::from("product_images").select("storage_path").eq("product_id", id).rows().await?;
-            remove_files(&images.into_iter().filter_map(|i| i.storage_path).filter(|p| !p.is_empty()).collect::<Vec<_>>()).await?;
+            let images: Vec<StoredPath> =
+                Q::from("product_images").select("storage_path").eq("product_id", id).rows().await?;
+            remove_files(
+                &images.into_iter().filter_map(|i| i.storage_path).filter(|p| !p.is_empty()).collect::<Vec<_>>(),
+            )
+            .await?;
             remove_files(&list_files(&format!("products/{id}")).await?).await?;
             Q::from("product_images").eq("product_id", id).delete().await?;
             Q::from("products").eq("id", id).delete().await?;
@@ -384,11 +413,15 @@ pub fn Bin() -> impl IntoView {
     // Drops rows on screen; a product deleted for good takes its binned photos.
     let drop_rows = move |gone: &dyn Fn(&BinItem) -> bool| {
         bin.patch(|list| {
-            let products: Vec<String> = list.iter().filter(|i| i.kind == Kind::Product && gone(i)).map(|i| i.id.clone()).collect();
-            list.retain(|i| !gone(i) && !(i.kind == Kind::Image && i.product_id.as_ref().is_some_and(|p| products.contains(p))));
+            let products: Vec<String> =
+                list.iter().filter(|i| i.kind == Kind::Product && gone(i)).map(|i| i.id.clone()).collect();
+            list.retain(|i| {
+                !gone(i) && !(i.kind == Kind::Image && i.product_id.as_ref().is_some_and(|p| products.contains(p)))
+            });
         });
     };
-    let run = move |work: std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, ApiError>>>>, gone: Box<dyn Fn(&BinItem) -> bool>| {
+    let run = move |work: std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, ApiError>>>>,
+                    gone: Box<dyn Fn(&BinItem) -> bool>| {
         pending.set(true);
         spawn_local(async move {
             let res = work.await;
@@ -408,7 +441,10 @@ pub fn Bin() -> impl IntoView {
         run(Box::pin(async move { restore(&item).await }), Box::new(move |i| i.id == id && i.kind == kind));
     };
     let on_delete = move |item: BinItem| {
-        if !confirm(&format!("Permanently delete \"{}\"? This will delete all its data and storage files and CANNOT be undone.", item.title)) {
+        if !confirm(&format!(
+            "Permanently delete \"{}\"? This will delete all its data and storage files and CANNOT be undone.",
+            item.title
+        )) {
             return;
         }
         let (id, kind) = (item.id.clone(), item.kind);
@@ -433,7 +469,9 @@ pub fn Bin() -> impl IntoView {
             Some(Kind::Product) => "all deleted products",
             Some(Kind::Image) => "all deleted photos",
         };
-        if !confirm(&format!("Permanently delete {scope} from the Bin? This will delete all records and stored images permanently and cannot be undone.")) {
+        if !confirm(&format!(
+            "Permanently delete {scope} from the Bin? This will delete all records and stored images permanently and cannot be undone."
+        )) {
             return;
         }
         let kinds = t.map_or_else(|| vec![Kind::Hamper, Kind::Product, Kind::Image], |k| vec![k]);
@@ -457,7 +495,12 @@ pub fn Bin() -> impl IntoView {
             Box::new(|i| days_left(i.deleted_ms) == 0),
         );
     };
-    let tabs = [(None, "All Items"), (Some(Kind::Hamper), "Hampers"), (Some(Kind::Product), "Products"), (Some(Kind::Image), "Photos")];
+    let tabs = [
+        (None, "All Items"),
+        (Some(Kind::Hamper), "Hampers"),
+        (Some(Kind::Product), "Products"),
+        (Some(Kind::Image), "Photos"),
+    ];
 
     view! {
         <div class="space-y-4">
@@ -554,7 +597,10 @@ fn Row(
     };
     let (expiry_class, expiry_text) = match days {
         0 => ("border-red-300 bg-red-50 font-semibold text-red-700", "Expired (0d)".to_string()),
-        1..=3 => ("border-rose-300 bg-rose-50 font-semibold text-rose-700", format!("{days} {} left", if days == 1 { "day" } else { "days" })),
+        1..=3 => (
+            "border-rose-300 bg-rose-50 font-semibold text-rose-700",
+            format!("{days} {} left", if days == 1 { "day" } else { "days" }),
+        ),
         4..=10 => ("border-amber-300 bg-amber-50 font-medium text-amber-800", format!("{days} days left")),
         _ => ("border-(--color-line) bg-(--color-paper) text-(--color-muted)", format!("{days} days left")),
     };

@@ -132,7 +132,16 @@ fn rect(ids: Ids, x: f64, y: f64, width: f64, height: f64, color: &str, name: &s
 }
 
 #[allow(clippy::too_many_arguments)]
-fn photo(ids: Ids, url: &str, x: f64, y: f64, width: f64, height: f64, product_id: Option<String>, name: &str) -> Layer {
+fn photo(
+    ids: Ids,
+    url: &str,
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+    product_id: Option<String>,
+    name: &str,
+) -> Layer {
     Layer {
         base: named(ids, x, y, name),
         shape: Shape::Image(Image { product_id, url: url.into(), width, height, fit: super::Fit::Stretch }),
@@ -140,7 +149,12 @@ fn photo(ids: Ids, url: &str, x: f64, y: f64, width: f64, height: f64, product_i
 }
 
 fn page(background: &str, layers: Vec<Layer>) -> Canvas {
-    Canvas { width: SLIDE_W, height: SLIDE_H, background: Background { fill: Fill::solid(background), image_url: None }, layers }
+    Canvas {
+        width: SLIDE_W,
+        height: SLIDE_H,
+        background: Background { fill: Fill::solid(background), image_url: None },
+        layers,
+    }
 }
 
 /// "Essential Hamper" → ("Essential", "Hamper"), as the deck sets its titles.
@@ -199,7 +213,8 @@ pub struct Placed {
 /// `/\bbox/i` on "caption name".
 fn is_box(item: &DeckItemInfo) -> bool {
     let s = format!("{} {}", item.caption, item.name).to_lowercase();
-    s.match_indices("box").any(|(i, _)| s.get(..i).and_then(|h| h.chars().last()).is_none_or(|c| !(c.is_alphanumeric() || c == '_')))
+    s.match_indices("box")
+        .any(|(i, _)| s.get(..i).and_then(|h| h.chars().last()).is_none_or(|c| !(c.is_alphanumeric() || c == '_')))
 }
 
 /// Scales a photo to a target height, capping its width so wide items don't dominate.
@@ -222,9 +237,11 @@ pub fn arrange_row(items: &[(DeckItemInfo, String, Size)]) -> Vec<Placed> {
         return Vec::new();
     }
     let box_index = items.iter().position(|(i, _, _)| is_box(i));
-    let others: Vec<&(DeckItemInfo, String, Size)> = items.iter().enumerate().filter(|(i, _)| Some(*i) != box_index).map(|(_, x)| x).collect();
+    let others: Vec<&(DeckItemInfo, String, Size)> =
+        items.iter().enumerate().filter(|(i, _)| Some(*i) != box_index).map(|(_, x)| x).collect();
     let half = others.len().div_ceil(2);
-    let mut ordered: Vec<(&(DeckItemInfo, String, Size), bool)> = others.iter().take(half).map(|x| (*x, false)).collect();
+    let mut ordered: Vec<(&(DeckItemInfo, String, Size), bool)> =
+        others.iter().take(half).map(|x| (*x, false)).collect();
     if let Some(b) = box_index.and_then(|i| items.get(i)) {
         ordered.push((b, true));
     }
@@ -238,10 +255,8 @@ pub fn arrange_row(items: &[(DeckItemInfo, String, Size)]) -> Vec<Placed> {
         })
         .collect();
     // Neighbours of the box tuck in front of it; other items get a small gap.
-    let gaps: Vec<f64> = sized
-        .windows(2)
-        .map(|w| if w[0].1 || w[1].1 { -0.14 * w[0].2.min(w[1].2) } else { 28.0 })
-        .collect();
+    let gaps: Vec<f64> =
+        sized.windows(2).map(|w| if w[0].1 || w[1].1 { -0.14 * w[0].2.min(w[1].2) } else { 28.0 }).collect();
     let total = sized.iter().map(|s| s.2).sum::<f64>() + gaps.iter().sum::<f64>();
     let k = (ROW_WIDTH / total).min(1.0);
     let mut x = SLIDE_W / 2.0 - total * k / 2.0;
@@ -250,7 +265,8 @@ pub fn arrange_row(items: &[(DeckItemInfo, String, Size)]) -> Vec<Placed> {
         .enumerate()
         .map(|(i, (it, boxy, w, h))| {
             let (width, height) = (w * k, h * k);
-            let p = Placed { item: it.0.clone(), url: it.1.clone(), is_box: *boxy, x, y: BASELINE - height, width, height };
+            let p =
+                Placed { item: it.0.clone(), url: it.1.clone(), is_box: *boxy, x, y: BASELINE - height, width, height };
             x += width + gaps.get(i).copied().unwrap_or(0.0) * k;
             p
         })
@@ -268,7 +284,12 @@ pub fn labels(ids: Ids, row: &[Placed]) -> Vec<Layer> {
     let mut out = Vec::new();
     for (i, p) in row.iter().enumerate() {
         let left = i < pivot;
-        let mut b = (if left { p.x - 10.0 - LABEL_WIDTH } else { p.x + p.width + 10.0 }, p.y + if p.is_box { 6.0 } else { 16.0 }, LABEL_WIDTH, LABEL_HEIGHT);
+        let mut b = (
+            if left { p.x - 10.0 - LABEL_WIDTH } else { p.x + p.width + 10.0 },
+            p.y + if p.is_box { 6.0 } else { 16.0 },
+            LABEL_WIDTH,
+            LABEL_HEIGHT,
+        );
         let neighbour = if left { i.checked_sub(1).and_then(|j| row.get(j)) } else { row.get(i + 1) };
         if let Some(n) = neighbour
             && !p.is_box
@@ -278,10 +299,22 @@ pub fn labels(ids: Ids, row: &[Placed]) -> Vec<Layer> {
         }
         let align = if left { Align::Right } else { Align::Left };
         let name = format!("{} label", p.item.name);
-        out.push(text(ids, &p.item.name, b.0, b.1, TextOpts { size: NAME_SIZE, width: LABEL_WIDTH, align, name: &name, ..Default::default() }));
+        out.push(text(
+            ids,
+            &p.item.name,
+            b.0,
+            b.1,
+            TextOpts { size: NAME_SIZE, width: LABEL_WIDTH, align, name: &name, ..Default::default() },
+        ));
         if !p.item.caption.is_empty() {
             let name = format!("{} caption", p.item.name);
-            out.push(text(ids, &p.item.caption, b.0, b.1 + NAME_SIZE * 1.15, TextOpts { size: CAPTION_SIZE, width: LABEL_WIDTH, align, name: &name, ..Default::default() }));
+            out.push(text(
+                ids,
+                &p.item.caption,
+                b.0,
+                b.1 + NAME_SIZE * 1.15,
+                TextOpts { size: CAPTION_SIZE, width: LABEL_WIDTH, align, name: &name, ..Default::default() },
+            ));
         }
     }
     out
@@ -289,8 +322,20 @@ pub fn labels(ids: Ids, row: &[Placed]) -> Vec<Layer> {
 
 pub fn cover_slide(ids: Ids, title: &str, subtitle: &str, logo: Option<&Photo>) -> Canvas {
     let mut layers = vec![
-        text(ids, if title.is_empty() { "Premium" } else { title }, 61.0, 64.0, TextOpts { size: 88.0, color: colors::HEADING, width: 1400.0, name: "Title", ..Default::default() }),
-        text(ids, subtitle, 61.0, 164.0, TextOpts { size: 38.0, color: colors::HEADING, width: 1400.0, name: "Subtitle", ..Default::default() }),
+        text(
+            ids,
+            if title.is_empty() { "Premium" } else { title },
+            61.0,
+            64.0,
+            TextOpts { size: 88.0, color: colors::HEADING, width: 1400.0, name: "Title", ..Default::default() },
+        ),
+        text(
+            ids,
+            subtitle,
+            61.0,
+            164.0,
+            TextOpts { size: 38.0, color: colors::HEADING, width: 1400.0, name: "Subtitle", ..Default::default() },
+        ),
     ];
     if let Some(l) = logo {
         layers.push(logo_layer(ids, l, 300.0, "bottom-right"));
@@ -303,18 +348,56 @@ pub fn closing_slide(ids: Ids, heading: &str, tagline: &str, contact: &str, logo
     if let Some(l) = logo {
         layers.push(logo_layer(ids, l, 300.0, "top-right"));
     }
-    let q = |size, width, name| TextOpts { font: "Questrial", size, color: "#111111", width, name, ..Default::default() };
-    layers.push(text(ids, if heading.is_empty() { "Thank You" } else { heading }, 99.0, 700.0, q(112.0, 900.0, "Thank you")));
+    let q =
+        |size, width, name| TextOpts { font: "Questrial", size, color: "#111111", width, name, ..Default::default() };
+    layers.push(text(
+        ids,
+        if heading.is_empty() { "Thank You" } else { heading },
+        99.0,
+        700.0,
+        q(112.0, 900.0, "Thank you"),
+    ));
     layers.push(text(ids, tagline, 104.0, 826.0, TextOpts { spacing: 4.0, ..q(48.0, 900.0, "Tagline") }));
-    layers.push(text(ids, "For any Query", 1022.0, 690.0, TextOpts { align: Align::Right, underline: true, ..q(38.0, 800.0, "Query heading") }));
-    layers.push(text(ids, contact, 822.0, 752.0, TextOpts { align: Align::Right, spacing: 3.0, line_height: 1.3, ..q(34.0, 1000.0, "Contact") }));
+    layers.push(text(
+        ids,
+        "For any Query",
+        1022.0,
+        690.0,
+        TextOpts { align: Align::Right, underline: true, ..q(38.0, 800.0, "Query heading") },
+    ));
+    layers.push(text(
+        ids,
+        contact,
+        822.0,
+        752.0,
+        TextOpts { align: Align::Right, spacing: 3.0, line_height: 1.3, ..q(34.0, 1000.0, "Contact") },
+    ));
     page(colors::GREEN, layers)
 }
 
-fn item_page(ids: Ids, (title, subtitle): (String, String), price: Option<f64>, note: &str, logo: Option<&Photo>, middle: Vec<Layer>) -> Canvas {
+fn item_page(
+    ids: Ids,
+    (title, subtitle): (String, String),
+    price: Option<f64>,
+    note: &str,
+    logo: Option<&Photo>,
+    middle: Vec<Layer>,
+) -> Canvas {
     let mut layers = vec![
-        text(ids, &title, 86.0, 64.0, TextOpts { size: 82.0, color: colors::HEADING, width: 1200.0, name: "Title", ..Default::default() }),
-        text(ids, &subtitle, 86.0, 158.0, TextOpts { size: 40.0, color: colors::HEADING, width: 1200.0, name: "Subtitle", ..Default::default() }),
+        text(
+            ids,
+            &title,
+            86.0,
+            64.0,
+            TextOpts { size: 82.0, color: colors::HEADING, width: 1200.0, name: "Title", ..Default::default() },
+        ),
+        text(
+            ids,
+            &subtitle,
+            86.0,
+            158.0,
+            TextOpts { size: 40.0, color: colors::HEADING, width: 1200.0, name: "Subtitle", ..Default::default() },
+        ),
         rect(ids, BAND.0, BAND.1, BAND.2, BAND.3, colors::GREEN, "Band"),
     ];
     layers.extend(middle);
@@ -324,27 +407,69 @@ fn item_page(ids: Ids, (title, subtitle): (String, String), price: Option<f64>, 
             &format!("Price : {} + Tax", format_inr(p)),
             1213.0,
             88.0,
-            TextOpts { size: 18.0, style: FontStyle::Bold, color: colors::HEADING, width: 600.0, align: Align::Right, name: "Price", ..Default::default() },
+            TextOpts {
+                size: 18.0,
+                style: FontStyle::Bold,
+                color: colors::HEADING,
+                width: 600.0,
+                align: Align::Right,
+                name: "Price",
+                ..Default::default()
+            },
         ));
         layers.push(text(
             ids,
             "Shipping & Packaging\nWill Cost you Extra",
             1213.0,
             112.0,
-            TextOpts { size: 14.0, color: colors::MUTED, width: 600.0, align: Align::Right, name: "Price note", ..Default::default() },
+            TextOpts {
+                size: 14.0,
+                color: colors::MUTED,
+                width: 600.0,
+                align: Align::Right,
+                name: "Price note",
+                ..Default::default()
+            },
         ));
     }
     if let Some(l) = logo {
         layers.push(logo_layer(ids, l, 190.0, "bottom-left"));
     }
     if !note.trim().is_empty() {
-        layers.push(text(ids, note, 1128.0, 972.0, TextOpts { size: 17.0, color: colors::MUTED, width: 700.0, align: Align::Right, line_height: 1.3, name: "Terms", ..Default::default() }));
+        layers.push(text(
+            ids,
+            note,
+            1128.0,
+            972.0,
+            TextOpts {
+                size: 17.0,
+                color: colors::MUTED,
+                width: 700.0,
+                align: Align::Right,
+                line_height: 1.3,
+                name: "Terms",
+                ..Default::default()
+            },
+        ));
     }
     page(colors::PAGE, layers)
 }
 
 fn band_message(ids: Ids, message: &str) -> Layer {
-    text(ids, message, BAND.0, BAND.1 + BAND.3 / 2.0 - 16.0, TextOpts { size: 28.0, color: colors::HEADING, width: BAND.2, align: Align::Center, name: "Placeholder", ..Default::default() })
+    text(
+        ids,
+        message,
+        BAND.0,
+        BAND.1 + BAND.3 / 2.0 - 16.0,
+        TextOpts {
+            size: 28.0,
+            color: colors::HEADING,
+            width: BAND.2,
+            align: Align::Center,
+            name: "Placeholder",
+            ..Default::default()
+        },
+    )
 }
 
 /// Looks up a loaded photo's natural size; None if it didn't load.
@@ -371,8 +496,10 @@ pub fn hamper_slide(ids: Ids, h: &HamperInfo, size_of: SizeOf, note: &str, logo:
         // The box is drawn first so the other items sit in front of it.
         let mut by_depth = row.clone();
         by_depth.sort_by_key(|p| !p.is_box);
-        let mut m: Vec<Layer> =
-            by_depth.iter().map(|p| photo(ids, &p.url, p.x, p.y, p.width, p.height, p.item.product_id.clone(), &p.item.name)).collect();
+        let mut m: Vec<Layer> = by_depth
+            .iter()
+            .map(|p| photo(ids, &p.url, p.x, p.y, p.width, p.height, p.item.product_id.clone(), &p.item.name))
+            .collect();
         m.extend(labels(ids, &row));
         m
     } else if let Some((url, size)) = h.image_url.as_ref().and_then(|u| size_of(u).map(|s| (u, s))) {
@@ -389,7 +516,12 @@ pub fn product_slide(ids: Ids, p: &ProductInfo, size_of: SizeOf, note: &str, log
         Some((url, size)) => {
             let (w, h) = fit_photo(size, 520.0, 900.0);
             let placed = Placed {
-                item: DeckItemInfo { product_id: Some(p.id.clone()), name: p.name.clone(), caption: p.caption.clone(), image_url: Some(url.clone()) },
+                item: DeckItemInfo {
+                    product_id: Some(p.id.clone()),
+                    name: p.name.clone(),
+                    caption: p.caption.clone(),
+                    image_url: Some(url.clone()),
+                },
                 url: url.clone(),
                 is_box: false,
                 x: SLIDE_W / 2.0 - w / 2.0,
@@ -510,8 +642,22 @@ mod tests {
                 item("No photo item", "Edibles", None),
             ],
         };
-        let bare = HamperInfo { id: "h2".into(), code: "H2".into(), name: "Bare".into(), price: None, image_url: None, items: vec![] };
-        let p = ProductInfo { id: "p".into(), code: "P1".into(), name: "Mug".into(), caption: "Drinkware".into(), price: Some(900.0), image_url: Some("https://e.com/mug.png".into()) };
+        let bare = HamperInfo {
+            id: "h2".into(),
+            code: "H2".into(),
+            name: "Bare".into(),
+            price: None,
+            image_url: None,
+            items: vec![],
+        };
+        let p = ProductInfo {
+            id: "p".into(),
+            code: "P1".into(),
+            name: "Mug".into(),
+            caption: "Drinkware".into(),
+            price: Some(900.0),
+            image_url: Some("https://e.com/mug.png".into()),
+        };
         let slides = [
             cover_slide(&mut next, "Premium", "Giveaway Hamper", Some(&logo)),
             hamper_slide(&mut next, &h, &sizes, "MOQ note", Some(&logo)),
@@ -530,7 +676,8 @@ mod tests {
         let hs = &slides[1];
         let has_text = |c: &Canvas, s: &str| c.layers.iter().any(|l| matches!(&l.shape, Shape::Text(t) if t.text == s));
         assert!(has_text(hs, "Price : INR 3,250 + Tax") && has_text(hs, "Essential"));
-        let photos: Vec<&Layer> = hs.layers.iter().filter(|l| l.kind() == "image" && l.base.name.as_deref() != Some("Logo")).collect();
+        let photos: Vec<&Layer> =
+            hs.layers.iter().filter(|l| l.kind() == "image" && l.base.name.as_deref() != Some("Logo")).collect();
         assert_eq!(photos.len(), 4);
         assert_eq!(photos[0].base.name.as_deref(), Some("Wooden Lift Top Box"));
         assert!(slides[2].layers.iter().any(|l| l.base.name.as_deref() == Some("Placeholder")));

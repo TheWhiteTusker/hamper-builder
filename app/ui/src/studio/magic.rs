@@ -7,7 +7,9 @@
 use super::editor::Ed;
 use super::render::new_canvas;
 use super::{load_image, uuid};
-use lattice_core::canvas::magic::{FramePlacer, LineBox, LowMask, Rect, alpha_for, dilate, fill_holes, fit_font_size, source_box, text_style};
+use lattice_core::canvas::magic::{
+    FramePlacer, LineBox, LowMask, Rect, alpha_for, dilate, fill_holes, fit_font_size, source_box, text_style,
+};
 use lattice_core::canvas::{Align, Base, Decoration, Fill, Fit, FontStyle, Image, Layer, Shape, Text};
 use leptos::prelude::*;
 use leptos::task::spawn_local;
@@ -73,7 +75,10 @@ fn decode_mask(m: &MaskOut) -> LowMask {
 }
 
 async fn png(c: &web_sys::HtmlCanvasElement) -> Result<Vec<u8>, String> {
-    let blob = crate::photos::to_blob(c, "image/png", None).await.map_err(|e| e.to_string())?.ok_or("Could not render a layer.")?;
+    let blob = crate::photos::to_blob(c, "image/png", None)
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or("Could not render a layer.")?;
     crate::photos::blob_bytes(&blob).await.map_err(|e| e.to_string())
 }
 
@@ -88,7 +93,11 @@ async fn split(ed: Ed, parent: Layer, steps: RwSignal<Option<Step>>) -> Result<V
     let (wu, hu) = (w as usize, h as usize);
     let (src, sctx) = new_canvas(w, h).ok_or("No canvas")?;
     sctx.draw_image_with_html_image_element(&img, 0.0, 0.0).map_err(|_| "Could not draw the image")?;
-    let mut original = sctx.get_image_data(0.0, 0.0, f64::from(w), f64::from(h)).map_err(|_| "Export blocked by an image from another website.")?.data().0;
+    let mut original = sctx
+        .get_image_data(0.0, 0.0, f64::from(w), f64::from(h))
+        .map_err(|_| "Export blocked by an image from another website.")?
+        .data()
+        .0;
     let bytes = png(&src).await?;
     let analysis: Analysis = crate::tauri::invoke_raw("magic_analyze", &bytes, &[]).await.map_err(|e| e.to_string())?;
     if analysis.lines.is_empty() && analysis.masks.is_empty() {
@@ -114,9 +123,16 @@ async fn split(ed: Ed, parent: Layer, steps: RwSignal<Option<Step>>) -> Result<V
             continue;
         }
         let alpha = alpha_for(&m, analysis.scale, b);
-        let mut px = sctx.get_image_data(b.x as f64, b.y as f64, b.w as f64, b.h as f64).map_err(|_| "Could not read the image")?.data().0;
+        let mut px = sctx
+            .get_image_data(b.x as f64, b.y as f64, b.w as f64, b.h as f64)
+            .map_err(|_| "Could not read the image")?
+            .data()
+            .0;
         // Text printed on the object becomes its own layer, so lift it off the cut-out too.
-        let on_piece: Vec<bool> = (0..b.h).flat_map(|y| (0..b.w).map(move |x| (x, y))).map(|(x, y)| text_hole[(b.y + y) * wu + b.x + x]).collect();
+        let on_piece: Vec<bool> = (0..b.h)
+            .flat_map(|y| (0..b.w).map(move |x| (x, y)))
+            .map(|(x, y)| text_hole[(b.y + y) * wu + b.x + x])
+            .collect();
         if on_piece.iter().any(|v| *v) {
             fill_holes(&mut px, b.w, b.h, &on_piece);
         }
@@ -129,14 +145,16 @@ async fn split(ed: Ed, parent: Layer, steps: RwSignal<Option<Step>>) -> Result<V
             }
         }
         let (piece, pctx) = new_canvas(b.w as u32, b.h as u32).ok_or("No canvas")?;
-        let data = web_sys::ImageData::new_with_u8_clamped_array_and_sh(Clamped(&px), b.w as u32, b.h as u32).map_err(|_| "Could not process")?;
+        let data = web_sys::ImageData::new_with_u8_clamped_array_and_sh(Clamped(&px), b.w as u32, b.h as u32)
+            .map_err(|_| "Could not process")?;
         pctx.put_image_data(&data, 0.0, 0.0).map_err(|_| "Could not process")?;
         cutouts.push((b, piece));
     }
     // Biggest first, so smaller objects sit on top of the ones they overlap.
     cutouts.sort_by_key(|(b, _)| std::cmp::Reverse(b.w * b.h));
     fill_holes(&mut original, wu, hu, &dilate(&hole, wu, hu, 3));
-    let data = web_sys::ImageData::new_with_u8_clamped_array_and_sh(Clamped(&original), w, h).map_err(|_| "Could not process")?;
+    let data = web_sys::ImageData::new_with_u8_clamped_array_and_sh(Clamped(&original), w, h)
+        .map_err(|_| "Could not process")?;
     sctx.put_image_data(&data, 0.0, 0.0).map_err(|_| "Could not process")?;
 
     steps.set(Some(Step { label: "Saving layers".into(), progress: None }));
@@ -145,7 +163,9 @@ async fn split(ed: Ed, parent: Layer, steps: RwSignal<Option<Step>>) -> Result<V
         let folder = folder.clone();
         async move {
             let path = crate::photos::asset_path(&folder, "png");
-            crate::db::upload(crate::db::PHOTOS, &path, &bytes, "image/png", false).await.map_err(|e| format!("Upload failed: {e}"))
+            crate::db::upload(crate::db::PHOTOS, &path, &bytes, "image/png", false)
+                .await
+                .map_err(|e| format!("Upload failed: {e}"))
         }
     };
     let bg_url = upload(png(&src).await?).await?;
@@ -157,7 +177,13 @@ async fn split(ed: Ed, parent: Layer, steps: RwSignal<Option<Step>>) -> Result<V
     let place = FramePlacer::new(&parent.base, frame, f64::from(w), f64::from(h));
     let image_at = |url: String, name: &str, b: Rect| Layer {
         base: place.base_at(uuid(), b.x as f64, b.y as f64, name),
-        shape: Shape::Image(Image { product_id: None, url, width: b.w as f64 * place.kx, height: b.h as f64 * place.ky, fit: Fit::Stretch }),
+        shape: Shape::Image(Image {
+            product_id: None,
+            url,
+            width: b.w as f64 * place.kx,
+            height: b.h as f64 * place.ky,
+            fit: Fit::Stretch,
+        }),
     };
     let mut out = vec![image_at(bg_url, "Background", Rect { x: 0, y: 0, w: wu, h: hu })];
     for (i, ((b, _), url)) in cutouts.iter().zip(piece_urls).enumerate() {
@@ -175,7 +201,8 @@ async fn split(ed: Ed, parent: Layer, steps: RwSignal<Option<Step>>) -> Result<V
         let size = fit_font_size(l.row_height, box_w, at100);
         let width = box_w.max(at100 * size / 100.0) * 1.05;
         // Centre the line box on the ink, so the retyped line sits where the old one was.
-        let base: Base = place.base_at(uuid(), l.line.x0 as f64, (l.line.y0 + l.line.y1) as f64 / 2.0 - size / 2.0, &l.text);
+        let base: Base =
+            place.base_at(uuid(), l.line.x0 as f64, (l.line.y0 + l.line.y1) as f64 / 2.0 - size / 2.0, &l.text);
         out.push(Layer {
             base: Base { name: None, ..base },
             shape: Shape::Text(Text {
@@ -200,14 +227,19 @@ pub fn magic_split(ed: Ed, id: String, steps: RwSignal<Option<Step>>) {
     if steps.get_untracked().is_some() {
         return;
     }
-    let Some(layer) = ed.with_canvas(|c| c.layers.iter().find(|l| l.base.id == id && l.kind() == "image").cloned()) else { return };
+    let Some(layer) = ed.with_canvas(|c| c.layers.iter().find(|l| l.base.id == id && l.kind() == "image").cloned())
+    else {
+        return;
+    };
     steps.set(Some(Step { label: "Starting".into(), progress: None }));
     spawn_local(async move {
         let res = split(ed, layer, steps).await;
         let at = steps.get_untracked().map(|s| s.label).unwrap_or_default();
         steps.set(None);
         match res {
-            Ok(layers) if layers.is_empty() => ed.notify(false, "No text or separate objects were found in that image."),
+            Ok(layers) if layers.is_empty() => {
+                ed.notify(false, "No text or separate objects were found in that image.")
+            }
             Ok(layers) => {
                 let ids: Vec<String> = layers.iter().map(|l| l.base.id.clone()).collect();
                 let n = layers.len();
@@ -220,9 +252,15 @@ pub fn magic_split(ed: Ed, id: String, steps: RwSignal<Option<Step>>) {
                     None,
                 );
                 ed.select_many(ids);
-                ed.notify(true, format!("Split into {n} layers. Double-click text to edit it; Undo puts the original back."));
+                ed.notify(
+                    true,
+                    format!("Split into {n} layers. Double-click text to edit it; Undo puts the original back."),
+                );
             }
-            Err(e) => ed.notify(false, format!("Magic layers failed at \"{at}\": {e}. Try again; downloads often succeed on a retry.")),
+            Err(e) => ed.notify(
+                false,
+                format!("Magic layers failed at \"{at}\": {e}. Try again; downloads often succeed on a retry."),
+            ),
         }
     });
 }

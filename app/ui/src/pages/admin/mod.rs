@@ -65,12 +65,15 @@ pub async fn save_xlsx(file_name: &str, sheets: Vec<SheetData>) -> Result<bool, 
 }
 
 pub async fn save_text(file_name: &str, content: String) -> Result<bool, ApiError> {
-    let path: Option<String> = tauri::invoke("save_text", &json!({ "file_name": file_name, "content": content })).await?;
+    let path: Option<String> =
+        tauri::invoke("save_text", &json!({ "file_name": file_name, "content": content })).await?;
     Ok(path.is_some())
 }
 
 pub async fn file_bytes(file: &web_sys::File) -> Result<Vec<u8>, ApiError> {
-    let buf = JsFuture::from(file.array_buffer()).await.map_err(|_| ApiError::Invalid(format!("Couldn't read {}.", file.name())))?;
+    let buf = JsFuture::from(file.array_buffer())
+        .await
+        .map_err(|_| ApiError::Invalid(format!("Couldn't read {}.", file.name())))?;
     Ok(js_sys::Uint8Array::new(&buf).to_vec())
 }
 

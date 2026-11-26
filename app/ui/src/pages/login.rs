@@ -58,7 +58,7 @@ pub fn Login() -> impl IntoView {
     };
     play();
 
-    let _resize = window_event_listener(leptos::ev::resize, move |_| {
+    crate::kit::on_window(leptos::ev::resize, move |_| {
         if desktop.get_untracked() != is_desktop() {
             desktop.set(is_desktop());
             play();

@@ -14,7 +14,7 @@ use lattice_core::reprice::{MasterRate, PricedProduct, RepriceInput, SheetRef, p
 use lattice_core::{Decimal, lenient};
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 pub struct Payload {
     pub sheet_id: Option<String>,
@@ -244,7 +244,7 @@ async fn link_bought_out(lines: Vec<ProductCostLine>) -> Result<(Vec<ProductCost
             "subcategory_id",
             &sub.id,
             &var_name,
-            json!({ "default_rate": l.rate, "unit": l.unit, "default_wastage_pct": 0 }),
+            json!({ "default_rate": l.rate, "unit": l.unit, "default_wastage_pct": l.wastage_pct }),
         )
         .await
         .map_err(wrap)?;
@@ -406,8 +406,13 @@ pub async fn save_costing(p: Payload) -> Result<Saved, ApiError> {
     }
 
     // Outsourced products type their bought-out items; they go into the master here.
-    let (lines, repriced) =
+    let (lines, mut repriced) =
         if p.source.as_deref() == Some("Outsource") { link_bought_out(p.lines).await? } else { (p.lines, Vec::new()) };
+    for id in save_line_wastage(&lines).await? {
+        if !repriced.contains(&id) {
+            repriced.push(id);
+        }
+    }
     let prepared = prepare_lines(&lines);
     // Only real, non-zero percentages are kept.
     let overheads: StageOverheads =
@@ -524,10 +529,46 @@ pub async fn save_costing(p: Payload) -> Result<Saved, ApiError> {
         }
     }
 
-    // A bought-out rate changed in the master: reprice the other products using it.
+    // A rate or wastage changed in the master: reprice the other products using it.
     reprice_varieties(&repriced).await.map_err(err("Saved, but repricing other products failed"))?;
 
     Ok(Saved { product_id, variants, total_cost: totals.total_cost, selling_price: final_sp })
+}
+
+/// A wastage % edited on a line linked to a rate is saved to that rate on the
+/// Rates page. Returns the rates changed, to reprice the products using them.
+async fn save_line_wastage(lines: &[ProductCostLine]) -> Result<Vec<String>, ApiError> {
+    #[derive(Deserialize)]
+    struct Rate {
+        id: String,
+        default_wastage_pct: Decimal,
+    }
+    let mut typed: BTreeMap<String, Decimal> = BTreeMap::new();
+    for l in lines {
+        if let Some(id) = &l.cost_variety_id {
+            typed.insert(id.clone(), l.wastage_pct);
+        }
+    }
+    if typed.is_empty() {
+        return Ok(Vec::new());
+    }
+    let ids: Vec<String> = typed.keys().cloned().collect();
+    let rates: Vec<Rate> =
+        Q::from("cost_varieties").select("id,default_wastage_pct").in_list("id", &ids).rows().await?;
+    let changed: Vec<String> =
+        rates.into_iter().filter(|r| typed.get(&r.id) != Some(&r.default_wastage_pct)).map(|r| r.id).collect();
+    if changed.is_empty() {
+        return Ok(changed);
+    }
+    if !crate::db::me().role.is_admin() {
+        return Err(ApiError::Invalid(
+            "Only an admin can change a rate's wastage, because it updates the products that use it.".into(),
+        ));
+    }
+    for (id, pct) in typed.iter().filter(|(id, _)| changed.contains(id)) {
+        Q::from("cost_varieties").eq("id", id).update(&json!({ "default_wastage_pct": pct }), None).await?;
+    }
+    Ok(changed)
 }
 
 /// The next free 4-digit serial for a category, across every product code.

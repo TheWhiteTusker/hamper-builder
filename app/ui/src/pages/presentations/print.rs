@@ -35,7 +35,13 @@ pub fn PrintDeck() -> impl IntoView {
                 canvas: Value,
             }
             let head = Q::from("presentations").select("title").eq("id", &id).one::<Head>().await.ok().flatten();
-            let rows: Vec<Row> = Q::from("presentation_slides").select("canvas").eq("presentation_id", &id).order("position").rows().await.unwrap_or_default();
+            let rows: Vec<Row> = Q::from("presentation_slides")
+                .select("canvas")
+                .eq("presentation_id", &id)
+                .order("position")
+                .rows()
+                .await
+                .unwrap_or_default();
             title.set(head.map(|h| h.title).unwrap_or_default());
             let canvases: Vec<Canvas> = rows.iter().map(|r| parse_canvas(&r.canvas)).collect();
             images.set(vec![None; canvases.len()]);

@@ -9,6 +9,8 @@ mod magic;
 mod pptx;
 mod session;
 mod supabase;
+#[cfg(desktop)]
+mod updates;
 mod worker;
 
 use commands::AppState;
@@ -48,6 +50,7 @@ pub fn run() {
     // One running copy: a second launch (or a deep link) focuses the first.
     #[cfg(desktop)]
     {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build()).manage(updates::Pending::default());
         builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.unminimize();
@@ -107,6 +110,11 @@ pub fn run() {
             commands::request_password_reset,
             commands::update_password,
             commands::query,
+            commands::realtime_auth,
+            #[cfg(desktop)]
+            updates::update_check,
+            #[cfg(desktop)]
+            updates::update_install,
             db::db_select,
             db::db_count,
             db::db_insert,
@@ -121,6 +129,8 @@ pub fn run() {
             db::storage_list,
             db::storage_public_url,
             worker::gstin_lookup,
+            worker::release_start,
+            worker::release_status,
             worker::print_page,
             files::save_xlsx,
             files::save_text,

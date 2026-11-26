@@ -104,6 +104,64 @@ body {
   }
 }
 
+/* List screens (Products, Hampers) fit the window: title and filters stay put,
+   the rows scroll in their own box, and the column headings stick to its top.
+   The page grows to fit when the window is too short to leave the box room. */
+body:has(.list-scroll) {
+  height: 100dvh;
+}
+
+main:has(.list-scroll) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.list-scroll {
+  flex: 0 1 auto;
+  min-height: 16rem;
+  overflow: auto;
+}
+
+.list-scroll thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #fff;
+  /* Collapsed table borders scroll away from a sticky header; draw its own. */
+  box-shadow: inset 0 -1px var(--color-line);
+}
+
+/* The heading cells' own borders scroll away too, leaving a 1px see-through
+   seam that rows show through. No borders inside the sticky header; lines
+   between its rows are shadows. */
+.list-scroll thead th {
+  border-bottom-width: 0;
+}
+
+.list-scroll thead tr:not(:last-child) th {
+  box-shadow: inset 0 -1px var(--color-line);
+}
+
+/* A 3rem gutter left of a list's table for each row's tick box and bookmark
+   (kit.rs RowNumber). The table, title and filters stay aligned: the page
+   moves in by the gutter, except on wide screens, where the gutter fits in
+   the page's side margin. */
+main:has(.row-gutter) {
+  padding-left: 4rem;
+}
+
+@media (min-width: 1500px) {
+  main:has(.row-gutter) {
+    padding-left: 1rem;
+  }
+}
+
+.row-gutter {
+  margin-left: -3rem;
+  padding-left: 3rem;
+}
+
 @media print {
   @page {
     size: A4;

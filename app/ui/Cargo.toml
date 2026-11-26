@@ -26,6 +26,7 @@ web-sys = { version = "0.3", features = [
   "PointerEvent", "Storage", "Url", "Window", "CanvasGradient", "TextMetrics", "Document", "HtmlTextAreaElement",
   "FontFaceSet", "Crypto", "WheelEvent", "ResizeObserver", "ResizeObserverEntry", "HtmlDivElement", "HtmlElement",
   "HtmlLinkElement", "CssStyleDeclaration", "EventTarget", "FilePropertyBag", "DomRectReadOnly", "Event", "Navigator",
+  "WebSocket", "MessageEvent", "AddEventListenerOptions",
 ] }
 
 [lints]

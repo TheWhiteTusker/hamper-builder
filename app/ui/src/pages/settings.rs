@@ -20,13 +20,14 @@ use serde_json::{Value, json};
 use std::time::Duration;
 
 // Most-used first; the first is what /settings opens on.
-static TABS: [(&str, &str, &str); 6] = [
+static TABS: [(&str, &str, &str); 7] = [
     ("rates", "Rates", "Material, hardware, finishing and machine rates used to cost products."),
     ("dropdowns", "Dropdowns", "The options people pick from across the app: occasions, vendors, colours, statuses."),
     ("categories", "Categories", "Product categories, and whether each counts towards a hamper's item count."),
     ("tools", "Tools", "Recycle Bin, price refresh and app updates."),
     ("users", "Users", "Who can sign in and what they can do."),
     ("company", "Company & terms", "Your letterhead details, GST and the terms printed on quotes and invoices."),
+    ("keys", "Key bindings", "Shortcuts and mouse buttons for the app, like a game's controls."),
 ];
 
 async fn save_setting(key: &str, value: Value) -> Result<(), ApiError> {
@@ -113,6 +114,7 @@ pub fn SettingsPage() -> impl IntoView {
             "tools" => view! { <Tools /> }.into_any(),
             "users" => view! { <Users /> }.into_any(),
             "company" => view! { <CompanyTab /> }.into_any(),
+            "keys" => view! { <crate::pages::keys::KeyBindingsTab /> }.into_any(),
             _ => view! { <RatesMaster embedded=true /> }.into_any(),
         }}
     }
@@ -272,8 +274,16 @@ static LISTS: [(&str, &str, &str); 9] = [
     ("hamper_statuses", "Hamper statuses", "e.g. Draft, Approved, Active, Discontinued."),
     ("quote_statuses", "Quote statuses", "Only managers can move a quote between these."),
     ("validity_options", "Quote validity", "How long a quote is valid, e.g. 7 Days, 15 Days."),
-    ("packaging_treatments", "Packaging treatments", "A name containing \"absorb\" folds packaging cost into the hamper."),
-    ("detail_modes", "Contents shown on quotes", "A name containing \"hide\" hides contents; \"summary\" prints a count."),
+    (
+        "packaging_treatments",
+        "Packaging treatments",
+        "A name containing \"absorb\" folds packaging cost into the hamper.",
+    ),
+    (
+        "detail_modes",
+        "Contents shown on quotes",
+        "A name containing \"hide\" hides contents; \"summary\" prints a count.",
+    ),
     ("quote_structures", "Quote structures", "\"Combined Order\" has one total; any other is priced per option."),
 ];
 
@@ -313,7 +323,9 @@ fn PickLists() -> impl IntoView {
         let message = RwSignal::new(None::<(bool, String)>);
         let pending = RwSignal::new(false);
         let config = move || LISTS.iter().find(|(k, _, _)| *k == selected.get()).copied().unwrap_or(LISTS[0]);
-        let items = move || lists.with(|l| l.iter().find(|(k, _)| *k == selected.get()).map(|(_, v)| v.clone()).unwrap_or_default());
+        let items = move || {
+            lists.with(|l| l.iter().find(|(k, _)| *k == selected.get()).map(|(_, v)| v.clone()).unwrap_or_default())
+        };
         let set_items = move |key: &str, v: Vec<String>| {
             lists.update(|l| {
                 if let Some(entry) = l.iter_mut().find(|(k, _)| *k == key) {
@@ -323,7 +335,16 @@ fn PickLists() -> impl IntoView {
         };
         let notify = move |ok: bool, text: String| {
             message.set(Some((ok, text.clone())));
-            set_timeout(move || message.update(|m| if m.as_ref().is_some_and(|(_, t)| *t == text) { *m = None }), Duration::from_secs(4));
+            set_timeout(
+                move || {
+                    message.update(|m| {
+                        if m.as_ref().is_some_and(|(_, t)| *t == text) {
+                            *m = None
+                        }
+                    })
+                },
+                Duration::from_secs(4),
+            );
         };
         // Applies `next` at once, saves, and rolls back if the save fails.
         let change = move |item: String, adding_it: bool| {
@@ -364,7 +385,14 @@ fn PickLists() -> impl IntoView {
                 match res {
                     Ok(updated) => {
                         set_items(key, updated);
-                        notify(true, if adding_it { format!("Added \"{item}\" to {label}.") } else { format!("Removed \"{item}\" from {label}.") });
+                        notify(
+                            true,
+                            if adding_it {
+                                format!("Added \"{item}\" to {label}.")
+                            } else {
+                                format!("Removed \"{item}\" from {label}.")
+                            },
+                        );
                     }
                     Err(e) => {
                         set_items(key, previous);
@@ -381,11 +409,18 @@ fn PickLists() -> impl IntoView {
             let q = search.get().trim().to_lowercase();
             items().iter().any(|i| i.to_lowercase() == q)
         };
-        let open_add = move |prefill: Option<String>| adding.set(Some(prefill.unwrap_or_else(|| search.get_untracked()).trim().to_string()));
+        let open_add = move |prefill: Option<String>| {
+            adding.set(Some(prefill.unwrap_or_else(|| search.get_untracked()).trim().to_string()))
+        };
         let values = |n: usize| format!("{n} {}", if n == 1 { "value" } else { "values" });
         let defaults = [
             ("default_detail_mode", "Default contents setting", s.default_detail_mode.clone(), "detail_modes"),
-            ("default_packaging_treatment", "Default packaging treatment", s.default_packaging_treatment.clone(), "packaging_treatments"),
+            (
+                "default_packaging_treatment",
+                "Default packaging treatment",
+                s.default_packaging_treatment.clone(),
+                "packaging_treatments",
+            ),
             ("default_validity", "Default validity", s.default_validity.clone(), "validity_options"),
         ];
 
@@ -740,13 +775,13 @@ fn Tools() -> impl IntoView {
                     <A href=href attr:class="btn-secondary">"Open"</A>
                 </div>
             }).collect_view()}
+            <crate::updates::UpdateRow />
             <div class="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div>
-                    <h2 class="text-sm font-semibold">"App"</h2>
-                    <p class="mt-0.5 text-xs text-(--color-muted)">
-                        "Lattice Lane Hamper Builder · Version "<span class="font-mono font-medium text-(--color-brand)">{concat!("v", env!("CARGO_PKG_VERSION"))}</span>
-                    </p>
+                    <h2 class="text-sm font-semibold">"Publish the app"</h2>
+                    <p class="mt-0.5 text-xs text-(--color-muted)">"Builds the Windows app from the latest code and publishes it; everyone's app offers the update on its next launch."</p>
                 </div>
+                <crate::release::PublishRelease />
             </div>
             <div class="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div>
@@ -805,7 +840,8 @@ fn UserRow(profile: Profile, is_self: bool) -> impl IntoView {
         }
         status.start();
         spawn_local(async move {
-            let res = Q::from("profiles").eq("id", id.get_value()).update(&json!({ "role": role }), None).await.map(|_| ());
+            let res =
+                Q::from("profiles").eq("id", id.get_value()).update(&json!({ "role": role }), None).await.map(|_| ());
             if res.is_ok() {
                 saved.set(role);
                 db::cache_drop(&["profiles"]).await;

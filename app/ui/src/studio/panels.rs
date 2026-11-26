@@ -5,8 +5,8 @@ use super::editor::{DRAG_MIME, Ed, Tool};
 use super::{PickerProduct, Thumb};
 use lattice_core::canvas::arrange::{LayerMove, PageAlign};
 use lattice_core::canvas::{
-    Align, Decoration, ELEMENTS, FONTS, Fill, Fit, FontStyle, LineCap, PRESETS, Shape, TEXT_COMBOS, TEXT_PRESETS, document_colors, element,
-    fill_css, layer_label, make_text,
+    Align, Decoration, ELEMENTS, FONTS, Fill, Fit, FontStyle, LineCap, PRESETS, Shape, TEXT_COMBOS, TEXT_PRESETS,
+    document_colors, element, fill_css, layer_label, make_text,
 };
 use lattice_core::images::thumb_url;
 use leptos::prelude::*;
@@ -28,7 +28,11 @@ const RAIL: [(Tab, &str, &str); 5] = [
     (Tab::Uploads, "Uploads", "M12 16V4m0 0l-4 4m4-4l4 4M4 16v4h16v-4"),
     (Tab::Text, "Text", "M5 6V4h14v2M12 4v16m-3 0h6"),
     (Tab::Elements, "Elements", "M4 4h7v7H4zM17.5 4a3.5 3.5 0 110 7 3.5 3.5 0 010-7zM4 20l3.5-6 3.5 6zM14 14h6v6h-6z"),
-    (Tab::Background, "Background", "M12 3a9 9 0 100 18c1 0 1.5-.8 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.8.7-1.5 1.5-1.5H16a5 5 0 005-5c0-4.4-4-8-9-8z"),
+    (
+        Tab::Background,
+        "Background",
+        "M12 3a9 9 0 100 18c1 0 1.5-.8 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.8.7-1.5 1.5-1.5H16a5 5 0 005-5c0-4.4-4-8-9-8z",
+    ),
 ];
 
 fn icon(d: &'static str) -> impl IntoView {
@@ -40,7 +44,12 @@ fn icon(d: &'static str) -> impl IntoView {
 const TOOL_BTN: &str = "inline-flex h-8 min-w-8 items-center justify-center gap-1 rounded-md px-2 text-[12.5px] text-(--st-text) hover:bg-(--st-hover) disabled:opacity-40";
 
 #[component]
-fn ToolButton(#[prop(into)] title: String, #[prop(optional, into)] active: Signal<bool>, on_click: impl Fn() + 'static, children: Children) -> impl IntoView {
+fn ToolButton(
+    #[prop(into)] title: String,
+    #[prop(optional, into)] active: Signal<bool>,
+    on_click: impl Fn() + 'static,
+    children: Children,
+) -> impl IntoView {
     view! {
         <button type="button" title=title.clone() aria-label=title
             class=move || format!("{TOOL_BTN} {}", if active.get() { "bg-(--st-accent-soft) text-(--st-accent)" } else { "" })
@@ -89,8 +98,10 @@ pub fn SidePanel(ed: Ed) -> impl IntoView {
 
 fn drag_data(e: &web_sys::DragEvent, product: Option<&PickerProduct>, url: &str, name: &str) {
     if let Some(dt) = e.data_transfer() {
-        let product = product.map(|p| serde_json::json!({ "id": p.id, "code": p.code, "name": p.name, "image_url": p.image_url }));
-        let _ = dt.set_data(DRAG_MIME, &serde_json::json!({ "product": product, "url": url, "name": name }).to_string());
+        let product = product
+            .map(|p| serde_json::json!({ "id": p.id, "code": p.code, "name": p.name, "image_url": p.image_url }));
+        let _ =
+            dt.set_data(DRAG_MIME, &serde_json::json!({ "product": product, "url": url, "name": name }).to_string());
         dt.set_effect_allowed("copy");
     }
 }
@@ -148,7 +159,11 @@ fn ProductsPanel(ed: Ed) -> impl IntoView {
 
 fn input_files(e: &leptos::ev::Event) -> Vec<web_sys::File> {
     let input = e.target().and_then(|t| t.dyn_into::<web_sys::HtmlInputElement>().ok());
-    let files = input.as_ref().and_then(|i| i.files()).map(|l| (0..l.length()).filter_map(|i| l.get(i)).collect()).unwrap_or_default();
+    let files = input
+        .as_ref()
+        .and_then(|i| i.files())
+        .map(|l| (0..l.length()).filter_map(|i| l.get(i)).collect())
+        .unwrap_or_default();
     if let Some(i) = input {
         i.set_value("");
     }
@@ -236,7 +251,10 @@ fn ElementsPanel(ed: Ed) -> impl IntoView {
     }
 }
 
-const PALETTE: [&str; 12] = ["#ffffff", "#faf8ee", "#f1ebe0", "#e7e1d0", "#ddcf8b", "#b5c2b1", "#54655b", "#2c332f", "#1f1f1f", "#b08d57", "#c0392b", "#ff66c4"];
+const PALETTE: [&str; 12] = [
+    "#ffffff", "#faf8ee", "#f1ebe0", "#e7e1d0", "#ddcf8b", "#b5c2b1", "#54655b", "#2c332f", "#1f1f1f", "#b08d57",
+    "#c0392b", "#ff66c4",
+];
 
 #[component]
 fn Swatches(ed: Ed, on_pick: impl Fn(String) + Copy + Send + Sync + 'static) -> impl IntoView {
@@ -309,7 +327,13 @@ fn BackgroundPanel(ed: Ed) -> impl IntoView {
 
 // ------------------------------------------------------------- toolbars
 
-fn num_input(value: f64, step: &'static str, width: &'static str, label: &'static str, on: impl Fn(f64) + 'static) -> impl IntoView {
+fn num_input(
+    value: f64,
+    step: &'static str,
+    width: &'static str,
+    label: &'static str,
+    on: impl Fn(f64) + 'static,
+) -> impl IntoView {
     view! {
         <input type="number" step=step aria-label=label title=label prop:value=format!("{}", (value * 100.0).round() / 100.0)
             class=format!("h-8 {width} rounded-md border border-(--st-line) bg-(--st-panel-2) px-2 text-[12.5px] tabular-nums outline-none focus:border-(--st-accent)")
@@ -437,7 +461,9 @@ fn layer_tools(ed: Ed, id: String) -> impl IntoView {
     let opacity = l.base.opacity;
     let ids = vec![id.clone()];
     let idv = StoredValue::new(id);
-    let tweak = move |key: &'static str, f: Box<dyn FnOnce(&mut lattice_core::canvas::Layer)>| idv.with_value(|i| ed.tweak(i, key, f));
+    let tweak = move |key: &'static str, f: Box<dyn FnOnce(&mut lattice_core::canvas::Layer)>| {
+        idv.with_value(|i| ed.tweak(i, key, f))
+    };
     let specific = if locked {
         view! { <span class="text-[12px] text-(--st-muted)">"This element is locked."</span> }.into_any()
     } else {
@@ -502,7 +528,10 @@ fn layer_tools(ed: Ed, id: String) -> impl IntoView {
             _ => {
                 let Some(s) = l.style().cloned() else { return ().into_any() };
                 let rect = matches!(&l.shape, Shape::Rect(_));
-                let radius = match &l.shape { Shape::Rect(r) => r.corner_radius, _ => 0.0 };
+                let radius = match &l.shape {
+                    Shape::Rect(r) => r.corner_radius,
+                    _ => 0.0,
+                };
                 view! {
                     <span class="text-[11px] text-(--st-muted)">"Fill"</span>
                     {color_input(s.fill.main_color().to_string(), "Fill colour", move |c| tweak("fill", Box::new(move |l| if let Some(s) = l.style_mut() { s.fill = match &s.fill { Fill::Linear { to, angle, .. } => Fill::Linear { from: c, to: to.clone(), angle: *angle }, Fill::Solid { .. } => Fill::Solid { color: c } } })))}
@@ -739,17 +768,23 @@ pub fn PageStrip(ed: Ed) -> impl IntoView {
 
 #[component]
 pub fn ContextMenu(ed: Ed) -> impl IntoView {
-    let _close = window_event_listener(leptos::ev::pointerdown, move |e| {
-        let inside = e.target().and_then(|t| t.dyn_into::<web_sys::Element>().ok()).and_then(|el| el.closest("[data-studio-menu]").ok().flatten()).is_some();
+    crate::kit::on_window(leptos::ev::pointerdown, move |e| {
+        let inside = e
+            .target()
+            .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
+            .and_then(|el| el.closest("[data-studio-menu]").ok().flatten())
+            .is_some();
         if !inside {
             ed.menu.set(None);
         }
     });
-    let item = move |label: &'static str, hint: &'static str, run: Box<dyn Fn()>| view! {
-        <button type="button" class="flex w-full items-center justify-between rounded px-3 py-1.5 text-left text-[12.5px] hover:bg-(--st-hover)"
-            on:click=move |_| { run(); ed.menu.set(None); }>
-            <span>{label}</span><span class="text-[11px] text-(--st-muted)">{hint}</span>
-        </button>
+    let item = move |label: &'static str, hint: &'static str, run: Box<dyn Fn()>| {
+        view! {
+            <button type="button" class="flex w-full items-center justify-between rounded px-3 py-1.5 text-left text-[12.5px] hover:bg-(--st-hover)"
+                on:click=move |_| { run(); ed.menu.set(None); }>
+                <span>{label}</span><span class="text-[11px] text-(--st-muted)">{hint}</span>
+            </button>
+        }
     };
     view! {
         {move || ed.menu.get().map(|(x, y)| {

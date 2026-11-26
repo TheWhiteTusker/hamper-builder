@@ -6,6 +6,10 @@
 //!   for signed-in users only.
 //! - the nightly cron: removes Recycle Bin items kept past 30 days, files
 //!   first, then the rows (`SUPABASE_SERVICE_ROLE_KEY`; skipped without it).
+//! - `POST /release`, `GET /release`: an admin's "Update the app", which starts
+//!   the desktop build on GitHub and reports its progress (`GITHUB_TOKEN`).
+
+mod release;
 
 use lattice_core::bin_expiry::RETENTION_DAYS;
 use lattice_core::gstin::{is_valid, read_gstinapi};
@@ -44,17 +48,40 @@ async fn send(method: Method, url: &str, key: &str, token: &str, body: Option<&V
 
 #[event(fetch)]
 async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
-    Router::new().get_async("/gstin/:gstin", gstin).run(req, env).await
+    Router::new()
+        .get_async("/gstin/:gstin", gstin)
+        .post_async("/release", release::start)
+        .get_async("/release", release::status)
+        .run(req, env)
+        .await
+}
+
+fn bearer(req: &Request) -> Result<Option<String>> {
+    Ok(req.headers().get("authorization")?.and_then(|h| h.strip_prefix("Bearer ").map(str::to_string)))
 }
 
 /// A signed-in user's JWT, checked with Supabase Auth itself.
 async fn signed_in(req: &Request) -> Result<bool> {
-    let Some(token) = req.headers().get("authorization")?.and_then(|h| h.strip_prefix("Bearer ").map(str::to_string)) else {
-        return Ok(false);
-    };
+    let Some(token) = bearer(req)? else { return Ok(false) };
     let (url, anon) = supabase()?;
     let resp = send(Method::Get, &format!("{url}/auth/v1/user"), anon, &token, None).await?;
     Ok(resp.status_code() == 200)
+}
+
+/// A signed-in admin: the JWT's user, checked with Supabase Auth, then their
+/// role, read with their own token so RLS applies as in the app.
+async fn is_admin(req: &Request) -> Result<bool> {
+    let Some(token) = bearer(req)? else { return Ok(false) };
+    let (url, anon) = supabase()?;
+    let mut user = send(Method::Get, &format!("{url}/auth/v1/user"), anon, &token, None).await?;
+    if user.status_code() != 200 {
+        return Ok(false);
+    }
+    let user: Value = user.json().await.unwrap_or(Value::Null);
+    let Some(id) = user.get("id").and_then(Value::as_str) else { return Ok(false) };
+    let mut rows = send(Method::Get, &format!("{url}/rest/v1/profiles?select=role&id=eq.{id}"), anon, &token, None).await?;
+    let rows: Value = rows.json().await.unwrap_or(Value::Null);
+    Ok(rows.pointer("/0/role").and_then(Value::as_str) == Some("admin"))
 }
 
 async fn gstin(req: Request, ctx: RouteContext<()>) -> Result<Response> {

@@ -1,0 +1,69 @@
+# Builds the Windows app from main and publishes it as the latest GitHub
+# release, with the latest.json the updater reads. Installed apps see it on
+# their next launch (or Settings → Tools → Check for updates) and offer
+# "Update now".
+#
+# Started by Settings → Tools → "Update the app" (through the Worker's
+# /release, which holds GITHUB_TOKEN), or by hand from the Actions tab.
+#
+# Needs one repo secret: TAURI_SIGNING_PRIVATE_KEY, the updater signing key.
+# Its public half is in app/src-tauri/tauri.conf.json; without it, installed
+# apps refuse the update.
+name: Desktop app
+
+on:
+  workflow_dispatch:
+
+# A second click supersedes a build still in progress.
+concurrency:
+  group: desktop
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target"
+
+      - name: Install Trunk and the Tauri CLI
+        run: cargo install --locked trunk tauri-cli
+
+      # Version = major.minor from Cargo.toml + this run's number, so every
+      # release is newer than the last without committing a bump. Change
+      # major.minor in Cargo.toml by hand for a big release.
+      - name: Set version
+        shell: bash
+        run: |
+          base=$(sed -nE '0,/^version = "([0-9]+\.[0-9]+)\..*"/s//\1/p' Cargo.toml)
+          version="$base.${{ github.run_number }}"
+          sed -i -E "0,/^version = \".*\"/s//version = \"$version\"/" Cargo.toml
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "Releasing $version"
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+        with:
+          projectPath: app/src-tauri
+          tauriScript: cargo tauri
+          args: --bundles nsis
+          tagName: v${{ env.VERSION }}
+          releaseName: Lattice Lane ${{ env.VERSION }}
+          releaseBody: Installed apps offer this update on their next launch.
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true

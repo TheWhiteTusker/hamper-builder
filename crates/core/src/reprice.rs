@@ -124,8 +124,7 @@ pub fn plan_reprice(input: &RepriceInput) -> RepricePlan {
             let Some(v) = l.cost_variety_id.as_deref().and_then(|id| rates.get(id)) else {
                 return (l.clone(), false);
             };
-            // Bought-out items never carry wastage.
-            let wastage_pct = if l.stage_code == "bought_out" { Decimal::ZERO } else { v.default_wastage_pct };
+            let wastage_pct = v.default_wastage_pct;
             let mut line = ProductCostLine { rate: v.default_rate, unit: v.unit.clone(), wastage_pct, ..l.clone() };
             let calc = calculate_line_cost(&line);
             // Lines also take the master's current names, so renames show everywhere.

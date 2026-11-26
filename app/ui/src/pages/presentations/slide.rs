@@ -33,7 +33,12 @@ async fn save_slide(deck: String, slide: String, canvas: Canvas) -> Result<(), S
     if !canvas.valid() {
         return Err("Invalid design.".into());
     }
-    let rows = Q::from("presentation_slides").eq("id", &slide).eq("presentation_id", &deck).update(&json!({ "canvas": canvas }), Some("id")).await.map_err(|e| e.to_string())?;
+    let rows = Q::from("presentation_slides")
+        .eq("id", &slide)
+        .eq("presentation_id", &deck)
+        .update(&json!({ "canvas": canvas }), Some("id"))
+        .await
+        .map_err(|e| e.to_string())?;
     if rows.as_array().is_none_or(Vec::is_empty) {
         return Err("This slide no longer exists.".into());
     }
@@ -47,7 +52,8 @@ async fn save_slide(deck: String, slide: String, canvas: Canvas) -> Result<(), S
 pub fn SlideEditor() -> impl IntoView {
     let params = use_params_map();
     // A new slide id (from the strip) starts the editor again.
-    let key = Memo::new(move |_| params.with(|p| (p.get("id").unwrap_or_default(), p.get("slide").unwrap_or_default())));
+    let key =
+        Memo::new(move |_| params.with(|p| (p.get("id").unwrap_or_default(), p.get("slide").unwrap_or_default())));
     view! { {move || { let (deck, slide) = key.get(); view! { <Editor deck=deck slide=slide /> } }} }
 }
 
@@ -64,8 +70,22 @@ fn Editor(deck: String, slide: String) -> impl IntoView {
                 struct Head {
                     title: String,
                 }
-                let Some(head) = Q::from("presentations").select("title").eq("id", &deck).one::<Head>().await.map_err(|e| e.to_string())? else { return Ok(None) };
-                let slides: Vec<Row> = Q::from("presentation_slides").select("id,canvas,hamper_id,product_id").eq("presentation_id", &deck).order("position").rows().await.map_err(|e| e.to_string())?;
+                let Some(head) = Q::from("presentations")
+                    .select("title")
+                    .eq("id", &deck)
+                    .one::<Head>()
+                    .await
+                    .map_err(|e| e.to_string())?
+                else {
+                    return Ok(None);
+                };
+                let slides: Vec<Row> = Q::from("presentation_slides")
+                    .select("id,canvas,hamper_id,product_id")
+                    .eq("presentation_id", &deck)
+                    .order("position")
+                    .rows()
+                    .await
+                    .map_err(|e| e.to_string())?;
                 Ok(Some(Loaded { title: head.title, slides }))
             }
             .await;
@@ -88,8 +108,19 @@ fn Editor(deck: String, slide: String) -> impl IntoView {
         };
         let Some(row) = l.slides.get(index).cloned() else { return };
         let n = l.slides.len();
-        let pages: Vec<PageLink> = l.slides.iter().map(|s| PageLink { id: s.id.clone(), href: format!("{}/slides/{}", deck_href(&deck), s.id), canvas: parse_canvas(&s.canvas) }).collect();
-        let products: Vec<PickerProduct> = products.into_iter().map(|p| PickerProduct { id: p.id, code: p.code, name: p.name, image_url: p.image_url }).collect();
+        let pages: Vec<PageLink> = l
+            .slides
+            .iter()
+            .map(|s| PageLink {
+                id: s.id.clone(),
+                href: format!("{}/slides/{}", deck_href(&deck), s.id),
+                canvas: parse_canvas(&s.canvas),
+            })
+            .collect();
+        let products: Vec<PickerProduct> = products
+            .into_iter()
+            .map(|p| PickerProduct { id: p.id, code: p.code, name: p.name, image_url: p.image_url })
+            .collect();
         spawn_local(async move {
             // "In this hamper": the slide's hamper's products, or its product.
             let related: Vec<String> = match (&row.hamper_id, &row.product_id) {
@@ -98,7 +129,15 @@ fn Editor(deck: String, slide: String) -> impl IntoView {
                     struct P {
                         product_id: Option<String>,
                     }
-                    let mut ids: Vec<String> = Q::from("hamper_items").select("product_id").eq("hamper_id", h).rows::<P>().await.unwrap_or_default().into_iter().filter_map(|p| p.product_id).collect();
+                    let mut ids: Vec<String> = Q::from("hamper_items")
+                        .select("product_id")
+                        .eq("hamper_id", h)
+                        .rows::<P>()
+                        .await
+                        .unwrap_or_default()
+                        .into_iter()
+                        .filter_map(|p| p.product_id)
+                        .collect();
                     ids.sort();
                     ids.dedup();
                     ids

@@ -6,6 +6,34 @@ use leptos::html;
 use leptos::prelude::*;
 use leptos_router::components::A;
 
+/// A window listener that lives as long as the component adding it. Leptos
+/// leaves `window_event_listener` attached until removed by hand, so without
+/// this every visit to a screen added another, still running on dead state.
+pub fn on_window<E>(event: E, cb: impl Fn(E::EventType) + 'static)
+where
+    E: leptos::ev::EventDescriptor + 'static,
+    E::EventType: wasm_bindgen::JsCast,
+{
+    let handle = window_event_listener(event, cb);
+    on_cleanup(move || handle.remove());
+}
+
+/// "19 Nov 2026, 3:42 pm" in India's time, as
+/// `toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" })`.
+pub fn when(ts: &str) -> String {
+    let d = js_sys::Date::new(&ts.into());
+    let opts = js_sys::Object::new();
+    for (k, v) in [("timeZone", "Asia/Kolkata"), ("dateStyle", "medium"), ("timeStyle", "short")] {
+        let _ = js_sys::Reflect::set(&opts, &k.into(), &v.into());
+    }
+    d.to_locale_string("en-IN", &opts).as_string().unwrap_or_default()
+}
+
+/// The History tab beside Costing: that product's changes.
+pub fn history_href(code: &str) -> String {
+    format!("/cost-calculator/history/{}", encode_parts(code))
+}
+
 /// `/products/LC/0001/WL`, each part encoded (the code's slashes are path separators).
 pub fn product_href(code: &str) -> String {
     format!("/products/{}", encode_parts(code))
@@ -53,7 +81,7 @@ pub fn Menu(label: &'static str, items: Vec<MenuItem>) -> impl IntoView {
             d.set_open(false);
         }
     };
-    let _outside = window_event_listener(leptos::ev::pointerdown, move |e| {
+    on_window(leptos::ev::pointerdown, move |e| {
         let inside = details
             .get()
             .zip(e.target())
@@ -155,54 +183,109 @@ pub fn ImagePreview(src: String, #[prop(into)] alt: String, class: &'static str)
     }
 }
 
-/// Ticked rows of a list, kept on this device until unticked (survive other
-/// screens, restarts and filters), as the Next app kept them in localStorage.
+/// Ticked rows of a list (products, hampers), and its rows marked for review,
+/// kept on this device until unticked: they survive other screens, restarts
+/// and filters. One store per list for the whole window, so every screen and
+/// every undo step sees the same ticks (port of `selection.ts`).
 #[derive(Clone, Copy)]
 pub struct Selection {
     kind: &'static str,
-    ids: RwSignal<Vec<String>>,
+}
+
+thread_local! {
+    static STORES: std::cell::RefCell<std::collections::HashMap<String, ArcRwSignal<Vec<String>>>> =
+        std::cell::RefCell::default();
 }
 
 fn storage() -> Option<web_sys::Storage> {
     window().local_storage().ok().flatten()
 }
 
+/// `products`, `review-products`, …: the store behind one list's ticks or marks.
+fn store(key: &str) -> ArcRwSignal<Vec<String>> {
+    STORES.with(|s| {
+        s.borrow_mut()
+            .entry(key.to_string())
+            .or_insert_with(|| {
+                let saved = storage()
+                    .and_then(|s| s.get_item(&format!("lattice:selected-{key}")).ok().flatten())
+                    .and_then(|raw| serde_json::from_str(&raw).ok())
+                    .unwrap_or_default();
+                ArcRwSignal::new(saved)
+            })
+            .clone()
+    })
+}
+
+type Change = Vec<(String, Vec<String>)>;
+
+fn apply(to: &Change) {
+    for (key, ids) in to {
+        if let (Some(s), Ok(raw)) = (storage(), serde_json::to_string(ids)) {
+            let _ = s.set_item(&format!("lattice:selected-{key}"), &raw);
+        }
+        store(key).set(ids.clone());
+    }
+}
+
+/// Every tick, mark and clear goes through here, so each is one undo step.
+fn change(next: Change) {
+    let prev: Change = next.iter().map(|(k, _)| (k.clone(), store(k).get_untracked())).collect();
+    apply(&next);
+    crate::undo::record(move || apply(&prev), move || apply(&next));
+}
+
 impl Selection {
     pub fn new(kind: &'static str) -> Self {
-        let saved = storage()
-            .and_then(|s| s.get_item(&format!("lattice:selected-{kind}")).ok().flatten())
-            .and_then(|raw| serde_json::from_str(&raw).ok())
-            .unwrap_or_default();
-        Self { kind, ids: RwSignal::new(saved) }
+        Self { kind }
     }
 
-    fn save(&self) {
-        if let (Some(s), Ok(raw)) = (storage(), serde_json::to_string(&self.ids.get_untracked())) {
-            let _ = s.set_item(&format!("lattice:selected-{}", self.kind), &raw);
+    fn review(&self) -> String {
+        format!("review-{}", self.kind)
+    }
+
+    fn holds(key: &str, id: &str) -> bool {
+        store(key).with(|ids| ids.iter().any(|x| x == id))
+    }
+
+    /// A row is ticked or marked for review, never both: doing one undoes the other.
+    fn toggle(own: &str, rival: &str, id: &str, on: bool) {
+        let mut cur = store(own).get_untracked();
+        cur.retain(|x| x != id);
+        if on {
+            cur.push(id.to_string());
         }
+        let mut next = vec![(own.to_string(), cur)];
+        if on && Self::holds(rival, id) {
+            let mut r = store(rival).get_untracked();
+            r.retain(|x| x != id);
+            next.push((rival.to_string(), r));
+        }
+        change(next);
     }
 
     pub fn has(&self, id: &str) -> bool {
-        self.ids.with(|ids| ids.iter().any(|x| x == id))
+        Self::holds(self.kind, id)
     }
 
     pub fn set(&self, id: &str, on: bool) {
-        self.ids.update(|ids| {
-            ids.retain(|x| x != id);
-            if on {
-                ids.push(id.to_string());
-            }
-        });
-        self.save();
+        Self::toggle(self.kind, &self.review(), id, on);
+    }
+
+    pub fn marked(&self, id: &str) -> bool {
+        Self::holds(&self.review(), id)
+    }
+
+    pub fn mark(&self, id: &str, on: bool) {
+        Self::toggle(&self.review(), self.kind, id, on);
     }
 
     pub fn clear(&self) {
-        self.ids.set(Vec::new());
-        self.save();
+        change(vec![(self.kind.to_string(), Vec::new())]);
     }
 
     pub fn len(&self) -> usize {
-        self.ids.with(Vec::len)
+        store(self.kind).with(Vec::len)
     }
 
     /// "product" for "products".
@@ -223,7 +306,7 @@ pub fn Dots(
     class: &'static str,
 ) -> impl IntoView {
     let details = NodeRef::<html::Details>::new();
-    let _outside = window_event_listener(leptos::ev::pointerdown, move |e| {
+    on_window(leptos::ev::pointerdown, move |e| {
         let inside = details
             .get()
             .zip(e.target())
@@ -258,21 +341,6 @@ pub fn Dots(
                     .collect_view()}
             </div>
         </details>
-    }
-}
-
-/// ⋮ at the end of a row: Select / Unselect.
-#[component]
-pub fn RowMenu(sel: Selection, id: String, #[prop(into)] label: String) -> impl IntoView {
-    let (a, b) = (id.clone(), id);
-    let text = Signal::derive(move || if sel.has(&a) { "Unselect".to_string() } else { "Select".to_string() });
-    let toggle = Callback::new(move |()| sel.set(&b, !sel.has(&b)));
-    view! {
-        <Dots
-            label=format!("More actions for {label}")
-            items=vec![(text, toggle, Signal::derive(|| false))]
-            class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-lg leading-none text-(--color-muted) hover:bg-paper hover:text-(--color-ink)"
-        />
     }
 }
 
@@ -324,25 +392,68 @@ pub fn SelectionCount(sel: Selection) -> impl IntoView {
     }
 }
 
-/// Tick box shown only while the row is selected.
+/// Tick box beside a row's number: ticks or unticks it. Shown on row hover or
+/// keyboard focus (always on touch screens); the row's tint shows what's ticked.
 #[component]
 pub fn SelectBox(sel: Selection, id: String, #[prop(into)] label: String) -> impl IntoView {
-    let (a, b) = (id.clone(), id);
+    let id = StoredValue::new(id);
+    let on = Memo::new(move |_| id.with_value(|id| sel.has(id)));
     view! {
-        <Show when=move || sel.has(&a)>
-            <input
-                type="checkbox"
-                checked=true
-                aria-label=format!("Unselect {label}")
-                class="h-4 w-4 cursor-pointer accent-(--color-brand)"
-                on:change={
-                    let b = b.clone();
-                    move |_| sel.set(&b, false)
-                }
-            />
-        </Show>
+        <input
+            type="checkbox"
+            prop:checked=on
+            on:change=move |_| id.with_value(|id| sel.set(id, !on.get_untracked()))
+            aria-label=format!("Select {label}")
+            class="h-4 w-4 cursor-pointer accent-(--color-brand) opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
+        />
     }
 }
+
+/// Bookmark beside a row's tick box: marks it for review. Shown on row hover;
+/// the row's red shows it's marked.
+#[component]
+pub fn ReviewMark(sel: Selection, id: String, #[prop(into)] label: String) -> impl IntoView {
+    let id = StoredValue::new(id);
+    let on = Memo::new(move |_| id.with_value(|id| sel.marked(id)));
+    view! {
+        <button
+            type="button"
+            on:click=move |_| id.with_value(|id| sel.mark(id, !on.get_untracked()))
+            aria-pressed=move || on.get().to_string()
+            aria-label=format!("Mark {label} for review")
+            title=move || if on.get() { "Marked for review (click to unmark)" } else { "Mark for review" }
+            class=move || format!(
+                "cursor-pointer rounded p-0.5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 {}",
+                if on.get() { "text-red-600" } else { "text-(--color-muted) hover:text-red-600" }
+            )
+        >
+            <svg viewBox="0 0 24 24" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                fill=move || if on.get() { "currentColor" } else { "none" } aria-hidden="true">
+                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+            </svg>
+        </button>
+    }
+}
+
+/// A row's number, with its tick box and bookmark in the gutter left of the
+/// table (`.row-gutter`). Ticked rows take the brand tint and marked ones red
+/// (`row_tint`), so they show without hovering.
+#[component]
+pub fn RowNumber(sel: Selection, n: usize, id: String, #[prop(into)] label: String) -> impl IntoView {
+    view! {
+        <td class="td num relative w-12 text-(--color-muted)">
+            {n}
+            <div class="absolute top-1/2 right-full mr-1.5 flex -translate-y-1/2 items-center gap-1">
+                <SelectBox sel=sel id=id.clone() label=label.clone() />
+                <ReviewMark sel=sel id=id label=label />
+            </div>
+        </td>
+    }
+}
+
+/// The row classes that show its tick or review mark. Never both
+/// (Selection::toggle); the ! only covers the instant between the two writes.
+pub const ROW_TINT: &str = "group has-checked:bg-(--color-brand)/15 has-aria-pressed:bg-red-100!";
 
 /// An error box for a failed load or save.
 #[component]
@@ -425,18 +536,18 @@ pub fn Combo(
         let idx = if !typing.get() && !v.is_empty() { list.iter().position(|o| *o == v).unwrap_or(0) } else { 0 };
         highlight.set(if list.is_empty() { -1 } else { i32::try_from(idx).unwrap_or(0) });
     });
-    let _scroll = window_event_listener(leptos::ev::scroll, move |_| {
+    on_window(leptos::ev::scroll, move |_| {
         if open.get_untracked() {
             place();
         }
     });
-    let _resize = window_event_listener(leptos::ev::resize, move |_| {
+    on_window(leptos::ev::resize, move |_| {
         if open.get_untracked() {
             place();
         }
     });
     let root = NodeRef::<html::Div>::new();
-    let _outside = window_event_listener(leptos::ev::mousedown, move |e| {
+    on_window(leptos::ev::mousedown, move |e| {
         if !open.get_untracked() {
             return;
         }

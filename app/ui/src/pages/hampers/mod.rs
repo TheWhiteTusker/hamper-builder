@@ -4,18 +4,18 @@
 mod builder;
 mod image;
 
-pub use builder::{EditHamper, NewHamper};
-pub use image::HamperImage;
 use crate::components::PageHeader;
 use crate::data::use_settings;
 use crate::db::{Q, live, live_with, me};
-use crate::kit::{FallbackImg, ImagePreview, ListMenu, RowMenu, SelectBox, Selection, SelectionCount};
+use crate::kit::{FallbackImg, ImagePreview, ListMenu, ROW_TINT, RowNumber, Selection, SelectionCount};
+pub use builder::{EditHamper, NewHamper};
+pub use image::HamperImage;
+use lattice_core::Decimal;
 use lattice_core::api::ApiError;
 use lattice_core::images::thumb_url;
 use lattice_core::money::{format_money, format_pct};
 use lattice_core::numbers::{parse_num, round2};
 use lattice_core::records::{HamperItem, HamperSummary};
-use lattice_core::Decimal;
 use leptos::prelude::*;
 use leptos_router::NavigateOptions;
 use leptos_router::components::A;
@@ -43,6 +43,7 @@ pub fn Hampers() -> impl IntoView {
     let hampers = live::<HamperSummary>("hampers", summaries());
     let settings = use_settings();
     let sel = Selection::new("hampers");
+    crate::list_position::remember("hampers", move || hampers.data.with(Option::is_some));
     let query = use_query_map();
     let navigate = StoredValue::new_local(use_navigate());
     let param = move |k: &str| query.with(|m| m.get(k).unwrap_or_default());
@@ -54,7 +55,9 @@ pub fn Hampers() -> impl IntoView {
             m.replace(k, v);
         }
         let qs = m.to_query_string();
-        navigate.with_value(|nav| nav(&format!("/hampers{qs}"), NavigateOptions { replace: true, scroll: false, ..Default::default() }));
+        navigate.with_value(|nav| {
+            nav(&format!("/hampers{qs}"), NavigateOptions { replace: true, scroll: false, ..Default::default() })
+        });
     };
     let keys = ["q", "collection", "items", "cost_min", "cost_max", "price_min", "price_max"];
     let filtered_on = move || keys.iter().any(|k| !param(k).trim().is_empty());
@@ -63,12 +66,19 @@ pub fn Hampers() -> impl IntoView {
     let rows = Memo::new(move |_| {
         let q = param("q").trim().to_lowercase();
         let collection = param("collection");
-        let (items, cmin, cmax, pmin, pmax) =
-            (bound(&param("items")), bound(&param("cost_min")), bound(&param("cost_max")), bound(&param("price_min")), bound(&param("price_max")));
+        let (items, cmin, cmax, pmin, pmax) = (
+            bound(&param("items")),
+            bound(&param("cost_min")),
+            bound(&param("cost_max")),
+            bound(&param("price_min")),
+            bound(&param("price_max")),
+        );
         hampers.data.with(|all| {
             all.as_ref().map(|all| {
                 all.iter()
-                    .filter(|h| q.is_empty() || h.name.to_lowercase().contains(&q) || h.code.to_lowercase().contains(&q))
+                    .filter(|h| {
+                        q.is_empty() || h.name.to_lowercase().contains(&q) || h.code.to_lowercase().contains(&q)
+                    })
                     .filter(|h| collection.is_empty() || h.collection.as_deref() == Some(collection.as_str()))
                     .filter(|h| items.is_none_or(|n| h.number_of_items >= n))
                     .filter(|h| cmin.is_none_or(|n| h.total_cp >= n) && cmax.is_none_or(|n| h.total_cp <= n))
@@ -107,11 +117,13 @@ pub fn Hampers() -> impl IntoView {
             </div>
         </Show>
         <SelectionCount sel=sel />
-        <div class="card overflow-x-auto">
+        // row-gutter (app.css): room left of the table for each row's tick box and bookmark.
+        <div class="list-scroll row-gutter">
+            <div class="rounded-lg bg-white">
             <table class="w-full min-w-[1200px] border-collapse text-sm">
                 <thead>
                     <tr>
-                        <th class="th w-8" aria-label="Selected"></th>
+                        <th class="th num w-12">"S.No."</th>
                         <th class="th w-14"></th>
                         <th class="th">"Code"</th>
                         <th class="th">"Hamper"</th>
@@ -122,12 +134,11 @@ pub fn Hampers() -> impl IntoView {
                         <th class="th num">"Catalogue price"</th>
                         <th class="th num">"Profit"</th>
                         <th class="th num">"Margin"</th>
-                        <th class="th w-10"></th>
                     </tr>
                     <tr>
                         <th class="th pb-2" colspan="2"></th>
                         <th class="th pb-2" colspan="2">
-                            <input aria-label="Search name or code" placeholder="Name or code" class="input" prop:value=move || param("q") on:input=move |e| set_param("q", event_target_value(&e)) />
+                            <input name="q" aria-label="Search name or code" placeholder="Name or code" class="input" prop:value=move || param("q") on:input=move |e| set_param("q", event_target_value(&e)) />
                         </th>
                         <th class="th pb-2">
                             <input aria-label="Filter by collection" list="collection-options" placeholder="Any" class="input" prop:value=move || param("collection") on:input=move |e| set_param("collection", event_target_value(&e)) />
@@ -143,7 +154,7 @@ pub fn Hampers() -> impl IntoView {
                         <th class="th pb-2">
                             <div class="flex items-center gap-1">{field("price_min", "Minimum catalogue price", "input input-num")}<span class="text-(--color-muted)">"–"</span>{field("price_max", "Maximum catalogue price", "input input-num")}</div>
                         </th>
-                        <th class="th pb-2" colspan="3">
+                        <th class="th pb-2" colspan="2">
                             <div class="flex items-center justify-end gap-2">
                                 <Show when=filtered_on>
                                     <A href="/hampers" attr:class="btn-secondary">"Clear"</A>
@@ -154,17 +165,18 @@ pub fn Hampers() -> impl IntoView {
                 </thead>
                 <tbody>
                     {move || match rows.get() {
-                        None => view! { <tr><td colspan="12" class="td h-40 animate-pulse bg-white/60"></td></tr> }.into_any(),
+                        None => view! { <tr><td colspan="11" class="td h-40 animate-pulse bg-white/60"></td></tr> }.into_any(),
                         Some(list) if list.is_empty() => view! {
-                            <tr><td colspan="12" class="td py-10 text-center text-sm text-(--color-muted)">
+                            <tr><td colspan="11" class="td py-10 text-center text-sm text-(--color-muted)">
                                 {if filtered_on() { "No hampers match that search." } else { "No hampers yet." }}
                                 {(manage && !filtered_on()).then(|| view! { <A href="/hampers/new" attr:class="ml-2 underline">"Build the first one"</A> })}
                             </td></tr>
                         }.into_any(),
-                        Some(list) => list.into_iter().map(|h| view! { <Row h=h sel=sel /> }).collect_view().into_any(),
+                        Some(list) => list.into_iter().enumerate().map(|(i, h)| view! { <Row h=h n=i + 1 sel=sel /> }).collect_view().into_any(),
                     }}
                 </tbody>
             </table>
+            </div>
         </div>
     }
 }
@@ -174,13 +186,12 @@ fn tone(v: Option<Decimal>) -> &'static str {
 }
 
 #[component]
-fn Row(h: HamperSummary, sel: Selection) -> impl IntoView {
+fn Row(h: HamperSummary, n: usize, sel: Selection) -> impl IntoView {
     let href = hamper_href(&h.code);
-    let (id, sid) = (h.id.clone(), h.id.clone());
-    let (code, label1, label2) = (h.code.clone(), h.code.clone(), h.code.clone());
+    let (code, label) = (h.code.clone(), h.code.clone());
     view! {
-        <tr class=move || if sel.has(&sid) { "bg-(--color-brand)/5" } else { "" }>
-            <td class="td w-8 px-2 text-center"><SelectBox sel=sel id=id.clone() label=label1 /></td>
+        <tr class=ROW_TINT>
+            <RowNumber sel=sel n=n id=h.id.clone() label=label />
             <td class="td">
                 <A href=href.clone() attr:class="block h-10 w-10">
                     {match h.image_url.clone() {
@@ -203,7 +214,6 @@ fn Row(h: HamperSummary, sel: Selection) -> impl IntoView {
             </td>
             <td class=format!("td num {}", tone(h.gross_profit))>{h.gross_profit.map_or_else(|| "—".into(), |g| format_money(Some(g)))}</td>
             <td class=format!("td num {}", tone(h.final_margin))>{h.final_margin.map_or_else(|| "—".into(), |m| format_pct(Some(m), 1))}</td>
-            <td class="td w-10"><div class="flex justify-end"><RowMenu sel=sel id=id label=label2 /></div></td>
         </tr>
     }
 }
@@ -230,8 +240,17 @@ struct HamperPage {
 }
 
 async fn load_hamper_page(code: String) -> Result<HamperPage, ApiError> {
-    let hamper = summaries().eq("code", &code).one::<HamperSummary>().await?.ok_or_else(|| ApiError::NotFound("No such hamper.".into()))?;
-    let items = Q::from("hamper_items").select("*,products(image_url)").eq("hamper_id", &hamper.id).order("line_no").rows().await?;
+    let hamper = summaries()
+        .eq("code", &code)
+        .one::<HamperSummary>()
+        .await?
+        .ok_or_else(|| ApiError::NotFound("No such hamper.".into()))?;
+    let items = Q::from("hamper_items")
+        .select("*,products(image_url)")
+        .eq("hamper_id", &hamper.id)
+        .order("line_no")
+        .rows()
+        .await?;
     Ok(HamperPage { hamper, items })
 }
 
@@ -239,7 +258,11 @@ async fn load_hamper_page(code: String) -> Result<HamperPage, ApiError> {
 #[component]
 pub fn HamperView() -> impl IntoView {
     let params = use_params_map();
-    let code = Memo::new(move |_| params.with(|p| p.get("code").map(|c| js_sys::decode_uri_component(&c).map(String::from).unwrap_or(c)).unwrap_or_default()));
+    let code = Memo::new(move |_| {
+        params.with(|p| {
+            p.get("code").map(|c| js_sys::decode_uri_component(&c).map(String::from).unwrap_or(c)).unwrap_or_default()
+        })
+    });
     view! {
         {move || {
             let code = code.get();
@@ -247,6 +270,7 @@ pub fn HamperView() -> impl IntoView {
             let page = live_with(format!("hamper:{code}"), move || load_hamper_page(c.clone()));
             let manage = me().role.can_manage();
             view! {
+                <crate::list_position::BackToList kind="hampers" />
                 {move || match (page.data.get(), page.error.get()) {
                     (None, Some(e)) => view! { <div class="card p-6 text-sm text-red-800">{e.to_string()}</div> }.into_any(),
                     (None, None) => view! { <div class="card h-64 animate-pulse bg-white/60"></div> }.into_any(),
@@ -281,7 +305,11 @@ fn HamperPageView(page: HamperPage, manage: bool) -> impl IntoView {
         ("Target SP", money(h.target_sp), "text-(--color-ink)"),
         ("Variance", money(h.variance), good_bad(h.variance)),
         ("Final catalogue SP", money(h.final_catalogue_sp), "text-(--color-brand-dark)"),
-        ("Final margin", h.final_margin.map_or_else(|| "—".into(), |m| format_pct(Some(m), 1)), good_bad(h.final_margin)),
+        (
+            "Final margin",
+            h.final_margin.map_or_else(|| "—".into(), |m| format_pct(Some(m), 1)),
+            good_bad(h.final_margin),
+        ),
     ];
     let count = page.items.len();
     view! {

@@ -28,14 +28,20 @@ pub fn Clients() -> impl IntoView {
             m.replace("q", v);
         }
         let qs = m.to_query_string();
-        navigate.with_value(|nav| nav(&format!("/clients{qs}"), NavigateOptions { replace: true, scroll: false, ..Default::default() }));
+        navigate.with_value(|nav| {
+            nav(&format!("/clients{qs}"), NavigateOptions { replace: true, scroll: false, ..Default::default() })
+        });
     };
     let rows = Memo::new(move |_| {
         let q = param("q").trim().to_lowercase();
         clients.data.with(|all| {
             all.as_ref().map(|all| {
                 all.iter()
-                    .filter(|c| q.is_empty() || c.name.to_lowercase().contains(&q) || c.gstin.as_deref().is_some_and(|g| g.to_lowercase().contains(&q)))
+                    .filter(|c| {
+                        q.is_empty()
+                            || c.name.to_lowercase().contains(&q)
+                            || c.gstin.as_deref().is_some_and(|g| g.to_lowercase().contains(&q))
+                    })
                     .cloned()
                     .collect::<Vec<_>>()
             })
@@ -114,8 +120,10 @@ fn ClientForm(client: Option<Client>, clients: RwSignal<Option<Vec<Client>>>, re
     let navigate = StoredValue::new_local(use_navigate());
     let go = move |to: &str| navigate.with_value(|nav| nav(to, Default::default()));
     let field = |f: fn(&Client) -> Option<String>| RwSignal::new(client.as_ref().and_then(f).unwrap_or_default());
-    let (gstin_v, name, address) = (field(|c| c.gstin.clone()), field(|c| Some(c.name.clone())), field(|c| c.billing_address.clone()));
-    let (contact, phone, email) = (field(|c| c.contact_person.clone()), field(|c| c.phone.clone()), field(|c| c.email.clone()));
+    let (gstin_v, name, address) =
+        (field(|c| c.gstin.clone()), field(|c| Some(c.name.clone())), field(|c| c.billing_address.clone()));
+    let (contact, phone, email) =
+        (field(|c| c.contact_person.clone()), field(|c| c.phone.clone()), field(|c| c.email.clone()));
     let id = StoredValue::new(client.as_ref().map(|c| c.id.clone()));
     let error = RwSignal::new(None::<String>);
     let busy = RwSignal::new(None::<&'static str>);

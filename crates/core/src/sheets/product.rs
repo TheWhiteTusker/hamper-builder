@@ -258,7 +258,7 @@ pub fn lines_sheet(products: &[ProductLines], rows: &CostRows) -> (Sheet, StageS
                     variety_name: Some(m.v.name.clone()),
                     rate: m.v.default_rate,
                     unit: m.v.unit.clone(),
-                    wastage_pct: if saved.stage_code == "bought_out" { Decimal::ZERO } else { m.v.default_wastage_pct },
+                    wastage_pct: m.v.default_wastage_pct,
                     ..saved.clone()
                 },
                 None => saved.clone(),
@@ -452,14 +452,19 @@ pub fn read_overheads(row: &[String]) -> StageOverheads {
         .collect()
 }
 
-/// The Cost Lines tab as each product's lines. An item on the Rates page
-/// takes its rate, unit and wastage from there, as the calculator does; one
-/// that is not keeps what was typed, with a warning. An unknown Type is an error.
+/// The Cost Lines tab as each product's lines. Each item takes its rate, unit
+/// and wastage from the Rates page, as the calculator does. An item not on the
+/// Rates page is an error, as is an unknown Type: saved unlinked, a line shows
+/// "(not in master)" in the calculator and never follows the Rates page's rate.
+/// Names match in any case. A wastage % typed over a Rates item's is a change
+/// to the Rates page: it goes into `wastage` (variety id → new %, in the order
+/// first seen) and onto every line of that item.
 pub fn read_cost_lines(
     grid: Option<&Grid>,
     stages: &[StageNode],
     warnings: &mut Vec<String>,
     errors: &mut Vec<String>,
+    wastage: &mut Vec<(String, Decimal)>,
 ) -> BTreeMap<String, Vec<ProductCostLine>> {
     let mut stage_by: HashMap<String, &StageNode> = HashMap::new();
     for s in stages {
@@ -468,6 +473,8 @@ pub fn read_cost_lines(
         }
     }
     let mut lines: BTreeMap<String, Vec<ProductCostLine>> = BTreeMap::new();
+    // variety id → (path, the Rates page's %), for the warning.
+    let mut labels: HashMap<String, (String, Decimal)> = HashMap::new();
     for (row, n) in numbered(grid) {
         let get = |h: &str| cell(Some(row), line_col(h));
         let code = get("Product Code");
@@ -475,74 +482,87 @@ pub fn read_cost_lines(
             continue;
         }
         let Some(stage) = stage_by.get(&norm(&get("Type"))) else {
-            let labels: Vec<&str> = SHEET_STAGES.iter().map(|(_, l)| *l).collect();
+            let labels: Vec<&str> = stages.iter().map(|s| stage_label(&s.row.code, &s.row.name)).collect();
             errors.push(format!("Cost Lines row {n}: Type \"{}\" isn't one of {}.", get("Type"), labels.join(", ")));
             continue;
         };
         let cat = stage.categories.iter().find(|c| norm(&c.row.name) == norm(&get("Category")));
         let sub = cat.and_then(|c| c.subcategories.iter().find(|s| norm(&s.row.name) == norm(&get("Subcategory"))));
         let v = sub.and_then(|s| s.varieties.iter().find(|x| norm(&x.name) == norm(&get("Variety"))));
-        let sub_name = sub.map_or_else(|| get("Subcategory"), |s| s.row.name.clone());
-        let var_name = v.map_or_else(|| get("Variety"), |v| v.name.clone());
-        let bought = stage.row.code == "bought_out";
+        let path = ["Type", "Category", "Subcategory", "Variety"]
+            .iter()
+            .map(|h| get(h))
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>()
+            .join(" › ");
+        let (Some(cat), Some(sub), Some(v)) = (cat, sub, v) else {
+            errors.push(format!(
+                "Cost Lines row {n}: {code}'s {path} isn't on the Rates page. Spell it as the Rates page does, or add it there first."
+            ));
+            continue;
+        };
         let size = norm(&get("Size In"));
         let num_or_none = |h: &str| Some(get(h)).filter(|s| !s.is_empty()).map(|s| parse_num(&s));
-        let item_name = [sub_name.as_str(), var_name.as_str()]
-            .iter()
-            .filter(|s| !s.is_empty())
-            .copied()
-            .collect::<Vec<_>>()
-            .join(" ");
-        let typed_unit = get("Unit");
         let mrp = parse_num(&get("MRP"));
-        let mut line = ProductCostLine {
+        let line = ProductCostLine {
             stage_code: stage.row.code.clone(),
-            category_name: cat.map_or_else(|| get("Category"), |c| c.row.name.clone()),
-            subcategory_name: Some(sub_name.clone()).filter(|s| !s.is_empty()),
-            variety_name: Some(var_name.clone()).filter(|s| !s.is_empty()),
-            item_name: if item_name.is_empty() { get("Category") } else { item_name },
-            cost_variety_id: v.map(|v| v.id.clone()),
+            category_name: cat.row.name.clone(),
+            subcategory_name: Some(sub.row.name.clone()),
+            variety_name: Some(v.name.clone()),
+            item_name: format!("{} {}", sub.row.name, v.name),
+            cost_variety_id: Some(v.id.clone()),
             length: num_or_none("Length"),
             breadth: num_or_none("Breadth"),
             dimension_unit: Some(if size == "mm" || size == "cm" { size } else { "inch".into() }),
-            unit: v.map(|v| v.unit.clone()).unwrap_or_else(|| {
-                if !typed_unit.is_empty() {
-                    typed_unit
-                } else if stage.row.code == "machine" {
-                    "min".into()
-                } else {
-                    "piece".into()
-                }
-            }),
-            rate: v.map_or_else(|| parse_num(&get("Rate")), |v| v.default_rate),
+            unit: v.unit.clone(),
+            rate: v.default_rate,
             duration_minutes: num_or_none("Minutes"),
             qty: Some(if get("Qty").is_empty() { Decimal::ONE } else { parse_num(&get("Qty")) }),
-            wastage_pct: if bought {
-                Decimal::ZERO
-            } else {
-                v.map_or_else(|| parse_num(&get("Wastage %")), |v| v.default_wastage_pct)
-            },
+            wastage_pct: v.default_wastage_pct,
             mrp: (mrp > Decimal::ZERO).then_some(mrp),
             ..Default::default()
         };
-        if v.is_none() {
-            let path: Vec<String> = ["Type", "Category", "Subcategory", "Variety"]
-                .iter()
-                .map(|h| get(h))
-                .filter(|s| !s.is_empty())
-                .collect();
+        // Untouched rows still show the Rates value, so only a different one is an edit.
+        let typed = get("Wastage %");
+        if !typed.is_empty() {
+            let w = dec(js::round2(f(parse_num(&typed))));
+            if w != v.default_wastage_pct {
+                match wastage.iter_mut().find(|(id, _)| *id == v.id) {
+                    Some((_, seen)) => {
+                        if *seen != w {
+                            errors.push(format!(
+                                "Cost Lines row {n}: {path} has wastage {}% here but {}% on another row; use one.",
+                                js_num(w),
+                                js_num(*seen)
+                            ));
+                        }
+                        *seen = w;
+                    }
+                    None => wastage.push((v.id.clone(), w)),
+                }
+                labels.insert(v.id.clone(), (path.clone(), v.default_wastage_pct));
+            }
+        }
+        let list = lines.entry(code).or_default();
+        let sort_order = Some(i32::try_from(list.len() + 1).unwrap_or(i32::MAX));
+        list.push(ProductCostLine { sort_order, ..line });
+    }
+    for (id, w) in wastage.iter() {
+        if let Some((path, was)) = labels.get(id) {
             warnings.push(format!(
-                "{code}: {} isn't on the Rates page, so its typed rate ₹{} is used.",
-                path.join(" › "),
-                js_num(line.rate)
+                "{path}: wastage {}% → {}% on the Rates page; every product using it is repriced.",
+                js_num(*was),
+                js_num(*w)
             ));
         }
-        let calc = calculate_line_cost(&line);
-        let list = lines.entry(code).or_default();
+    }
+    for line in lines.values_mut().flatten() {
+        if let Some((_, w)) = wastage.iter().find(|(id, _)| line.cost_variety_id.as_deref() == Some(id.as_str())) {
+            line.wastage_pct = *w;
+        }
+        let calc = calculate_line_cost(line);
         line.calculated_area = Some(calc.calculated_area);
         line.line_total = calc.line_total;
-        line.sort_order = Some(i32::try_from(list.len() + 1).unwrap_or(i32::MAX));
-        list.push(line);
     }
     lines
 }
@@ -670,31 +690,62 @@ mod tests {
                     is_active: true,
                 },
             ],
-            categories: vec![CostCategory {
-                id: "c1".into(),
-                stage_id: "st1".into(),
-                name: "Woodbased".into(),
-                sort_order: 0,
-                is_active: true,
-            }],
-            subcategories: vec![CostSubcategory {
-                id: "s1".into(),
-                category_id: "c1".into(),
-                name: "Birch".into(),
-                sort_order: 0,
-                is_active: true,
-            }],
-            varieties: vec![CostVariety {
-                id: "v1".into(),
-                subcategory_id: "s1".into(),
-                name: "3mm".into(),
-                default_rate: dec!(90),
-                unit: "sq ft".into(),
-                default_wastage_pct: dec!(10),
-                notes: None,
-                sort_order: 0,
-                is_active: true,
-            }],
+            categories: vec![
+                CostCategory {
+                    id: "c1".into(),
+                    stage_id: "st1".into(),
+                    name: "Woodbased".into(),
+                    sort_order: 0,
+                    is_active: true,
+                },
+                CostCategory {
+                    id: "c2".into(),
+                    stage_id: "st2".into(),
+                    name: "Laser".into(),
+                    sort_order: 0,
+                    is_active: true,
+                },
+            ],
+            subcategories: vec![
+                CostSubcategory {
+                    id: "s1".into(),
+                    category_id: "c1".into(),
+                    name: "Birch".into(),
+                    sort_order: 0,
+                    is_active: true,
+                },
+                CostSubcategory {
+                    id: "s2".into(),
+                    category_id: "c2".into(),
+                    name: "CO2".into(),
+                    sort_order: 0,
+                    is_active: true,
+                },
+            ],
+            varieties: vec![
+                CostVariety {
+                    id: "v1".into(),
+                    subcategory_id: "s1".into(),
+                    name: "3mm".into(),
+                    default_rate: dec!(90),
+                    unit: "sq ft".into(),
+                    default_wastage_pct: dec!(10),
+                    notes: None,
+                    sort_order: 0,
+                    is_active: true,
+                },
+                CostVariety {
+                    id: "v2".into(),
+                    subcategory_id: "s2".into(),
+                    name: "Cutting".into(),
+                    default_rate: dec!(120),
+                    unit: "hour".into(),
+                    default_wastage_pct: dec!(0),
+                    notes: None,
+                    sort_order: 0,
+                    is_active: true,
+                },
+            ],
         }
     }
 
@@ -782,9 +833,9 @@ mod tests {
             line(|l| {
                 l.stage_code = "machine".into();
                 l.category_name = "Laser".into();
-                l.subcategory_name = None;
+                l.subcategory_name = Some("CO2".into());
                 l.variety_name = Some("Cutting".into());
-                l.cost_variety_id = None;
+                l.cost_variety_id = Some("v2".into());
                 l.length = None;
                 l.breadth = None;
                 l.unit = "hour".into();
@@ -823,9 +874,9 @@ mod tests {
         assert!(matches!(ws[0].get(1), Some(Cell::Formula { v: Some(Cached::Text(n)), .. }) if n == "Item E & <more>"));
         assert!(formula_of(ws[0].get(1)).is_some_and(|f| f.contains("MATCH(A2,'Product Master'!$A:$A")));
         assert!(formula_of(ws[0].get(12)).is_some_and(|f| f.contains("MATCH(")), "a master item's rate is looked up");
-        assert_eq!(formula_of(ws[1].get(12)), None, "an item not on the Rates page keeps its typed rate");
         assert_eq!(ws[2].first(), Some(&Cell::Empty), "a gap before the next product's lines");
         assert_eq!(ws[3].first(), Some(&Cell::text("G")));
+        assert_eq!(formula_of(ws[3].get(12)), None, "a line not linked to the Rates page keeps its typed rate");
         assert_eq!(
             grid(&sheets[2])[1].join(","),
             "Material,Woodbased,Birch,3mm,sq ft,90.00,10,Material|Woodbased|Birch|3mm"
@@ -833,8 +884,20 @@ mod tests {
 
         let result = build_import(&ImportInput { products: Some(master.clone()), ..Default::default() });
         let (mut warnings, mut errors) = (Vec::new(), Vec::new());
-        let read = read_cost_lines(Some(&grid(&sheets[1])), &build_cost_tree(&rates()), &mut warnings, &mut errors);
-        let e = read.get("E").cloned().unwrap_or_default();
+        let back = read_cost_lines(
+            Some(&grid(&sheets[1])),
+            &build_cost_tree(&rates()),
+            &mut warnings,
+            &mut errors,
+            &mut Vec::new(),
+        );
+        assert!(errors.is_empty(), "{errors:?}");
+        let e = back.get("E").cloned().unwrap_or_default();
+        assert_eq!(
+            back.get("G").and_then(|g| g.first()).and_then(|l| l.cost_variety_id.as_deref()),
+            Some("v1"),
+            "an unlinked line whose names are on the Rates page comes back linked"
+        );
         assert_eq!(e.iter().map(|l| l.line_total).collect::<Vec<_>>(), [dec!(198), dec!(60)]);
         assert_eq!(result.products[0].cost_price, dec!(277.8));
         let saved = ExistingCosting {
@@ -871,10 +934,15 @@ mod tests {
         );
     }
 
+    fn read(g: &Grid, warnings: &mut Vec<String>, errors: &mut Vec<String>) -> BTreeMap<String, Vec<ProductCostLine>> {
+        read_cost_lines(Some(g), &build_cost_tree(&rates()), warnings, errors, &mut Vec::new())
+    }
+
     #[test]
-    fn master_items_take_the_master_rate_and_others_keep_theirs() {
+    fn items_take_the_rates_page_rate_and_ones_not_on_it_are_errors() {
         let (mut warnings, mut errors) = (Vec::new(), Vec::new());
         let g = lines_grid(vec![
+            // Typed rate, unit and wastage are ignored for an item on the Rates page; names any case.
             line_row(&[
                 ("Product Code", "A"),
                 ("Type", "material"),
@@ -890,10 +958,10 @@ mod tests {
                 ("Product Code", "A"),
                 ("Type", "Machine Cost"),
                 ("Category", "Laser"),
+                ("Subcategory", "co2"),
                 ("Variety", "Cutting"),
                 ("Minutes", "30"),
-                ("Unit", "hour"),
-                ("Rate", "120"),
+                ("Rate", "5"),
             ]),
             line_row(&[
                 ("Product Code", "B"),
@@ -905,8 +973,9 @@ mod tests {
             ]),
             line_row(&[("Product Code", "B")]),
         ]);
-        let lines = read_cost_lines(Some(&g), &build_cost_tree(&rates()), &mut warnings, &mut errors);
-        assert!(errors.is_empty());
+        let lines = read(&g, &mut warnings, &mut errors);
+        assert!(errors.is_empty(), "{errors:?}");
+        assert!(warnings.is_empty(), "{warnings:?}");
         let a = &lines["A"];
         let (birch, laser) = (&a[0], &a[1]);
         assert_eq!(birch.cost_variety_id.as_deref(), Some("v1"));
@@ -925,24 +994,66 @@ mod tests {
             (
                 laser.stage_code.as_str(),
                 laser.cost_variety_id.as_deref(),
+                laser.subcategory_name.as_deref(),
                 laser.unit.as_str(),
                 laser.line_total,
                 laser.sort_order
             ),
-            ("machine", None, "hour", dec!(60), Some(2))
+            ("machine", Some("v2"), Some("CO2"), "hour", dec!(60), Some(2))
         );
         assert_eq!(lines["B"].len(), 1);
         assert_eq!(lines["B"][0].line_total, dec!(0), "qty 0 costs nothing");
-        assert_eq!(warnings.len(), 1);
+
+        // A near miss ("Birches" for "Birch") is not saved unlinked: it stops the import.
+        let missed = lines_grid(vec![line_row(&[
+            ("Product Code", "D"),
+            ("Type", "Material"),
+            ("Category", "Woodbased"),
+            ("Subcategory", "Birches"),
+            ("Variety", "3mm"),
+            ("Rate", "90"),
+        ])]);
+        assert!(read(&missed, &mut warnings, &mut errors).is_empty());
         assert!(
-            warnings[0].starts_with(
-                "A: Machine Cost › Laser › Cutting isn't on the Rates page, so its typed rate ₹120 is used"
-            )
+            errors[0].starts_with("Cost Lines row 2: D's Material › Woodbased › Birches › 3mm isn't on the Rates page")
         );
+        errors.clear();
 
         let bad = lines_grid(vec![line_row(&[("Product Code", "C"), ("Type", "Matrial"), ("Category", "Woodbased")])]);
-        read_cost_lines(Some(&bad), &build_cost_tree(&rates()), &mut Vec::new(), &mut errors);
-        assert!(errors[0].contains("row 2: Type \"Matrial\" isn't one of Material, Hardware"));
+        read(&bad, &mut Vec::new(), &mut errors);
+        // Only the stages in use are offered.
+        assert!(errors[0].ends_with("row 2: Type \"Matrial\" isn't one of Material, Machine."), "{}", errors[0]);
+    }
+
+    #[test]
+    fn a_typed_wastage_changes_the_rates_item_for_all_its_lines() {
+        let birch = |code: &'static str, w: &'static str| {
+            line_row(&[
+                ("Product Code", code),
+                ("Type", "Material"),
+                ("Category", "Woodbased"),
+                ("Subcategory", "Birch"),
+                ("Variety", "3mm"),
+                ("Length", "12"),
+                ("Breadth", "12"),
+                ("Wastage %", w),
+            ])
+        };
+        let (mut warnings, mut errors, mut wastage) = (Vec::new(), Vec::new(), Vec::new());
+        // B is untouched: it still shows the Rates value.
+        let g = lines_grid(vec![birch("A", "20"), birch("B", "10")]);
+        let lines = read_cost_lines(Some(&g), &build_cost_tree(&rates()), &mut warnings, &mut errors, &mut wastage);
+        assert!(errors.is_empty(), "{errors:?}");
+        assert_eq!(wastage, [("v1".to_string(), dec!(20))]);
+        assert_eq!((lines["A"][0].line_total, lines["B"][0].line_total), (dec!(108), dec!(108)), "1 sq ft × 90 + 20%");
+        assert!(warnings[0].contains("wastage 10% → 20% on the Rates page"), "{}", warnings[0]);
+
+        let clash = lines_grid(vec![birch("A", "20"), birch("B", "15")]);
+        read(&clash, &mut Vec::new(), &mut errors);
+        assert!(
+            errors[0].starts_with("Cost Lines row 3: ")
+                && errors[0].contains("has wastage 15% here but 20% on another row")
+        );
     }
 
     #[test]
@@ -956,8 +1067,7 @@ mod tests {
             ("Length", "24"),
             ("Breadth", "12"),
         ])]);
-        let lines =
-            read_cost_lines(Some(&g), &build_cost_tree(&rates()), &mut Vec::new(), &mut Vec::new())["A"].clone();
+        let lines = read(&g, &mut Vec::new(), &mut Vec::new())["A"].clone();
         let p = SheetCost { code: "A", cost_price: dec!(217.8), markup_pct: dec!(50) };
         let ten = StageOverheads::from([("material".into(), dec!(10))]);
         let saved = ExistingCosting {

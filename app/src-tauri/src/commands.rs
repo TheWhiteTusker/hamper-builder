@@ -204,3 +204,18 @@ pub async fn query(state: State<'_, AppState>, key: Query, fresh: bool) -> Resul
     }
     Ok(Some(Cached { value, fetched_at }))
 }
+
+/// What the UI's live-updates socket needs: Realtime's address and a valid
+/// access token, refreshed first when it is about to expire. The UI holds the
+/// token only to open that socket; every other request still goes through here.
+#[derive(serde::Serialize)]
+pub struct RealtimeAuth {
+    url: String,
+    token: String,
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn realtime_auth(state: State<'_, AppState>) -> Result<RealtimeAuth, ApiError> {
+    let token = state.sessions.token(&state.api).await?;
+    Ok(RealtimeAuth { url: state.api.realtime_url(), token })
+}

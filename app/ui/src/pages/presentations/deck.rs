@@ -77,8 +77,15 @@ async fn load_deck(id: String) -> Result<Option<DeckData>, ApiError> {
         id: String,
         title: String,
     }
-    let Some(head) = Q::from("presentations").select("id,title").eq("id", &id).one::<Head>().await? else { return Ok(None) };
-    let slides = Q::from("presentation_slides").select("id,kind,canvas").eq("presentation_id", &id).order("position").rows().await?;
+    let Some(head) = Q::from("presentations").select("id,title").eq("id", &id).one::<Head>().await? else {
+        return Ok(None);
+    };
+    let slides = Q::from("presentation_slides")
+        .select("id,kind,canvas")
+        .eq("presentation_id", &id)
+        .order("position")
+        .rows()
+        .await?;
     Ok(Some(DeckData { id: head.id, title: head.title, slides }))
 }
 
@@ -98,12 +105,16 @@ async fn save_deck(deck_id: &str, title: &str, slides: &[Draft]) -> Result<Vec<(
         id: String,
         position: i64,
     }
-    let existing: Vec<Pos> = Q::from("presentation_slides").select("id,position").eq("presentation_id", deck_id).rows().await?;
+    let existing: Vec<Pos> =
+        Q::from("presentation_slides").select("id,position").eq("presentation_id", deck_id).rows().await?;
     let kept: Vec<&str> = slides.iter().filter(|s| s.unsaved.is_none()).map(|s| s.id.as_str()).collect();
     if kept.iter().any(|id| !existing.iter().any(|e| e.id == *id)) {
-        return Err(ApiError::Conflict("Some slides were changed somewhere else. Reload the page and make your changes again.".into()));
+        return Err(ApiError::Conflict(
+            "Some slides were changed somewhere else. Reload the page and make your changes again.".into(),
+        ));
     }
-    let removed: Vec<String> = existing.iter().filter(|e| !kept.contains(&e.id.as_str())).map(|e| e.id.clone()).collect();
+    let removed: Vec<String> =
+        existing.iter().filter(|e| !kept.contains(&e.id.as_str())).map(|e| e.id.clone()).collect();
     if !removed.is_empty() {
         Q::from("presentation_slides").in_list("id", &removed).delete().await?;
     }
@@ -194,7 +205,7 @@ pub fn DeckOverview() -> impl IntoView {
             });
             view! {
                 {move || match (first.get(), picker.data.get()) {
-                    (Some(Some(d)), Some(p)) => view! { <Overview deck=d picker=p /> }.into_any(),
+                    (Some(Some(d)), Some(p)) => view! { <Overview deck=d picker=p fresh=deck.data /> }.into_any(),
                     _ => match deck.error.get() {
                         Some(e) => view! { <div class="card p-6 text-sm text-red-800">{e.to_string()}</div> }.into_any(),
                         None => view! { <div class="card h-96 animate-pulse bg-white/60"></div> }.into_any(),
@@ -206,14 +217,22 @@ pub fn DeckOverview() -> impl IntoView {
 }
 
 #[component]
-fn Overview(deck: DeckData, picker: PickerData) -> impl IntoView {
+fn Overview(deck: DeckData, picker: PickerData, fresh: RwSignal<Option<Option<DeckData>>>) -> impl IntoView {
     let navigate = StoredValue::new_local(use_navigate());
     let deck_id = StoredValue::new(deck.id.clone());
-    let initial: Vec<Draft> = deck.slides.iter().map(|s| Draft { id: s.id.clone(), kind: s.kind.clone(), canvas: parse_canvas(&s.canvas), unsaved: None }).collect();
+    let drafts_of = |d: &DeckData| -> Vec<Draft> {
+        d.slides
+            .iter()
+            .map(|s| Draft { id: s.id.clone(), kind: s.kind.clone(), canvas: parse_canvas(&s.canvas), unsaved: None })
+            .collect()
+    };
+    let saved_of =
+        |d: &DeckData| (d.title.clone(), d.slides.iter().map(|s| s.id.clone()).collect::<Vec<_>>().join(","));
+    let initial = drafts_of(&deck);
     let slides = RwSignal::new(initial.clone());
     let initial = StoredValue::new(initial);
     let title = RwSignal::new(deck.title.clone());
-    let saved = RwSignal::new((deck.title.clone(), deck.slides.iter().map(|s| s.id.clone()).collect::<Vec<_>>().join(",")));
+    let saved = RwSignal::new(saved_of(&deck));
     let error = RwSignal::new(None::<String>);
     let notice = RwSignal::new(None::<String>);
     let exporting = RwSignal::new(None::<String>);
@@ -224,6 +243,20 @@ fn Overview(deck: DeckData, picker: PickerData) -> impl IntoView {
     let laying_out = RwSignal::new(false);
     let ids_now = move || slides.with(|s| s.iter().map(|d| d.id.clone()).collect::<Vec<_>>().join(","));
     let dirty = move || saved.with(|(t, ids)| title.with(|x| x.trim() != t) || ids_now() != *ids);
+    crate::leave::warn_unsaved(move || untrack(dirty));
+    // Someone else's save arrives with a refresh: taken unless there are
+    // unsaved changes here. The first copy is the one the page opened with.
+    Effect::new(move |opened: Option<()>| {
+        let Some(Some(d)) = fresh.get() else { return };
+        if opened.is_none() || untrack(dirty) {
+            return;
+        }
+        let drafts = drafts_of(&d);
+        initial.set_value(drafts.clone());
+        slides.set(drafts);
+        title.set(d.title.clone());
+        saved.set(saved_of(&d));
+    });
     let edit = move |f: &dyn Fn(&mut Vec<Draft>)| {
         slides.update(|s| f(s));
         error.set(None);
@@ -295,7 +328,9 @@ fn Overview(deck: DeckData, picker: PickerData) -> impl IntoView {
         exporting.set(Some("Starting…".into()));
         spawn_local(async move {
             if export_pptx(&name, &canvases, exporting).await.is_err() {
-                error.set(Some("Could not build the PowerPoint. An image from another website may be blocking the export.".into()));
+                error.set(Some(
+                    "Could not build the PowerPoint. An image from another website may be blocking the export.".into(),
+                ));
             }
             exporting.set(None);
         });

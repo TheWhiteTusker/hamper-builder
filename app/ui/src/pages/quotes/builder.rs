@@ -73,8 +73,10 @@ async fn load_quote_options() -> Result<QuoteOptions, ApiError> {
     for item in items? {
         by_hamper.entry(item.hamper_id.clone()).or_default().push(item);
     }
-    let hampers =
-        hampers?.into_iter().map(|h| HamperOption { items: by_hamper.remove(&h.id).unwrap_or_default(), ..h }).collect();
+    let hampers = hampers?
+        .into_iter()
+        .map(|h| HamperOption { items: by_hamper.remove(&h.id).unwrap_or_default(), ..h })
+        .collect();
     Ok(QuoteOptions { hampers, products: products?, clients: clients? })
 }
 
@@ -231,11 +233,15 @@ impl Fields {
             gstin: text(|q| q.gstin.clone()),
             occasion: text(|q| q.occasion.clone()),
             structure: RwSignal::new(q.map_or_else(|| COMBINED_ORDER.to_string(), |q| q.quote_structure.clone())),
-            validity: RwSignal::new(q.map_or_else(|| Some(s.default_validity.clone()), |q| q.validity.clone()).unwrap_or_default()),
+            validity: RwSignal::new(
+                q.map_or_else(|| Some(s.default_validity.clone()), |q| q.validity.clone()).unwrap_or_default(),
+            ),
             status: RwSignal::new(q.map_or_else(|| "Draft".to_string(), |q| q.status.clone())),
             follow_up: text(|q| q.follow_up_date.clone()),
             notes: text(|q| q.notes.clone()),
-            terms: RwSignal::new(q.map_or_else(|| Some(s.quote_terms.clone()), |q| q.terms.clone()).unwrap_or_default()),
+            terms: RwSignal::new(
+                q.map_or_else(|| Some(s.quote_terms.clone()), |q| q.terms.clone()).unwrap_or_default(),
+            ),
             order_discount: RwSignal::new(q.map_or_else(|| "0".into(), |q| dstr(q.order_discount))),
             adj1: RwSignal::new(q.map_or_else(|| "0".into(), |q| dstr(q.adj1))),
             adj2: RwSignal::new(q.map_or_else(|| "0".into(), |q| dstr(q.adj2))),
@@ -266,7 +272,9 @@ pub fn QuotePage() -> impl IntoView {
     let params = use_params_map();
     let location = use_location();
     let doc_no = Memo::new(move |_| {
-        params.with(|p| p.get("doc").map(|c| js_sys::decode_uri_component(&c).map(String::from).unwrap_or(c)).unwrap_or_default())
+        params.with(|p| {
+            p.get("doc").map(|c| js_sys::decode_uri_component(&c).map(String::from).unwrap_or(c)).unwrap_or_default()
+        })
     });
     // Keyed on the whole URL: saving lands back here (`?saved=1`), and the
     // page then starts again from what the server stored.
@@ -366,7 +374,8 @@ fn Builder(
     packaging: Memo<Vec<String>>,
 ) -> impl IntoView {
     let profile = me();
-    let can_edit = profile.role.can_manage() || saved.as_ref().is_some_and(|s| s.quote.created_by.as_deref() == Some(profile.id.as_str()));
+    let can_edit = profile.role.can_manage()
+        || saved.as_ref().is_some_and(|s| s.quote.created_by.as_deref() == Some(profile.id.as_str()));
     let can_change_status = profile.role.can_manage();
     let navigate = StoredValue::new_local(use_navigate());
     let go = move |to: String| navigate.with_value(|nav| nav(&to, Default::default()));
@@ -425,15 +434,22 @@ fn Builder(
     });
     let option_totals = Memo::new(move |_| {
         let gst = fields.gst();
-        groups.get().into_iter().map(|g| {
-            let priced: Vec<QuoteLineInput> = lines.with(|ls| ls.iter().filter(|l| l.option() == g).map(Line::priced).collect());
-            (g, price_option(&priced, gst))
-        }).collect::<Vec<_>>()
+        groups
+            .get()
+            .into_iter()
+            .map(|g| {
+                let priced: Vec<QuoteLineInput> =
+                    lines.with(|ls| ls.iter().filter(|l| l.option() == g).map(Line::priced).collect());
+                (g, price_option(&priced, gst))
+            })
+            .collect::<Vec<_>>()
     });
 
     let add = move |kind: &str, id: String, option: String| {
         let line = opts.with_value(|o| match kind {
-            "hamper" => o.hampers.iter().find(|h| h.id == id).map(|h| settings.with_value(|s| Line::from_hamper(h, &option, s))),
+            "hamper" => {
+                o.hampers.iter().find(|h| h.id == id).map(|h| settings.with_value(|s| Line::from_hamper(h, &option, s)))
+            }
             _ => o.products.iter().find(|p| p.id == id).map(|p| Line::from_product(p, &option)),
         });
         if let Some(line) = line {
@@ -470,7 +486,8 @@ fn Builder(
     let save = move || {
         error.set(None);
         let text = |s: String| Some(s.trim().to_string()).filter(|s| !s.is_empty());
-        let (date, client) = (fields.doc_date.get_untracked().trim().to_string(), fields.client_name.get_untracked().trim().to_string());
+        let (date, client) =
+            (fields.doc_date.get_untracked().trim().to_string(), fields.client_name.get_untracked().trim().to_string());
         let ls = lines.get_untracked();
         let problem = if date.is_empty() {
             Some("Pick the document date.")
@@ -526,7 +543,12 @@ fn Builder(
         spawn_local(async move {
             match db::rpc::<_, String>("save_quote", &json!({ "p": payload })).await {
                 Ok(doc) => {
-                    let mut stale = vec!["quotes".to_string(), "dashboard".into(), format!("quote:{doc}"), format!("quote-print:{doc}")];
+                    let mut stale = vec![
+                        "quotes".to_string(),
+                        "dashboard".into(),
+                        format!("quote:{doc}"),
+                        format!("quote-print:{doc}"),
+                    ];
                     stale.extend(old.map(|d| format!("quote:{d}")));
                     db::cache_drop(&stale.iter().map(String::as_str).collect::<Vec<_>>()).await;
                     go(format!("{}?saved=1", quote_href(&doc)));
@@ -630,7 +652,12 @@ fn Builder(
 }
 
 #[component]
-fn Field(label: &'static str, id: &'static str, #[prop(optional)] class: &'static str, children: Children) -> impl IntoView {
+fn Field(
+    label: &'static str,
+    id: &'static str,
+    #[prop(optional)] class: &'static str,
+    children: Children,
+) -> impl IntoView {
     view! {
         <div class=class>
             <label class="label" for=id>{label}</label>
@@ -765,7 +792,10 @@ fn Pickers(
         let o = option.get();
         lines.with(|ls| ls.iter().filter(|l| l.option() == o).map(|l| l.hamper_code.clone()).collect::<HashSet<_>>())
     });
-    let picker = move |kind: &'static str, label: &'static str, placeholder: &'static str, items: Vec<(String, String, String)>| {
+    let picker = move |kind: &'static str,
+                       label: &'static str,
+                       placeholder: &'static str,
+                       items: Vec<(String, String, String)>| {
         let id = move || format!("{kind}-{}", option.get().replace(|c: char| !c.is_alphanumeric() && c != '_', "-"));
         view! {
             <div>
@@ -841,7 +871,9 @@ fn OptionGroup(
         empty.update(|e| e.retain(|x| *x != current));
         lines.update(|ls| ls.retain(|l| l.option() != current));
     };
-    let money = move |pick: fn(&QuotePricing) -> Option<Decimal>| move || totals.with(|t| t.as_ref().and_then(pick)).map_or_else(String::new, |v| format_money(Some(v)));
+    let money = move |pick: fn(&QuotePricing) -> Option<Decimal>| {
+        move || totals.with(|t| t.as_ref().and_then(pick)).map_or_else(String::new, |v| format_money(Some(v)))
+    };
     view! {
         <div class="border-t border-(--color-line) first:border-t-0">
             <div class="flex flex-wrap items-end justify-between gap-3 bg-(--color-brand-soft) px-4 py-2.5">
@@ -869,7 +901,11 @@ fn OptionGroup(
 }
 
 #[component]
-fn Total(#[prop(into)] label: Signal<String>, #[prop(into)] value: Signal<String>, #[prop(optional)] strong: bool) -> impl IntoView {
+fn Total(
+    #[prop(into)] label: Signal<String>,
+    #[prop(into)] value: Signal<String>,
+    #[prop(optional)] strong: bool,
+) -> impl IntoView {
     view! {
         <div class="flex items-baseline gap-2">
             <dt class="text-(--color-muted)">{label}</dt>
@@ -890,7 +926,9 @@ fn LineTable(
 ) -> impl IntoView {
     let keys = Memo::new(move |_| {
         let want = option.map(|o| o.get());
-        lines.with(|ls| ls.iter().filter(|l| want.as_ref().is_none_or(|w| l.option() == *w)).map(|l| l.key).collect::<Vec<_>>())
+        lines.with(|ls| {
+            ls.iter().filter(|l| want.as_ref().is_none_or(|w| l.option() == *w)).map(|l| l.key).collect::<Vec<_>>()
+        })
     });
     view! {
         <Show
@@ -951,7 +989,11 @@ fn LineRow(
     let has_hamper = Memo::new(move |_| line.with(|l| l.hamper_id.is_some()));
     let contents = move || {
         let l = line.get();
-        let items = l.hamper_id.as_ref().and_then(|id| opts.with_value(|o| o.hampers.iter().find(|h| h.id == *id).map(|h| h.items.clone()))).unwrap_or_default();
+        let items = l
+            .hamper_id
+            .as_ref()
+            .and_then(|id| opts.with_value(|o| o.hampers.iter().find(|h| h.id == *id).map(|h| h.items.clone())))
+            .unwrap_or_default();
         view! { <HamperContents class="text-xs" items=items detail_mode=l.detail_mode packaging_treatment=l.packaging_treatment packaging=packaging.get() /> }
     };
     let number = move |label: &'static str, get: fn(&Line) -> String, set: fn(&mut Line, String)| {
@@ -962,7 +1004,10 @@ fn LineRow(
             </td>
         }
     };
-    let pick = move |label: &'static str, list: fn(&Settings) -> Vec<String>, get: fn(&Line) -> String, set: fn(&mut Line, String)| {
+    let pick = move |label: &'static str,
+                     list: fn(&Settings) -> Vec<String>,
+                     get: fn(&Line) -> String,
+                     set: fn(&mut Line, String)| {
         view! {
             <td class="td">
                 <select aria-label=label class="select" disabled=!can_edit on:change=move |e| { let v = event_target_value(&e); update(&|l| set(l, v.clone())); }>
@@ -1036,7 +1081,9 @@ fn Totals(
     let amount = move |id: &'static str, label: &'static str, value: RwSignal<String>, class: &'static str| {
         view! { <TextField id=id label=label value=value disabled=off mode="decimal" class=if class.is_empty() { "input-num" } else { class } /> }
     };
-    let money = move |pick: fn(&QuotePricing) -> Option<Decimal>| Signal::derive(move || totals.with(pick).map(|v| format_money(Some(v))).unwrap_or_default());
+    let money = move |pick: fn(&QuotePricing) -> Option<Decimal>| {
+        Signal::derive(move || totals.with(pick).map(|v| format_money(Some(v))).unwrap_or_default())
+    };
     let label = |s: &'static str| Signal::stored(s.to_string());
     view! {
         <section class="grid gap-4 lg:grid-cols-2">
@@ -1097,7 +1144,8 @@ fn Actions(
 ) -> impl IntoView {
     let navigate = StoredValue::new_local(use_navigate());
     let go = move |to: String| navigate.with_value(|nav| nav(&to, Default::default()));
-    let chosen = RwSignal::new(if options.len() == 1 { options.first().cloned().unwrap_or_default() } else { String::new() });
+    let chosen =
+        RwSignal::new(if options.len() == 1 { options.first().cloned().unwrap_or_default() } else { String::new() });
     let (doc_no, id) = (quote.doc_no.clone(), StoredValue::new(quote.id.clone()));
     let doc = StoredValue::new(doc_no.clone());
     let convert = move || {
@@ -1174,7 +1222,8 @@ async fn convert_to_proforma(doc_no: &str, option: &str) -> Result<String, ApiEr
     let (quote, s) = join!(read.one::<Value>(), crate::data::load_settings());
     let Some(Value::Object(mut rest)) = quote? else { return Err(ApiError::NotFound("Not found".into())) };
     let pi_terms = s?.pi_terms;
-    let all: Vec<QuoteItem> = rest.remove("quote_items").map(serde_json::from_value).transpose().ok().flatten().unwrap_or_default();
+    let all: Vec<QuoteItem> =
+        rest.remove("quote_items").map(serde_json::from_value).transpose().ok().flatten().unwrap_or_default();
     for k in ["id", "doc_no", "created_at", "updated_at"] {
         rest.remove(k);
     }
@@ -1183,10 +1232,17 @@ async fn convert_to_proforma(doc_no: &str, option: &str) -> Result<String, ApiEr
     if is_options && option.is_empty() {
         return Err(ApiError::Invalid("Choose the option the client picked.".into()));
     }
-    let lines: Vec<&QuoteItem> =
-        if is_options { all.iter().filter(|l| option_key(l.option_label.as_deref()) == option).collect() } else { all.iter().collect() };
+    let lines: Vec<&QuoteItem> = if is_options {
+        all.iter().filter(|l| option_key(l.option_label.as_deref()) == option).collect()
+    } else {
+        all.iter().collect()
+    };
     if lines.is_empty() {
-        return Err(ApiError::Invalid(if is_options { format!("{option} has no items to invoice.") } else { "This quotation has no items.".into() }));
+        return Err(ApiError::Invalid(if is_options {
+            format!("{option} has no items to invoice.")
+        } else {
+            "This quotation has no items.".into()
+        }));
     }
     rest.insert("doc_type".into(), json!("proforma_invoice"));
     rest.insert("quote_structure".into(), json!(COMBINED_ORDER));

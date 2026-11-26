@@ -19,7 +19,11 @@ use serde_json::{Value, json};
 use std::rc::Rc;
 
 fn admin_only() -> Result<(), ApiError> {
-    if me().role.is_admin() { Ok(()) } else { Err(ApiError::Forbidden("Only an admin can change the master from Excel.".into())) }
+    if me().role.is_admin() {
+        Ok(())
+    } else {
+        Err(ApiError::Forbidden("Only an admin can change the master from Excel.".into()))
+    }
 }
 
 /// Every row, inactive too: names are unique per parent either way.
@@ -28,9 +32,14 @@ fn admin_only() -> Result<(), ApiError> {
 /// name (safe, not silent). Page with offsets then.
 async fn load_all_cost_rows() -> Result<CostRows, ApiError> {
     let all = |t: &str| Q::from(t).select("*").order("sort_order");
-    let (st, ca, su, va) = (all("cost_stages"), all("cost_categories"), all("cost_subcategories"), all("cost_varieties"));
-    let (stages, categories, subcategories, varieties) =
-        futures::join!(st.rows::<CostStage>(), ca.rows::<CostCategory>(), su.rows::<CostSubcategory>(), va.rows::<CostVariety>());
+    let (st, ca, su, va) =
+        (all("cost_stages"), all("cost_categories"), all("cost_subcategories"), all("cost_varieties"));
+    let (stages, categories, subcategories, varieties) = futures::join!(
+        st.rows::<CostStage>(),
+        ca.rows::<CostCategory>(),
+        su.rows::<CostSubcategory>(),
+        va.rows::<CostVariety>()
+    );
     Ok(CostRows { stages: stages?, categories: categories?, subcategories: subcategories?, varieties: varieties? })
 }
 
@@ -50,7 +59,9 @@ async fn import_rate_sheet(grid: Grid, apply: bool, only_new: bool) -> Result<Re
     if !apply {
         return Ok(Report { ok: true, counts: counts(&plan.counts), warnings: plan.warnings, ..Default::default() });
     }
-    for (table, list) in [("cost_categories", &plan.reactivate.categories), ("cost_subcategories", &plan.reactivate.subcategories)] {
+    for (table, list) in
+        [("cost_categories", &plan.reactivate.categories), ("cost_subcategories", &plan.reactivate.subcategories)]
+    {
         if !list.is_empty() {
             Q::from(table).in_list("id", list).update(&json!({ "is_active": true }), None).await?;
         }
@@ -64,13 +75,17 @@ async fn import_rate_sheet(grid: Grid, apply: bool, only_new: bool) -> Result<Re
         name: String,
     }
     if !plan.new_categories.is_empty() {
-        let rows: Vec<Value> =
-            plan.new_categories.iter().map(|c| json!({ "stage_id": c.stage_id, "name": c.name, "sort_order": c.sort_order })).collect();
+        let rows: Vec<Value> = plan
+            .new_categories
+            .iter()
+            .map(|c| json!({ "stage_id": c.stage_id, "name": c.name, "sort_order": c.sort_order }))
+            .collect();
         for c in insert_returning::<_, NewCat>("cost_categories", &rows).await? {
             plan.ids.insert(format!("{}|{}", c.stage_id, c.name.trim().to_lowercase()), c.id);
         }
     }
-    let key_by_id: std::collections::HashMap<String, String> = plan.ids.iter().map(|(k, v)| (v.clone(), k.clone())).collect();
+    let key_by_id: std::collections::HashMap<String, String> =
+        plan.ids.iter().map(|(k, v)| (v.clone(), k.clone())).collect();
     #[derive(Deserialize)]
     struct NewSub {
         id: String,
@@ -108,7 +123,12 @@ async fn import_rate_sheet(grid: Grid, apply: bool, only_new: bool) -> Result<Re
     db::cache_drop(&["cost_rows", "products", "catalog"]).await;
     let counts = counts(&plan.counts);
     Ok(match repriced {
-        Err(e) => Report { applied: true, counts, error: Some(format!("Master saved, but repricing failed: {e}")), ..Default::default() },
+        Err(e) => Report {
+            applied: true,
+            counts,
+            error: Some(format!("Master saved, but repricing failed: {e}")),
+            ..Default::default()
+        },
         Ok(n) => Report {
             error: None,
             ok: true,
@@ -117,7 +137,10 @@ async fn import_rate_sheet(grid: Grid, apply: bool, only_new: bool) -> Result<Re
             warnings: plan.warnings,
             added: plan.new_varieties.iter().map(|v| (v.label.clone(), None)).collect(),
             message: Some(if n > 0 {
-                format!("Master saved. {n} product{} repriced; quotations and invoices keep their prices.", if n == 1 { "" } else { "s" })
+                format!(
+                    "Master saved. {n} product{} repriced; quotations and invoices keep their prices.",
+                    if n == 1 { "" } else { "s" }
+                )
             } else {
                 "Master saved.".into()
             }),

@@ -71,7 +71,10 @@ mod tests {
             Ok(GstDetails { name: "Acme Pvt Ltd".into(), billing_address: "1 MG Road - 560001".into() })
         );
         assert_eq!(read_gstinapi(false, &json!({"error": "Invalid key"})), Err("Invalid key".into()));
-        assert_eq!(read_gstinapi(true, &json!({"success": false, "error": {"message": "Not found"}})), Err("Not found".into()));
+        assert_eq!(
+            read_gstinapi(true, &json!({"success": false, "error": {"message": "Not found"}})),
+            Err("Not found".into())
+        );
         assert_eq!(read_gstinapi(true, &Value::Null), Err("GST lookup failed. Enter the details by hand.".into()));
     }
 }

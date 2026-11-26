@@ -175,7 +175,9 @@ pub fn EditHamper() -> impl IntoView {
     let params = use_params_map();
     let query = use_query_map();
     let code = Memo::new(move |_| {
-        params.with(|p| p.get("code").map(|c| js_sys::decode_uri_component(&c).map(String::from).unwrap_or(c)).unwrap_or_default())
+        params.with(|p| {
+            p.get("code").map(|c| js_sys::decode_uri_component(&c).map(String::from).unwrap_or(c)).unwrap_or_default()
+        })
     });
     view! {
         {move || {
@@ -232,7 +234,8 @@ fn Builder(hamper: Option<HamperPage>) -> impl IntoView {
 
     let saved = StoredValue::new(hamper.as_ref().map(|p| p.hamper.clone()));
     let fields = Fields::new(hamper.as_ref().map(|p| &p.hamper));
-    let first_lines: Vec<Line> = hamper.as_ref().map(|p| p.items.iter().map(|i| Line::from_item(&i.item)).collect()).unwrap_or_default();
+    let first_lines: Vec<Line> =
+        hamper.as_ref().map(|p| p.items.iter().map(|i| Line::from_item(&i.item)).collect()).unwrap_or_default();
     let lines = RwSignal::new(if first_lines.is_empty() { vec![Line::blank()] } else { first_lines });
     let error = RwSignal::new(None::<String>);
     let busy = RwSignal::new(None::<&'static str>);
@@ -258,7 +261,8 @@ fn Builder(hamper: Option<HamperPage>) -> impl IntoView {
         price_hamper(&inputs, &fields.opts())
     });
     let products = Memo::new(move |_| catalog.data.get().unwrap_or_default());
-    let all_labels = Memo::new(move |_| products.with(|ps| ps.iter().map(|p| product_label(&p.name, &p.code)).collect::<Vec<_>>()));
+    let all_labels =
+        Memo::new(move |_| products.with(|ps| ps.iter().map(|p| product_label(&p.name, &p.code)).collect::<Vec<_>>()));
     let category_options = Memo::new(move |_| {
         std::iter::once("All categories".to_string())
             .chain(categories.data.with(|c| c.iter().flatten().map(|c| c.name.clone()).collect::<Vec<_>>()))
@@ -268,7 +272,8 @@ fn Builder(hamper: Option<HamperPage>) -> impl IntoView {
 
     let save = move || {
         error.set(None);
-        let (name, status) = (fields.name.get_untracked().trim().to_string(), fields.status.get_untracked().trim().to_string());
+        let (name, status) =
+            (fields.name.get_untracked().trim().to_string(), fields.status.get_untracked().trim().to_string());
         let ls = lines.get_untracked();
         let kept: Vec<&Line> = ls.iter().filter(|l| !l.product_name.trim().is_empty()).collect();
         let final_sp = optional(&fields.final_sp.get_untracked());
@@ -338,8 +343,9 @@ fn Builder(hamper: Option<HamperPage>) -> impl IntoView {
                     let mut stale = vec!["hampers".to_string(), "dashboard".into(), format!("hamper:{code}")];
                     stale.extend(old_code.map(|c| format!("hamper:{c}")));
                     db::cache_drop(&stale.iter().map(String::as_str).collect::<Vec<_>>()).await;
-                    // Saving is the end of the job: back to the list.
-                    go("/hampers".into());
+                    // Saving is the end of the job: back to the list as it was left.
+                    crate::list_position::mark_restore("hampers");
+                    go(crate::list_position::after_save("hampers", false));
                 }
                 Err(e) => {
                     busy.set(None);
@@ -367,10 +373,14 @@ fn Builder(hamper: Option<HamperPage>) -> impl IntoView {
         });
     };
     let bin = move || {
-        let Some((id, code, name)) = saved.with_value(|h| h.as_ref().map(|h| (h.id.clone(), h.code.clone(), h.name.clone()))) else {
+        let Some((id, code, name)) =
+            saved.with_value(|h| h.as_ref().map(|h| (h.id.clone(), h.code.clone(), h.name.clone())))
+        else {
             return;
         };
-        if !confirm(&format!("Move {name} to the Bin? It will stay in the Bin for 30 days and can be restored anytime.")) {
+        if !confirm(&format!(
+            "Move {name} to the Bin? It will stay in the Bin for 30 days and can be restored anytime."
+        )) {
             return;
         }
         error.set(None);
@@ -380,7 +390,7 @@ fn Builder(hamper: Option<HamperPage>) -> impl IntoView {
             match Q::from("hampers").eq("id", &id).update(&json!({ "deleted_at": now }), None).await {
                 Ok(_) => {
                     db::cache_drop(&["hampers", "dashboard", &format!("hamper:{code}")]).await;
-                    go("/hampers?deleted=1".into());
+                    go(crate::list_position::after_save("hampers", true));
                 }
                 Err(e) => {
                     busy.set(None);
@@ -527,7 +537,12 @@ fn tone(v: Option<Decimal>) -> &'static str {
 }
 
 #[component]
-fn Cell(label: &'static str, #[prop(into)] value: Signal<String>, #[prop(optional, into)] tone: Signal<&'static str>, #[prop(optional)] strong: bool) -> impl IntoView {
+fn Cell(
+    label: &'static str,
+    #[prop(into)] value: Signal<String>,
+    #[prop(optional, into)] tone: Signal<&'static str>,
+    #[prop(optional)] strong: bool,
+) -> impl IntoView {
     let size = if strong { "text-base font-semibold" } else { "text-sm font-medium" };
     view! {
         <div>
@@ -538,7 +553,13 @@ fn Cell(label: &'static str, #[prop(into)] value: Signal<String>, #[prop(optiona
 }
 
 #[component]
-fn NumField(id: &'static str, label: &'static str, value: RwSignal<String>, disabled: bool, #[prop(optional)] hint: &'static str) -> impl IntoView {
+fn NumField(
+    id: &'static str,
+    label: &'static str,
+    value: RwSignal<String>,
+    disabled: bool,
+    #[prop(optional)] hint: &'static str,
+) -> impl IntoView {
     view! {
         <div class="w-30">
             <label class="label" for=id title=hint>{label}</label>
@@ -552,7 +573,9 @@ fn NumField(id: &'static str, label: &'static str, value: RwSignal<String>, disa
 #[component]
 fn PricingStrip(fields: Fields, totals: Memo<HamperPricing>, disabled: bool) -> impl IntoView {
     let t = move |pick: fn(&HamperPricing) -> Option<Decimal>| Signal::derive(move || totals.with(pick));
-    let money = move |pick: fn(&HamperPricing) -> Option<Decimal>| Signal::derive(move || totals.with(pick).map_or_else(|| "—".into(), |v| format_money(Some(v))));
+    let money = move |pick: fn(&HamperPricing) -> Option<Decimal>| {
+        Signal::derive(move || totals.with(pick).map_or_else(|| "—".into(), |v| format_money(Some(v))))
+    };
     view! {
         <section class="card p-4">
             <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
@@ -600,7 +623,9 @@ fn LineRow(
         let wanted = line.with(|l| l.category_name.trim().to_lowercase());
         products.with(|ps| {
             ps.iter()
-                .filter(|p| wanted.is_empty() || p.category_name.as_deref().unwrap_or("").trim().to_lowercase() == wanted)
+                .filter(|p| {
+                    wanted.is_empty() || p.category_name.as_deref().unwrap_or("").trim().to_lowercase() == wanted
+                })
                 .map(|p| product_label(&p.name, &p.code))
                 .collect::<Vec<_>>()
         })
@@ -614,7 +639,9 @@ fn LineRow(
             let label = |p: &&CatalogProduct| product_label(&p.name, &p.code) == text;
             let wanted = line.with_untracked(|l| l.category_name.trim().to_lowercase());
             ps.iter()
-                .filter(|p| wanted.is_empty() || p.category_name.as_deref().unwrap_or("").trim().to_lowercase() == wanted)
+                .filter(|p| {
+                    wanted.is_empty() || p.category_name.as_deref().unwrap_or("").trim().to_lowercase() == wanted
+                })
                 .find(label)
                 .or_else(|| ps.iter().find(label))
                 .cloned()
@@ -626,7 +653,8 @@ fn LineRow(
             if x != 0.0 && !x.is_nan() { format_money(Some(dec(x))) } else { "—".into() }
         }
     };
-    let what = move || line.with(|l| if l.product_name.is_empty() { "line".to_string() } else { l.product_name.clone() });
+    let what =
+        move || line.with(|l| if l.product_name.is_empty() { "line".to_string() } else { l.product_name.clone() });
     let cell = move |field: Option<Price>, label: &'static str, get: fn(&Line) -> String| {
         view! {
             <td class="td">

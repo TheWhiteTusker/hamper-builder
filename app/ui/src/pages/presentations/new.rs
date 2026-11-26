@@ -26,7 +26,11 @@ async fn create_presentation(title: &str, slides: Vec<SlideInput>) -> Result<Str
     struct Id {
         id: String,
     }
-    let deck = insert_returning::<_, Id>("presentations", &json!({ "title": title })).await?.into_iter().next().ok_or_else(|| ApiError::Server("The presentation was not created.".into()))?;
+    let deck = insert_returning::<_, Id>("presentations", &json!({ "title": title }))
+        .await?
+        .into_iter()
+        .next()
+        .ok_or_else(|| ApiError::Server("The presentation was not created.".into()))?;
     let rows: Vec<Value> = slides
         .into_iter()
         .enumerate()
@@ -84,7 +88,11 @@ fn Form(picker: PickerData, contact: String) -> impl IntoView {
         spawn_local(async move {
             let res = async {
                 let slides = build_slides(&picked, &note, Some(&text)).await?;
-                let name = [text.title.trim(), text.subtitle.trim()].into_iter().filter(|s| !s.is_empty()).collect::<Vec<_>>().join(" ");
+                let name = [text.title.trim(), text.subtitle.trim()]
+                    .into_iter()
+                    .filter(|s| !s.is_empty())
+                    .collect::<Vec<_>>()
+                    .join(" ");
                 create_presentation(&name, slides).await
             }
             .await;
@@ -95,11 +103,13 @@ fn Form(picker: PickerData, contact: String) -> impl IntoView {
             }
         });
     };
-    let field = |id: &'static str, label: &'static str, v: RwSignal<String>| view! {
-        <div>
-            <label class="label" for=id>{label}</label>
-            <input id=id class="input mt-1" prop:value=v on:input=move |e| v.set(event_target_value(&e)) />
-        </div>
+    let field = |id: &'static str, label: &'static str, v: RwSignal<String>| {
+        view! {
+            <div>
+                <label class="label" for=id>{label}</label>
+                <input id=id class="input mt-1" prop:value=v on:input=move |e| v.set(event_target_value(&e)) />
+            </div>
+        }
     };
     view! {
         <div class="space-y-4">
