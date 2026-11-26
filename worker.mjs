@@ -20,8 +20,19 @@ const FILES = {
   "Lattice-Lane-Setup.exe": "application/octet-stream",
 };
 
+const LATEST_RUST =
+  "https://github.com/TheWhiteTusker/hamper-builder/releases/latest/download/latest.json";
+
 const worker = {
   async fetch(request, env, ctx) {
+    // "Download app": the newest Rust (Tauri) installer, read from the
+    // updater's latest.json on GitHub so it never needs updating here.
+    if (new URL(request.url).pathname === "/download") {
+      const res = await fetch(LATEST_RUST, { cf: { cacheTtl: 300 } });
+      const url = res.ok ? (await res.json()).platforms?.["windows-x86_64"]?.url : null;
+      return url ? Response.redirect(url, 302) : new Response("Download unavailable, try again shortly.", { status: 503 });
+    }
+
     const name = new URL(request.url).pathname.match(/^\/updates\/([^/]+)$/)?.[1];
     const type = name && FILES[name];
     if (!type || (request.method !== "GET" && request.method !== "HEAD")) {

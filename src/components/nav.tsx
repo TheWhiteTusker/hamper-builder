@@ -103,13 +103,24 @@ export function Nav({ profile, desktop }: { profile: Profile; desktop: boolean }
 
         <div className="flex shrink-0 items-center whitespace-nowrap gap-[clamp(0.4rem,0.9vw,0.75rem)] text-[clamp(0.75rem,0.95vw,0.875rem)]">
           {!isDesktopClient ? (
-            // Plain <a>: a file download, not a page for the router to prefetch.
-            <a
-              href="/updates/Lattice-Lane-Setup.exe"
-              className="btn rounded-full border border-white/30 px-[clamp(0.6rem,1vw,1rem)] text-[length:inherit] text-white hover:bg-white/10"
-            >
-              Download app
-            </a>
+            // Plain <a>s: file downloads, not pages for the router to prefetch.
+            // The new Rust app first; the old Electron app until everyone has moved.
+            <>
+              <a
+                href="/download"
+                title="The new Lattice Lane app (about 10 MB)"
+                className="btn rounded-full border border-white/30 px-[clamp(0.6rem,1vw,1rem)] text-[length:inherit] text-white hover:bg-white/10"
+              >
+                Download app
+              </a>
+              <a
+                href="/updates/Lattice-Lane-Setup.exe"
+                title="The previous Electron version of the app (about 112 MB)"
+                className="text-[length:inherit] text-white/60 underline-offset-2 hover:text-white hover:underline"
+              >
+                Old app
+              </a>
+            </>
           ) : (
             <button
               type="button"
