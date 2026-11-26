@@ -138,7 +138,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         // row-gutter (globals.css): room left of the table for each row's tick box and bookmark.
         <div className="list-scroll row-gutter">
           {/* No outline: just the rows' own lines, with the gutter's buttons outside them. */}
-          <div className="rounded-lg bg-white">
+          <div className="rounded-lg border border-white/70 bg-white/60">
           <Table>
             <TableHeader>
               <TableRow>

@@ -71,7 +71,7 @@ export function Nav({ profile, desktop }: { profile: Profile; desktop: boolean }
   // screen (clamp) so the bar fits a small laptop without scrolling; the
   // links wrap to a second line rather than scroll if it is narrower still.
   return (
-    <header className="no-print bg-(--color-brand)">
+    <header className="no-print bg-(--color-brand)/90 backdrop-blur-md">
       <div className="flex flex-wrap items-center justify-between gap-[clamp(0.5rem,1.4vw,1.5rem)] px-[clamp(0.75rem,1.8vw,1.5rem)] py-[clamp(0.5rem,0.9vw,0.75rem)]">
         <Link href="/dashboard" aria-label="Lattice Lane — dashboard" className="shrink-0">
           <Image

@@ -39,7 +39,14 @@ html {
 }
 
 body {
-  background: var(--color-paper);
+  /* Soft sage and gold light on the cream, fixed to the window: the glass
+     panels (.card, list tables, the nav bar) show it through. */
+  background-color: var(--color-paper);
+  background-image:
+    radial-gradient(60rem 40rem at 8% -10%, rgb(84 101 91 / 0.16), transparent 60%),
+    radial-gradient(50rem 36rem at 96% 6%, rgb(221 207 139 / 0.32), transparent 60%),
+    radial-gradient(56rem 40rem at 50% 112%, rgb(84 101 91 / 0.12), transparent 60%);
+  background-attachment: fixed;
   color: var(--color-ink);
 }
 
@@ -105,7 +112,9 @@ main:has(> .list-scroll) {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: #fff;
+  /* Frosted: rows scrolling under the headings blur instead of clashing. */
+  background: rgb(255 255 255 / 0.72);
+  backdrop-filter: blur(12px);
   /* Collapsed table borders scroll away from a sticky header; draw its own. */
   box-shadow: inset 0 -1px var(--color-line);
 }
@@ -144,7 +153,7 @@ main:has(> .row-gutter) {
    of money line up, and compact controls so a 20-line hamper fits on screen. */
 @layer components {
   .card {
-    @apply rounded-lg border border-line bg-white;
+    @apply rounded-lg border border-white/70 bg-white/55 shadow-[0_8px_30px_rgba(44,51,47,0.06)] backdrop-blur-md;
   }
 
   .label {
@@ -184,8 +193,8 @@ main:has(> .row-gutter) {
   }
 
   .btn-secondary {
-    @apply border border-line bg-white text-(--color-ink)
-           hover:bg-paper;
+    @apply border border-line bg-white/60 backdrop-blur-sm text-(--color-ink)
+           hover:bg-white/90;
   }
 
   .btn-danger {
