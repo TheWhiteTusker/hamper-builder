@@ -1,0 +1,20 @@
+# A new Worker, separate from the live Next app's "hamper-builder": deploying
+# this never touches the running site. Secrets (never committed):
+#   wrangler secret put GSTIN_API_KEY              # gstinapi.in key
+#   wrangler secret put SUPABASE_SERVICE_ROLE_KEY  # optional: enables the nightly purge
+name = "lattice-lane-api"
+main = "build/worker/shim.mjs"
+compatibility_date = "2026-09-03"
+
+# Next to Supabase (Mumbai), as the old Worker was placed.
+placement = { region = "aws:ap-south-1" }
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
+
+# 02:00 IST: empty the Recycle Bin of anything kept past 30 days.
+[triggers]
+crons = ["30 20 * * *"]
+
+[observability]
+enabled = true

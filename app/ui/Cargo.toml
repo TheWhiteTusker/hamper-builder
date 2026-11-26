@@ -1,0 +1,33 @@
+[package]
+name = "lattice-ui"
+description = "Lattice Lane UI: Leptos, compiled to WASM and shown in the app's webview"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+lattice-core = { path = "../../crates/core" }
+leptos = { version = "0.8", features = ["csr"] }
+leptos_router = "0.8"
+serde.workspace = true
+serde_json.workspace = true
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+serde-wasm-bindgen = "0.6"
+js-sys = "0.3"
+console_error_panic_hook = "0.1"
+futures = "0.3"
+time.workspace = true
+web-sys = { version = "0.3", features = [
+  "Blob", "BlobPropertyBag", "CanvasRenderingContext2d", "DataTransfer", "DomRect", "DragEvent", "Element",
+  "File", "FileList", "HtmlCanvasElement", "HtmlDetailsElement", "HtmlDialogElement", "HtmlImageElement",
+  "HtmlInputElement", "HtmlSelectElement", "ImageBitmap", "ImageData", "KeyboardEvent", "MouseEvent", "Node",
+  "PointerEvent", "Storage", "Url", "Window", "CanvasGradient", "TextMetrics", "Document", "HtmlTextAreaElement",
+  "FontFaceSet", "Crypto", "WheelEvent", "ResizeObserver", "ResizeObserverEntry", "HtmlDivElement", "HtmlElement",
+  "HtmlLinkElement", "CssStyleDeclaration", "EventTarget", "FilePropertyBag", "DomRectReadOnly", "Event", "Navigator",
+  "WebSocket", "MessageEvent", "AddEventListenerOptions",
+] }
+
+[lints]
+workspace = true

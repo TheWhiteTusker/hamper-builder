@@ -1,0 +1,11 @@
+/target
+**/dist
+.env*
+!.env.example
+*.pem
+.DS_Store
+/scripts/fixtures/*.local.json
+/app/src-tauri/gen/schemas
+/app/src-tauri/target
+/worker/target
+/worker/build

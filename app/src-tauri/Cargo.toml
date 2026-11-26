@@ -1,0 +1,56 @@
+[package]
+name = "lattice-app"
+description = "Lattice Lane: the native side of the desktop and mobile app"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+name = "lattice_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+lattice-core = { path = "../../crates/core" }
+tauri = { version = "2", features = [] }
+tauri-plugin-deep-link = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+rust_xlsxwriter = "0.103"
+calamine = "0.38"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+candle-core = "0.11"
+candle-nn = "0.11"
+candle-transformers = "0.11"
+ocrs = "0.14"
+rten = "0.28"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
+serde.workspace = true
+serde_json.workspace = true
+time.workspace = true
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "http2"] }
+rusqlite = { version = "0.37", features = ["bundled"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+tokio = { version = "1", features = ["sync", "macros", "time"] }
+sha2 = "0.10"
+base64 = "0.22"
+getrandom = "0.3"
+url = "2"
+
+[target.'cfg(any(windows, target_os = "macos", target_os = "linux"))'.dependencies]
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+tauri-plugin-updater = "2"
+
+[target.'cfg(any(windows, target_os = "macos", target_os = "ios", target_os = "linux"))'.dependencies]
+keyring = { version = "3", features = ["windows-native", "apple-native", "sync-secret-service", "crypto-rust"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["sync", "macros", "rt-multi-thread"] }
+
+[lints]
+workspace = true
