@@ -9,3 +9,4 @@
 /app/src-tauri/target
 /worker/target
 /worker/build
+node_modules
