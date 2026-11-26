@@ -37,8 +37,13 @@ jobs:
         with:
           workspaces: ". -> target"
 
+      # Prebuilt binaries (seconds) instead of compiling both from source
+      # (~10 min). Exact versions so every release builds with the same tools;
+      # bump them here on purpose. The action is pinned to the v2.90.10 commit.
       - name: Install Trunk and the Tauri CLI
-        run: cargo install --locked trunk tauri-cli
+        uses: taiki-e/install-action@893d6ee8d714b6c7dfe2bcd94e5759e9a7958a7e # v2.90.10
+        with:
+          tool: trunk@0.22.2,tauri-cli@2.12.6
 
       # Version = major.minor from Cargo.toml + this run's number, so every
       # release is newer than the last without committing a bump. Change
