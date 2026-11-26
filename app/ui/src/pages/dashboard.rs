@@ -38,6 +38,7 @@ pub fn Dashboard(profile: Profile) -> impl IntoView {
     };
 
     view! {
+        <crate::exit::ExitOnEscape />
         <PageHeader title=title subtitle="Hamper costing and client quotations">
             <span class="text-xs text-(--color-muted)">{status}</span>
             {role.can_manage().then(|| view! { <A href="/hampers/new" attr:class="btn-secondary">"New hamper"</A> })}

@@ -3,6 +3,7 @@
 mod components;
 mod data;
 mod db;
+mod exit;
 mod kit;
 mod leave;
 mod list_position;
@@ -68,7 +69,7 @@ fn Shell(info: SessionInfo) -> impl IntoView {
         <OfflineBanner />
         <main id="top" class="mx-auto w-full max-w-350 flex-1 px-4 py-6">
             <Routes fallback=|| view! { <NotFound /> }>
-                <Route path=path!("/") view=|| view! { <Redirect path="/dashboard" /> } />
+                <Route path=path!("/") view=pages::landing::Landing />
                 <Route path=path!("/dashboard") view=move || view! { <pages::dashboard::Dashboard profile=dash.clone() /> } />
                 <Route path=path!("/hampers") view=hampers::Hampers />
                 <Route path=path!("/hampers/new") view=hampers::NewHamper />

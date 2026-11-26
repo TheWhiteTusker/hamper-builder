@@ -18,7 +18,6 @@ use leptos_router::components::A;
 use leptos_router::hooks::{use_navigate, use_query_map};
 use serde_json::json;
 
-
 pub fn products_query() -> Q {
     Q::from("products").select("*,categories(name,counts_as_item)").null("deleted_at").order("code")
 }

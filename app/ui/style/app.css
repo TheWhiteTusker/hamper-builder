@@ -233,3 +233,18 @@ main:has(.row-gutter) {
   background-size: 12px 12px;
   background-position: 0 0, 0 6px, 6px -6px, -6px 0;
 }
+
+/* Landing page: the photo columns scroll down forever (two copies of the
+   list, so -50% to 0 loops without a seam); hovering a column pauses it. */
+@keyframes marquee-down {
+  from { transform: translate3d(0, -50%, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+.animate-marquee-down {
+  animation: marquee-down linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+.group-pause:hover .animate-marquee-down {
+  animation-play-state: paused;
+}

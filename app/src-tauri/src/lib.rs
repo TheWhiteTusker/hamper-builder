@@ -44,6 +44,13 @@ fn open_urls(app: &AppHandle, urls: Vec<url::Url>) {
     }
 }
 
+/// "Exit" in the Escape pop-up: the window is full screen with no title bar,
+/// so the app closes itself.
+#[tauri::command]
+fn quit_app(app: tauri::AppHandle) {
+    app.exit(0);
+}
+
 pub fn run() {
     let mut builder = tauri::Builder::default();
 
@@ -103,6 +110,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            quit_app,
             commands::session_state,
             commands::sign_in,
             commands::sign_up,

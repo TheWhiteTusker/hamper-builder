@@ -6,6 +6,7 @@ pub mod dashboard;
 pub mod hampers;
 pub mod history;
 pub mod keys;
+pub mod landing;
 pub mod login;
 pub mod presentations;
 pub mod product;
