@@ -8,7 +8,7 @@ use crate::{error, is_admin};
 use serde_json::{Value, json};
 use worker::{Fetch, Headers, Method, Request, RequestInit, Response, Result, RouteContext};
 
-const REPO: &str = "https://api.github.com/repos/TheWhiteTusker/hamper-builder-r";
+const REPO: &str = "https://api.github.com/repos/TheWhiteTusker/hamper-builder";
 
 async fn github(method: Method, path: &str, token: &str, body: Option<Value>) -> Result<(u16, Value)> {
     let headers = Headers::new();
