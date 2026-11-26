@@ -88,9 +88,9 @@ function PublishReleaseButton() {
           type="submit"
           className="btn-secondary"
           disabled={pending || running || starting}
-          title="Trigger GitHub Actions to compile current web version into Windows installer"
+          title="Build the Windows app from main on GitHub and publish it as the newest release"
         >
-          {pending ? "Starting…" : "Package web into app release"}
+          {pending ? "Starting…" : "Release new app version"}
         </button>
       </form>
       {starting && !running && <span className="text-xs text-(--color-muted)">Starting on GitHub…</span>}
