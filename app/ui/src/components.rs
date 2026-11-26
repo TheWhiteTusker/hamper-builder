@@ -100,7 +100,7 @@ pub fn Nav(profile: Profile) -> impl IntoView {
     };
 
     view! {
-        <header class="no-print bg-(--color-brand)">
+        <header class="no-print bg-(--color-brand)/90 backdrop-blur-md">
             <div class="flex flex-wrap items-center justify-between gap-[clamp(0.5rem,1.4vw,1.5rem)] px-[clamp(0.75rem,1.8vw,1.5rem)] py-[clamp(0.5rem,0.9vw,0.75rem)]">
                 <A href="/dashboard" attr:aria-label="Lattice Lane, dashboard" attr:class="shrink-0">
                     <img src="/assets/lattice-lane-logo.png" alt="Lattice Lane" class="h-[clamp(1rem,1.6vw,1.75rem)] w-auto" />

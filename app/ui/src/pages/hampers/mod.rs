@@ -119,7 +119,7 @@ pub fn Hampers() -> impl IntoView {
         <SelectionCount sel=sel />
         // row-gutter (app.css): room left of the table for each row's tick box and bookmark.
         <div class="list-scroll row-gutter">
-            <div class="rounded-lg bg-white">
+            <div class="rounded-lg border border-white/70 bg-white/60">
             <table class="w-full min-w-[1200px] border-collapse text-sm">
                 <thead>
                     <tr>

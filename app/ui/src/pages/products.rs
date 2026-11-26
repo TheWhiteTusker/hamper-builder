@@ -205,7 +205,7 @@ pub fn Products() -> impl IntoView {
                     // row-gutter (app.css): room left of the table for each row's tick box and bookmark.
                     <div class="list-scroll row-gutter">
                         // No outline: just the rows' own lines, with the gutter's buttons outside them.
-                        <div class="rounded-lg bg-white">
+                        <div class="rounded-lg border border-white/70 bg-white/60">
                         <table class="w-full border-collapse text-sm">
                             <thead>
                                 <tr>
