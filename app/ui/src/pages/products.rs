@@ -18,7 +18,6 @@ use leptos_router::components::A;
 use leptos_router::hooks::{use_navigate, use_query_map};
 use serde_json::json;
 
-const PAGE: usize = 60;
 
 pub fn products_query() -> Q {
     Q::from("products").select("*,categories(name,counts_as_item)").null("deleted_at").order("code")
@@ -66,7 +65,6 @@ pub fn Products() -> impl IntoView {
             nav(&format!("/products{qs}"), NavigateOptions { replace: true, scroll: false, ..Default::default() })
         });
     };
-    let shown = RwSignal::new(PAGE);
     let deleted = RwSignal::new(false);
 
     let filtered = Memo::new(move |_| {
@@ -143,7 +141,6 @@ pub fn Products() -> impl IntoView {
                     placeholder="Name, code or source"
                     prop:value=move || param("q")
                     on:input=move |e| {
-                        shown.set(PAGE);
                         set_param("q", event_target_value(&e));
                     }
                 />
@@ -205,7 +202,6 @@ pub fn Products() -> impl IntoView {
                     .into_any()
             }
             Some(rows) => {
-                let more = rows.len().saturating_sub(shown.get());
                 view! {
                     // row-gutter (app.css): room left of the table for each row's tick box and bookmark.
                     <div class="list-scroll row-gutter">
@@ -227,23 +223,16 @@ pub fn Products() -> impl IntoView {
                                 </tr>
                             </thead>
                             <tbody>
+                                // ponytail: every row at once (fine at ~500 products); bring back
+                                // paging or a virtual list if typing in Search starts to lag.
                                 {rows
                                     .into_iter()
-                                    .take(shown.get())
                                     .enumerate()
                                     .map(|(i, p)| view! { <Row p=p n=i + 1 admin=admin sel=sel on_delete=remove /> })
                                     .collect_view()}
                             </tbody>
                         </table>
                         </div>
-                        // Inside the scroll box, so it only shows once the rows are scrolled to the end.
-                        {(more > 0).then(|| view! {
-                            <div class="mt-4 text-center">
-                                <button type="button" class="btn-secondary" on:click=move |_| shown.update(|n| *n += PAGE * 2)>
-                                    {format!("Show more ({more} left)")}
-                                </button>
-                            </div>
-                        })}
                     </div>
                 }
                     .into_any()
